@@ -18,7 +18,6 @@
 8. [Algoritma Scoring Engine (MCDA)](#-algoritma-scoring-engine-mcda)
 9. [Scraping Harga Marketplace Live](#-scraping-harga-marketplace-live)
 10. [Panduan Deployment ke Cloud (Vercel & Render/Railway)](#-panduan-deployment-ke-cloud)
-11. [Lisensi & Kontribusi](#-lisensi--kontribusi)
 
 ---
 

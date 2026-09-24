@@ -41,7 +41,6 @@ Permasalahan ini diperparah oleh beberapa faktor: ulasan di marketplace banyak y
 
 ### 5. Fitur yang Tidak Dikerjakan
 
-- Integrasi API harga langsung (*live price*) dari marketplace (Tokopedia, Shopee, Lazada)
 - Sistem komentar & diskusi komunitas antar pengguna terdaftar
 - Ekspor laporan perbandingan ke format PDF atau PNG
 - Penambahan kategori komponen PC rakitan (GPU, CPU, Motherboard)
@@ -55,6 +54,7 @@ Permasalahan ini diperparah oleh beberapa faktor: ulasan di marketplace banyak y
 - Matriks perbandingan menampilkan data produk yang akurat dengan *auto-highlighting* nilai terbaik di setiap kolom
 - Sistem scoring menghasilkan skor yang berbeda dan logis sesuai perubahan prioritas/preferensi pengguna
 - Penjelasan rekomendasi (*"Why This Product?"*) tampil dengan narasi kontekstual yang relevan terhadap input pengguna
+- Integrasi live price berhasil mengambil dan menampilkan harga produk terbaru dari marketplace yang telah diintegrasikan (Tokopedia, Shopee, dan Lazada)
 - Aplikasi dapat diakses melalui browser modern tanpa instalasi apapun (static web app)
 - Dark mode dan light mode berfungsi dengan transisi halus dan preferensi tersimpan
 
