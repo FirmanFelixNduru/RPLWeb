@@ -308,14 +308,3 @@ Modul `backend/app/scraper.py` menggunakan **Httpx Asynchronous Client** dan **B
 3. Railway akan membaca file `backend/railway.json` dan `backend/Dockerfile` secara otomatis untuk mem-build *multi-stage container*.
 
 ---
-
-## 📄 Lisensi & Kontribusi
-
-* **Lisensi**: Proyek ini dilisensikan di bawah [MIT License](LICENSE).
-* **Kontribusi**: Kontribusi pull request, pelaporan isu, dan saran pengembangan fitur selalu terbuka. Silakan buka *Issue* baru untuk diskusi lebih lanjut.
-
----
-
-<p align="center">
-  Dibuat dengan ❤️ untuk Membantu Konsumen Teknologi di Indonesia membuat Keputusan yang Lebih Cerdas.
-</p>
