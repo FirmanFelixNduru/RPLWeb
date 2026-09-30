@@ -74,7 +74,8 @@ Konsumen modern sering mengalami hambatan kritis saat hendak membeli perangkat t
 ```
 
 * **Frontend**: Next.js 14 (App Router), React 18, Tailwind CSS, Lucide Icons.
-* **Backend**: Python 3.12+, FastAPI, Uvicorn, Pydantic V2, Httpx, BeautifulSoup4.
+* **Backend**: Python 3.12+, FastAPI, Uvicorn, Pydantic V2, SQLAlchemy, Alembic, Httpx, BeautifulSoup4.
+* **Database**: PostgreSQL; SQLite may be used for local migration and integration tests.
 * **Deployment Tools**: Dockerfile (Multi-Stage), Procfile, railway.json, next.config.js.
 
 ---
@@ -89,6 +90,9 @@ Rekayasa Perangkat Lunak/
 │   │   ├── main.py                      # Entry point FastAPI, CORS, & Lifespan
 │   │   ├── models.py                    # Schema Pydantic lengkap
 │   │   ├── products.py                  # Database 20 produk terkurasi pasar Indonesia
+│   │   ├── db.py                        # SQLAlchemy engine and session
+│   │   ├── entities/                    # Database entities and relationships
+│   │   ├── repositories/                # Catalog and marketplace persistence
 │   │   ├── scoring.py                   # Weighted Dynamic Scoring Engine (MCDA)
 │   │   ├── scraper.py                   # Scraper Tokopedia, Shopee, Lazada + Fallback
 │   │   └── routers/
@@ -101,6 +105,9 @@ Rekayasa Perangkat Lunak/
 │   ├── Procfile                         # Konfigurasi deployment Render
 │   ├── railway.json                     # Konfigurasi deployment Railway
 │   ├── requirements.txt                 # Dependensi Python
+│   ├── alembic.ini                      # Konfigurasi migrasi database
+│   ├── migrations/                      # Alembic schema revisions
+│   ├── seed.py                          # Seed katalog idempotent
 │   └── .env.example                     # Templat environment variable backend
 │
 ├── frontend/                            # Next.js App Router Frontend
@@ -194,7 +201,19 @@ Rekayasa Perangkat Lunak/
    cp .env.example .env
    ```
 
-5. Jalankan server FastAPI dengan Uvicorn:
+5. Pastikan PostgreSQL aktif, buat database `comparebuy`, lalu isi konfigurasi `.env`:
+   ```env
+   DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/comparebuy
+   ALLOWED_ORIGINS=http://localhost:3000
+   ```
+   Backend memuat `.env` secara otomatis. Jalankan migrasi dan seed katalog:
+   ```bash
+   alembic upgrade head
+   python seed.py
+   ```
+   Seeder dapat dijalankan ulang tanpa menggandakan produk, brand, tag, atau marketplace.
+
+6. Jalankan server FastAPI dengan Uvicorn:
    ```bash
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
@@ -241,12 +260,13 @@ Backend FastAPI menyediakan endpoint RESTful yang siap dikonsumsi:
 |---|---|---|
 | `GET` | `/` | Status layanan & versi API |
 | `GET` | `/health` | Healthcheck endpoint untuk Docker / Railway / Render |
-| `GET` | `/api/products` | Mengambil seluruh katalog produk dengan query parameter: `search`, `category`, `brand`, `min_price`, `max_price`, `sort_by`, `page`, `per_page` |
+| `GET` | `/api/products` | Mengambil katalog dengan query `search`, `category`, `brand`, `min_price`, `max_price`, `tags`, `sort_by`, `page`, dan `per_page` |
 | `GET` | `/api/products/{id}` | Mengambil detail 1 produk lengkap dengan spesifikasi, review, dan garansi |
 | `POST` | `/api/score` | Menghitung rekomendasi terbobot berdasarkan input preferensi 4-langkah wizard |
 | `POST` | `/api/compare` | Membandingkan 2-4 produk dan menentukan `best_product_id` di setiap baris spesifikasi |
-| `GET` | `/api/prices/{id}` | Mengambil harga live dari Tokopedia, Shopee, dan Lazada via web scraper |
+| `GET` | `/api/prices/{id}` | Mengambil penawaran Tokopedia, Shopee, dan Lazada serta menandai sumber hasil scraping atau fallback |
 | `GET` | `/api/brands` | Mengambil daftar brand unik yang tersedia |
+| `GET` | `/api/tags` | Mengambil daftar tag unik yang tersedia |
 | `GET` | `/api/categories` | Mengambil daftar kategori produk |
 
 ---
@@ -255,8 +275,8 @@ Backend FastAPI menyediakan endpoint RESTful yang siap dikonsumsi:
 
 Mesin kalkulasi di `backend/app/scoring.py` mengimplementasikan teknik **Multi-Criteria Decision Analysis (MCDA)**:
 
-1. **Pembobotan Preferensi Pengguna**: Menerima bobot prioritas pengguna (skala 1 - 5) untuk 6 dimensi utama:
-   - *Performa*, *Kamera*, *Baterai*, *Layar*, *Build Quality*, dan *Value for Money*.
+1. **Pembobotan Preferensi Pengguna**: Menerima bobot prioritas pengguna (skala 1 - 5) untuk 8 dimensi:
+   - *Performa*, *Kamera*, *Baterai*, *Layar*, *Build Quality*, *Value for Money*, *Audio*, dan *Software*.
 2. **Peningkatan Bobot Berdasarkan Skenario**: Skenario seperti *Gaming* otomatis menambah bobot performa (+15%) dan layar (+8%). Skenario *Fotografi* meningkatkan bobot kamera (+20%). Skenario *Pelajar* menambah bobot value (+15%).
 3. **Normalisasi Vektor**: Seluruh bobot dinormalisasi sehingga total $\sum w_i = 1.0$.
 4. **Perhitungan Skor Dasar**: $\text{Skor Dasar} = \sum_{i=1}^{n} (w_i \times s_i)$, di mana $s_i$ adalah skor teruji perangkat pada dimensi $i$ (skala 0 - 100).
@@ -273,7 +293,8 @@ Mesin kalkulasi di `backend/app/scoring.py` mengimplementasikan teknik **Multi-C
 
 Modul `backend/app/scraper.py` menggunakan **Httpx Asynchronous Client** dan **BeautifulSoup4**:
 * Memindai halaman hasil pencarian resmi dari **Tokopedia**, **Shopee**, dan **Lazada** secara paralel menggunakan `asyncio.gather()`.
-* **Sistem Fail-Safe & Fallback**: Mengingat proteksi anti-bot Cloudflare/WAF pada marketplace produksi, modul ini dilengkapi mekanisme fallback cerdas dengan data harga realistis pasar Indonesia yang bervariasi dinamis, sehingga antarmuka pengguna tidak pernah kosong atau rusak.
+* **Sistem Fail-Safe & Fallback**: Jika scraping gagal, modul menggunakan data fallback terkurasi. Setiap penawaran menyertakan `source` (`scraped` atau `fallback`); fallback bukan harga live dan ketersediaannya tidak diverifikasi.
+* Jika database dikonfigurasi, setiap respons harga disimpan sebagai snapshot append-only. Harga MSRP produk tidak diubah oleh hasil marketplace.
 * Menampilkan badge **"Harga Termurah"** otomatis pada marketplace dengan penawaran paling hemat, serta tautan langsung untuk mempermudah transaksi.
 
 ---
@@ -299,11 +320,32 @@ Modul `backend/app/scraper.py` menggunakan **Httpx Asynchronous Client** dan **B
 5. Tambahkan Environment Variable:
    - Key: `ALLOWED_ORIGINS`
    - Value: `https://your-frontend.vercel.app`
-6. Render akan otomatis mendeteksi file `Procfile` dan menjalankan microservice FastAPI.
+   - Key: `DATABASE_URL`
+   - Value: URL PostgreSQL yang disediakan Render atau provider database Anda.
+6. Jalankan `alembic upgrade head` sebagai deploy/pre-deploy command dan `python seed.py` satu kali untuk mengisi katalog awal.
+7. Render akan otomatis mendeteksi file `Procfile` dan menjalankan microservice FastAPI.
 
 ### 3. Deploy Backend ke Railway (Alternatif)
 1. Buka [Railway Dashboard](https://railway.app) → Pilih **New Project** → **Deploy from GitHub repo**.
 2. Masuk ke menu **Settings** → Atur **Root Directory** ke `/backend`.
 3. Railway akan membaca file `backend/railway.json` dan `backend/Dockerfile` secara otomatis untuk mem-build *multi-stage container*.
+
+## Verifikasi
+
+Jalankan smoke test backend dari folder `backend/`. Test menggunakan database yang dikonfigurasi melalui `DATABASE_URL` bila tersedia, dan memeriksa fallback jika tidak.
+
+```bash
+cd backend
+python test_api.py
+```
+
+Bangun frontend dari folder `frontend/`:
+
+```bash
+cd frontend
+npm run build
+```
+
+Marketplace dapat membatasi scraping; test harga menerima respons live maupun fallback selama setiap penawaran mencantumkan sumbernya.
 
 ---
