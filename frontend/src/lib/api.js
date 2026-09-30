@@ -16,9 +16,12 @@ export async function getProducts(params = {}) {
     if (params.search) query.append('search', params.search);
     if (params.category) query.append('category', params.category);
     if (params.brand) query.append('brand', params.brand);
-    if (params.min_price) query.append('min_price', params.min_price);
-    if (params.max_price) query.append('max_price', params.max_price);
+    if (params.min_price != null) query.append('min_price', params.min_price);
+    if (params.max_price != null) query.append('max_price', params.max_price);
+    if (params.tags) query.append('tags', Array.isArray(params.tags) ? params.tags.join(',') : params.tags);
     if (params.sort_by) query.append('sort_by', params.sort_by);
+    if (params.page) query.append('page', params.page);
+    if (params.per_page) query.append('per_page', params.per_page);
 
     const res = await fetch(`${API_BASE}/api/products?${query.toString()}`, {
       cache: 'no-store',
@@ -39,6 +42,7 @@ export async function getProducts(params = {}) {
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.brand.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
           p.tags.some((t) => t.toLowerCase().includes(q))
       );
     }
@@ -53,12 +57,21 @@ export async function getProducts(params = {}) {
       );
     }
 
-    if (params.min_price) {
+    if (params.min_price != null) {
       filtered = filtered.filter((p) => p.price >= Number(params.min_price));
     }
 
-    if (params.max_price) {
+    if (params.max_price != null) {
       filtered = filtered.filter((p) => p.price <= Number(params.max_price));
+    }
+
+    if (params.tags) {
+      const requestedTags = (Array.isArray(params.tags) ? params.tags : params.tags.split(','))
+        .map((tag) => tag.trim().toLowerCase())
+        .filter(Boolean);
+      filtered = filtered.filter((product) =>
+        requestedTags.some((tag) => product.tags.some((productTag) => productTag.toLowerCase() === tag))
+      );
     }
 
     if (params.sort_by === 'price_asc') {
@@ -70,19 +83,27 @@ export async function getProducts(params = {}) {
     } else {
       // Default: sort by average score
       filtered.sort((a, b) => {
-        const scoreA =
-          (a.score_performance + a.score_camera + a.score_battery + a.score_display + a.score_value) / 5;
-        const scoreB =
-          (b.score_performance + b.score_camera + b.score_battery + b.score_display + b.score_value) / 5;
+        const scoreA = [
+          a.score_performance, a.score_camera, a.score_battery, a.score_display,
+          a.score_build_quality, a.score_value, a.score_audio, a.score_software,
+        ].reduce((sum, score) => sum + score, 0) / 8;
+        const scoreB = [
+          b.score_performance, b.score_camera, b.score_battery, b.score_display,
+          b.score_build_quality, b.score_value, b.score_audio, b.score_software,
+        ].reduce((sum, score) => sum + score, 0) / 8;
         return scoreB - scoreA;
       });
     }
 
+    const page = Number(params.page) || 1;
+    const perPage = Number(params.per_page) || 20;
+    const start = (page - 1) * perPage;
+
     return {
-      products: filtered,
+      products: filtered.slice(start, start + perPage),
       total: filtered.length,
-      page: 1,
-      per_page: filtered.length,
+      page,
+      per_page: perPage,
     };
   }
 }
@@ -123,23 +144,27 @@ export async function scoreRecommendations(wizardInput) {
     // Filter products by category
     const categoryProducts = PRODUCTS.filter((p) => p.category === wizardInput.category);
 
-    const dimensions = ['performance', 'camera', 'battery', 'display', 'build_quality', 'value'];
+    const dimensions = [
+      'performance', 'camera', 'battery', 'display',
+      'build_quality', 'value', 'audio', 'software',
+    ];
     const scenarioWeights = {
-      gaming: { performance: 0.15, display: 0.08, battery: 0.02 },
-      productivity: { performance: 0.08, battery: 0.07, display: 0.05 },
-      photography: { camera: 0.20, display: 0.05 },
-      content_creation: { performance: 0.10, display: 0.10, camera: 0.05 },
-      business: { build_quality: 0.08, battery: 0.07, performance: 0.05 },
-      student: { value: 0.15, battery: 0.10 },
-      fitness: { build_quality: 0.10, battery: 0.10 },
-      multimedia: { display: 0.12, battery: 0.06 },
-      casual: { value: 0.10, battery: 0.08 },
+      gaming: { performance: 0.15, display: 0.08, audio: 0.05, battery: 0.02 },
+      productivity: { performance: 0.08, software: 0.10, display: 0.05, battery: 0.07 },
+      photography: { camera: 0.20, display: 0.05, software: 0.03 },
+      social_media: { camera: 0.10, display: 0.05, battery: 0.05 },
+      content_creation: { performance: 0.10, display: 0.10, camera: 0.05, software: 0.05 },
+      business: { software: 0.10, build_quality: 0.08, battery: 0.07, performance: 0.05 },
+      student: { value: 0.15, battery: 0.10, software: 0.05 },
+      fitness: { build_quality: 0.10, battery: 0.10, software: 0.05 },
+      multimedia: { display: 0.12, audio: 0.12, battery: 0.06 },
+      casual: { value: 0.10, battery: 0.08, build_quality: 0.05, software: 0.05 },
     };
 
     // Build raw weights
     const weights = {};
     dimensions.forEach((dim) => {
-      weights[dim] = Number(wizardInput.priorities?.[dim] || 3);
+      weights[dim] = Number(wizardInput.priorities?.[dim] ?? 3);
     });
 
     // Apply scenario boosts
@@ -160,11 +185,11 @@ export async function scoreRecommendations(wizardInput) {
     // Score products
     const results = categoryProducts.map((p) => {
       const breakdown = dimensions.map((dim) => {
-        const rawScore = p[`score_${dim}`] || 50;
-        const w = normWeights[dim] || 0.16;
+        const rawScore = p[`score_${dim}`] ?? 50;
+        const w = normWeights[dim] ?? 0;
         return {
           dimension: dim,
-          weight: Math.round(w * 1000) / 1000,
+          weight: Math.round(w * 10000) / 10000,
           raw_score: rawScore,
           weighted_score: Math.round(rawScore * w * 10) / 10,
         };
@@ -180,7 +205,7 @@ export async function scoreRecommendations(wizardInput) {
         modifier = 2.0;
       } else if (p.price > wizardInput.budget_max) {
         budgetFit = 'above';
-        const overPct = (p.price - wizardInput.budget_max) / wizardInput.budget_max;
+        const overPct = (p.price - wizardInput.budget_max) / Math.max(wizardInput.budget_max, 1);
         modifier = overPct <= 0.2 ? -5.0 : -15.0;
       }
 
@@ -198,6 +223,8 @@ export async function scoreRecommendations(wizardInput) {
         display: 'Layar & Visual',
         build_quality: 'Build Quality & Rangka',
         value: 'Value for Money',
+        audio: 'Kualitas Audio',
+        software: 'Software & Update',
       };
 
       const whyNarrative = `**${p.name}** adalah pilihan unggulan Anda karena:\n` +
@@ -318,6 +345,8 @@ export async function getLiveMarketplacePrices(productId) {
           url: product?.marketplace_links?.tokopedia || 'https://www.tokopedia.com',
           seller: `${product?.brand || 'Official'} Store Official`,
           available: true,
+          source: 'fallback',
+          captured_at: new Date().toISOString(),
         },
         {
           marketplace: 'Shopee',
@@ -325,6 +354,8 @@ export async function getLiveMarketplacePrices(productId) {
           url: product?.marketplace_links?.shopee || 'https://shopee.co.id',
           seller: `${product?.brand || 'Official'} Mall Indonesia`,
           available: true,
+          source: 'fallback',
+          captured_at: new Date().toISOString(),
         },
         {
           marketplace: 'Lazada',
@@ -332,6 +363,8 @@ export async function getLiveMarketplacePrices(productId) {
           url: product?.marketplace_links?.lazada || 'https://www.lazada.co.id',
           seller: `LazMall ${product?.brand || 'Brand'} Partner`,
           available: true,
+          source: 'fallback',
+          captured_at: new Date().toISOString(),
         },
       ].sort((a, b) => a.price - b.price),
     };

@@ -16,7 +16,7 @@ PRODUCTS: list[Product] = [
         brand="Samsung",
         category=ProductCategory.SMARTPHONE,
         price=19999000,
-        image="/images/samsung-s24-ultra.webp",
+        image="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&auto=format&fit=crop&q=80",
         description="Flagship Samsung dengan S Pen, kamera 200MP, dan layar Dynamic AMOLED 2X terbaik di kelasnya.",
         specs=ProductSpecs(
             display="6.8\" Dynamic AMOLED 2X, 3120x1440",
@@ -70,7 +70,7 @@ PRODUCTS: list[Product] = [
         brand="Apple",
         category=ProductCategory.SMARTPHONE,
         price=22499000,
-        image="/images/iphone-15-pro-max.webp",
+        image="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80",
         description="iPhone termahal dengan chip A17 Pro, kamera periscope 5x, dan body titanium premium.",
         specs=ProductSpecs(
             display="6.7\" Super Retina XDR OLED, 2796x1290",
@@ -124,7 +124,7 @@ PRODUCTS: list[Product] = [
         brand="Google",
         category=ProductCategory.SMARTPHONE,
         price=14999000,
-        image="/images/pixel-8-pro.webp",
+        image="https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&auto=format&fit=crop&q=80",
         description="Smartphone AI-first dari Google dengan kamera komputasional terbaik dan 7 tahun update.",
         specs=ProductSpecs(
             display="6.7\" LTPO OLED, 2992x1344",
@@ -178,7 +178,7 @@ PRODUCTS: list[Product] = [
         brand="Xiaomi",
         category=ProductCategory.SMARTPHONE,
         price=14999000,
-        image="/images/xiaomi-14-ultra.webp",
+        image="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&auto=format&fit=crop&q=80",
         description="Flagship Xiaomi kolaborasi Leica dengan kamera 1-inch sensor dan performa kelas atas.",
         specs=ProductSpecs(
             display="6.73\" LTPO AMOLED, 3200x1440",
@@ -232,7 +232,7 @@ PRODUCTS: list[Product] = [
         brand="POCO",
         category=ProductCategory.SMARTPHONE,
         price=3999000,
-        image="/images/poco-x6-pro.webp",
+        image="https://images.unsplash.com/photo-1567581935884-3349723552ca?w=600&auto=format&fit=crop&q=80",
         description="Mid-range killer dengan Dimensity 8300 Ultra, layar AMOLED 120Hz, dan pengisian daya 67W.",
         specs=ProductSpecs(
             display="6.67\" Flow AMOLED, 2712x1220",
@@ -290,7 +290,7 @@ PRODUCTS: list[Product] = [
         brand="Apple",
         category=ProductCategory.LAPTOP,
         price=18499000,
-        image="/images/macbook-air-m3.webp",
+        image="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80",
         description="Laptop ultraportable Apple dengan chip M3, fanless design, dan baterai hingga 18 jam.",
         specs=ProductSpecs(
             display="13.6\" Liquid Retina, 2560x1664",
@@ -343,7 +343,7 @@ PRODUCTS: list[Product] = [
         brand="ASUS",
         category=ProductCategory.LAPTOP,
         price=28999000,
-        image="/images/rog-zephyrus-g14.webp",
+        image="https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&auto=format&fit=crop&q=80",
         description="Laptop gaming ultraportable dengan AMD Ryzen 9, RTX 4060, dan layar OLED 120Hz.",
         specs=ProductSpecs(
             display="14\" 2.8K OLED, 2880x1800",
@@ -397,7 +397,7 @@ PRODUCTS: list[Product] = [
         brand="Lenovo",
         category=ProductCategory.LAPTOP,
         price=24999000,
-        image="/images/thinkpad-x1-carbon.webp",
+        image="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&auto=format&fit=crop&q=80",
         description="Laptop bisnis premium ultra-ringan dengan keyboard legendaris dan keamanan enterprise.",
         specs=ProductSpecs(
             display="14\" 2.8K OLED, 2880x1800",
@@ -449,7 +449,7 @@ PRODUCTS: list[Product] = [
         brand="Acer",
         category=ProductCategory.LAPTOP,
         price=8499000,
-        image="/images/acer-aspire-5.webp",
+        image="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&auto=format&fit=crop&q=80",
         description="Laptop value-for-money untuk mahasiswa dan pekerja dengan Intel Core i5 Gen 13 dan layar IPS Full HD.",
         specs=ProductSpecs(
             display="15.6\" IPS FHD, 1920x1080",
@@ -505,7 +505,7 @@ PRODUCTS: list[Product] = [
         brand="Apple",
         category=ProductCategory.TABLET,
         price=10999000,
-        image="/images/ipad-air-m2.webp",
+        image="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&auto=format&fit=crop&q=80",
         description="Tablet premium Apple dengan chip M2, layar Liquid Retina 11\", dan dukungan Apple Pencil Pro.",
         specs=ProductSpecs(
             display="11\" Liquid Retina IPS, 2360x1640",
@@ -558,7 +558,7 @@ PRODUCTS: list[Product] = [
         brand="Samsung",
         category=ProductCategory.TABLET,
         price=6499000,
-        image="/images/galaxy-tab-s9-fe.webp",
+        image="https://images.unsplash.com/photo-1561154464-82e9adf32764?w=600&auto=format&fit=crop&q=80",
         description="Tablet Samsung mid-range dengan S Pen included, layar TFT 10.9\", dan IP68 water resistance.",
         specs=ProductSpecs(
             display="10.9\" TFT LCD, 2304x1440",
@@ -616,7 +616,7 @@ PRODUCTS: list[Product] = [
         brand="Apple",
         category=ProductCategory.TWS,
         price=3799000,
-        image="/images/airpods-pro-2.webp",
+        image="https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&auto=format&fit=crop&q=80",
         description="TWS premium Apple dengan ANC terbaik di kelasnya, Adaptive Audio, dan USB-C.",
         specs=ProductSpecs(
             display="N/A",
@@ -666,7 +666,7 @@ PRODUCTS: list[Product] = [
         brand="Sony",
         category=ProductCategory.TWS,
         price=4299000,
-        image="/images/sony-wf1000xm5.webp",
+        image="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&auto=format&fit=crop&q=80",
         description="TWS audiophile-grade Sony dengan ANC terbaik, LDAC support, dan suara Hi-Res.",
         specs=ProductSpecs(
             display="N/A",
@@ -716,7 +716,7 @@ PRODUCTS: list[Product] = [
         brand="Samsung",
         category=ProductCategory.TWS,
         price=3299000,
-        image="/images/galaxy-buds3-pro.webp",
+        image="https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80",
         description="TWS Samsung terbaru dengan desain blade, ANC canggih, dan Galaxy AI features.",
         specs=ProductSpecs(
             display="N/A",
@@ -770,7 +770,7 @@ PRODUCTS: list[Product] = [
         brand="Apple",
         category=ProductCategory.SMARTWATCH,
         price=13999000,
-        image="/images/apple-watch-ultra-2.webp",
+        image="https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600&auto=format&fit=crop&q=80",
         description="Smartwatch paling tangguh Apple untuk adventure & diving dengan layar 2000 nits.",
         specs=ProductSpecs(
             display="1.93\" LTPO OLED Always-On, 502x410",
@@ -821,7 +821,7 @@ PRODUCTS: list[Product] = [
         brand="Samsung",
         category=ProductCategory.SMARTWATCH,
         price=4499000,
-        image="/images/galaxy-watch-7.webp",
+        image="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80",
         description="Smartwatch Android terbaik dengan Wear OS 5, BioActive Sensor 3.0, dan AI health insights.",
         specs=ProductSpecs(
             display="1.3\" Super AMOLED Always-On, 432x432",
@@ -876,7 +876,7 @@ PRODUCTS: list[Product] = [
         brand="Samsung",
         category=ProductCategory.SMARTPHONE,
         price=5499000,
-        image="/images/galaxy-a55.webp",
+        image="https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&auto=format&fit=crop&q=80",
         description="Mid-range Samsung terbaik dengan layar Super AMOLED 120Hz, Exynos 1480, dan IP67.",
         specs=ProductSpecs(
             display="6.6\" Super AMOLED, 2340x1080",
@@ -934,7 +934,7 @@ PRODUCTS: list[Product] = [
         brand="Lenovo",
         category=ProductCategory.LAPTOP,
         price=13999000,
-        image="/images/lenovo-loq-15.webp",
+        image="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=600&auto=format&fit=crop&q=80",
         description="Laptop gaming budget dengan Intel Core i5 Gen 13, RTX 4050, dan layar 144Hz.",
         specs=ProductSpecs(
             display="15.6\" IPS FHD, 1920x1080",
@@ -992,7 +992,7 @@ PRODUCTS: list[Product] = [
         brand="QCY",
         category=ProductCategory.TWS,
         price=349000,
-        image="/images/qcy-melobuds.webp",
+        image="https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=600&auto=format&fit=crop&q=80",
         description="TWS budget dengan ANC aktif, driver 10mm, dan baterai 30 jam — dibawah 400 ribu.",
         specs=ProductSpecs(
             display="N/A",
@@ -1046,7 +1046,7 @@ PRODUCTS: list[Product] = [
         brand="Amazfit",
         category=ProductCategory.SMARTWATCH,
         price=2999000,
-        image="/images/amazfit-gtr4.webp",
+        image="https://images.unsplash.com/photo-1510017803434-a899398421b3?w=600&auto=format&fit=crop&q=80",
         description="Smartwatch premium-look dengan AMOLED display, GPS dual-band, dan baterai 14 hari.",
         specs=ProductSpecs(
             display="1.43\" AMOLED, 466x466",

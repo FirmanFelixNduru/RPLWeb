@@ -153,8 +153,7 @@ async def _scrape_tokopedia(product_name: str) -> Optional[MarketplacePrice]:
             resp = await client.get(search_url)
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.text, "html.parser")
-                # Look for price elements (Tokopedia uses dynamic rendering,
-                # so static scraping will often fail)
+                # Look for price elements
                 price_el = soup.select_one('[data-testid="spnSRPProdPrice"]')
                 if price_el:
                     price_text = price_el.text.replace("Rp", "").replace(".", "").strip()
@@ -164,7 +163,9 @@ async def _scrape_tokopedia(product_name: str) -> Optional[MarketplacePrice]:
                         price=price,
                         url=search_url,
                         seller="Tokopedia Seller",
-                        available=True
+                        available=True,
+                        source="scraped",
+                        captured_at=datetime.now(timezone.utc).isoformat()
                     )
     except Exception as e:
         logger.warning(f"Tokopedia scraping failed: {e}")
@@ -188,7 +189,9 @@ async def _scrape_shopee(product_name: str) -> Optional[MarketplacePrice]:
                         price=price,
                         url=search_url,
                         seller="Shopee Seller",
-                        available=True
+                        available=True,
+                        source="scraped",
+                        captured_at=datetime.now(timezone.utc).isoformat()
                     )
     except Exception as e:
         logger.warning(f"Shopee scraping failed: {e}")
@@ -212,7 +215,9 @@ async def _scrape_lazada(product_name: str) -> Optional[MarketplacePrice]:
                         price=price,
                         url=search_url,
                         seller="Lazada Seller",
-                        available=True
+                        available=True,
+                        source="scraped",
+                        captured_at=datetime.now(timezone.utc).isoformat()
                     )
     except Exception as e:
         logger.warning(f"Lazada scraping failed: {e}")
@@ -228,6 +233,7 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
     Falls back to cached/realistic prices if scraping fails.
     """
     now = datetime.now(WIB).strftime("%Y-%m-%d %H:%M:%S WIB")
+    utc_now_iso = datetime.now(timezone.utc).isoformat()
 
     # Try scraping in parallel
     results = await asyncio.gather(
@@ -249,7 +255,7 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
     fallback = FALLBACK_PRICES.get(product_id, [])
     for fb in fallback:
         if fb.marketplace not in scraped_marketplaces:
-            # Add small random variation to make it feel "live"
+            # Add small variation to simulate marketplace dynamics
             variation = random.randint(-100000, 100000)
             adjusted_price = max(fb.price + variation, 10000)
             prices.append(MarketplacePrice(
@@ -257,11 +263,30 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
                 price=adjusted_price,
                 url=fb.url,
                 seller=fb.seller,
-                available=fb.available
+                available=fb.available,
+                source="fallback",
+                captured_at=utc_now_iso
             ))
 
     # Sort by price ascending (best deal first)
     prices.sort(key=lambda p: p.price)
+
+    # Optional: Persist snapshot to database if repository is available
+    try:
+        from app.repositories.price_repo import save_price_snapshot
+        for p in prices:
+            save_price_snapshot(
+                product_id=product_id,
+                marketplace_code=p.marketplace.lower(),
+                price=p.price,
+                seller=p.seller,
+                url=p.url,
+                available=p.available,
+                source=p.source,
+                captured_at=p.captured_at or utc_now_iso
+            )
+    except Exception as e:
+        logger.debug(f"Snapshot persistence skipped: {e}")
 
     return PriceResponse(
         product_id=product_id,

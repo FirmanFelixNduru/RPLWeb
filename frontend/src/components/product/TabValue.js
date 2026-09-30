@@ -37,11 +37,21 @@ export default function TabValue({ product }) {
   // MSRP vs Best Marketplace Deal
   const prices = pricingData?.prices || [];
   const lowestPrice = prices.length > 0 ? Math.min(...prices.map((p) => p.price)) : product.price;
-  const potentialSavings = Math.max(0, product.price - lowestPrice);
+  const lowestOffer = prices.find((offer) => offer.price === lowestPrice);
+  const potentialSavings = lowestOffer?.source === 'scraped'
+    ? Math.max(0, product.price - lowestPrice)
+    : 0;
+  const sourceLabel = prices.length === 0
+    ? 'Belum ada penawaran'
+    : prices.every((offer) => offer.source === 'scraped')
+      ? 'Hasil scraping'
+      : prices.every((offer) => offer.source === 'fallback')
+        ? 'Data fallback'
+        : 'Scraping dan fallback';
 
   return (
     <div className="space-y-6">
-      {/* Live Scraping Status Bar */}
+      {/* Marketplace price source and update time */}
       <div className="flex flex-col sm:flex-row items-center justify-between p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 gap-2">
         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
           <span className="relative flex h-2.5 w-2.5">
@@ -49,8 +59,8 @@ export default function TabValue({ product }) {
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
           </span>
           <span>
-            Scraper Engine Live: Terakhir diperbarui{' '}
-            <strong>{pricingData?.last_updated || 'Baru saja'}</strong>
+            Sumber harga: <strong>{sourceLabel}</strong>. Terakhir diperbarui{' '}
+            <strong>{pricingData?.last_updated || 'Belum tersedia'}</strong>
           </span>
         </div>
 
@@ -61,7 +71,7 @@ export default function TabValue({ product }) {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-          <span>{refreshing ? 'Memindai Harga...' : 'Refresh Harga Live'}</span>
+          <span>{refreshing ? 'Memperbarui Harga...' : 'Perbarui Harga'}</span>
         </button>
       </div>
 
@@ -77,7 +87,7 @@ export default function TabValue({ product }) {
         <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-300 dark:border-emerald-800/80">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
-              Penawaran Terbaik Live
+              Harga Marketplace Terendah
             </span>
             {potentialSavings > 0 && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white">
@@ -93,7 +103,7 @@ export default function TabValue({ product }) {
       <div className="space-y-3">
         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
           <ShoppingBag className="w-4 h-4 text-indigo-500" />
-          <span>Harga Real-Time dari Marketplace Terkemuka</span>
+          <span>Penawaran dari Marketplace</span>
         </h4>
 
         {loading ? (
@@ -138,6 +148,9 @@ export default function TabValue({ product }) {
                         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                           {item.seller}
                         </span>
+                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                          {item.source === 'scraped' ? 'Hasil scraping' : 'Fallback'}
+                        </span>
                         {isLowest && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
                             Harga Termurah
@@ -145,7 +158,11 @@ export default function TabValue({ product }) {
                         )}
                       </div>
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {item.available ? 'Stok Terkonfirmasi Tersedia' : 'Cek Stok di Toko'}
+                        {item.source !== 'scraped'
+                          ? 'Ketersediaan belum diverifikasi'
+                          : item.available
+                            ? 'Harga terdeteksi; periksa stok di toko'
+                            : 'Tidak tersedia'}
                       </span>
                     </div>
                   </div>

@@ -14,7 +14,7 @@ export default function WizardPage() {
   const [category, setCategory] = useState('smartphone');
   const [budgetMin, setBudgetMin] = useState(3000000);
   const [budgetMax, setBudgetMax] = useState(12000000);
-  const [scenarios, setScenarios] = useState(['gaming', 'productivity']);
+  const [scenarios, setScenarios] = useState(['sp_game']);
   const [priorities, setPriorities] = useState({
     performance: 4,
     camera: 3,
@@ -62,11 +62,24 @@ export default function WizardPage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      // Map category-specific scenario IDs to standard backend scenario keys
+      const idToKeyMap = {
+        sp_game: 'gaming', sp_foto: 'photography', sp_sosmed: 'social_media', sp_bisnis: 'business',
+        lp_game: 'gaming', lp_kreatif: 'content_creation', lp_coding: 'productivity', lp_office: 'business',
+        tb_gambar: 'content_creation', tb_catatan: 'student', tb_nonton: 'multimedia', tb_kerja: 'productivity',
+        au_olahraga: 'fitness', au_rapat: 'business', au_musik: 'multimedia', au_game: 'gaming',
+        sw_olahraga: 'fitness', sw_sehat: 'fitness', sw_notif: 'casual', sw_gaya: 'casual',
+      };
+
+      const mappedScenarios = Array.from(
+        new Set(scenarios.map((s) => idToKeyMap[s] || s))
+      );
+
       const payload = {
         category,
         budget_min: budgetMin,
         budget_max: budgetMax,
-        scenarios,
+        scenarios: mappedScenarios,
         priorities,
       };
 
@@ -159,7 +172,12 @@ export default function WizardPage() {
             {currentStep === 1 && (
               <StepCategory
                 selectedCategory={category}
-                onSelect={(cat) => setCategory(cat)}
+                onSelect={(cat) => {
+                  if (cat !== category) {
+                    setCategory(cat);
+                    setScenarios([]); // Auto-reset scenarios to avoid cross-category conflicts
+                  }
+                }}
               />
             )}
 
@@ -175,6 +193,7 @@ export default function WizardPage() {
 
             {currentStep === 3 && (
               <StepScenario
+                category={category}
                 selectedScenarios={scenarios}
                 onToggleScenario={handleToggleScenario}
               />

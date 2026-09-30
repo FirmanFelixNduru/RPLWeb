@@ -17,7 +17,7 @@ export default function ComparePage() {
   // Fetch comparison data whenever compareList changes
   useEffect(() => {
     async function loadMatrix() {
-      if (compareList.length === 0) {
+      if (compareList.length < 2) {
         setComparisonData(null);
         return;
       }

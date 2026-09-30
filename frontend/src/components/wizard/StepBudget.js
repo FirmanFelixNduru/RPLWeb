@@ -94,42 +94,96 @@ export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin
         </div>
       </div>
 
-      {/* Sliders */}
-      <div className="space-y-5 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
-        <div>
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-            <span>Batas Minimum Anggaran:</span>
-            <span className="text-indigo-600 dark:text-indigo-400 font-bold">
-              Rp {budgetMin.toLocaleString('id-ID')}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={budgetMax - 500000}
-            step={500000}
-            value={budgetMin}
-            onChange={(e) => onChangeMin(Number(e.target.value))}
-            className="w-full accent-indigo-600 cursor-pointer"
-          />
+      {/* Integrated Dual-Thumb Range Slider */}
+      <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-8">
+        <div className="text-center">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Geser kedua tuas untuk menentukan batas minimum & maksimum anggaran:
+          </span>
         </div>
 
-        <div>
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-            <span>Batas Maksimum Anggaran:</span>
-            <span className="text-purple-600 dark:text-purple-400 font-bold">
-              Rp {budgetMax.toLocaleString('id-ID')}
+        {/* Slider Container with Floating Tooltips */}
+        <div className="relative pt-8 pb-4 px-2">
+          {/* Floating Bubble for Min Thumb */}
+          <div
+            className="absolute top-0 -translate-x-1/2 transition-all duration-75 pointer-events-none z-20 flex flex-col items-center"
+            style={{
+              left: `${Math.min(95, Math.max(5, ((budgetMin - 0) / (35000000 - 0)) * 100))}%`,
+            }}
+          >
+            <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-bold shadow-md whitespace-nowrap">
+              Min: Rp {(budgetMin / 1000000).toFixed(budgetMin >= 1000000 ? 1 : 0)} Jt
             </span>
+            <div className="w-1.5 h-1.5 bg-indigo-600 rotate-45 -mt-0.5" />
           </div>
-          <input
-            type="range"
-            min={budgetMin + 500000}
-            max={35000000}
-            step={500000}
-            value={budgetMax}
-            onChange={(e) => onChangeMax(Number(e.target.value))}
-            className="w-full accent-purple-600 cursor-pointer"
-          />
+
+          {/* Floating Bubble for Max Thumb */}
+          <div
+            className="absolute top-0 -translate-x-1/2 transition-all duration-75 pointer-events-none z-20 flex flex-col items-center"
+            style={{
+              left: `${Math.min(95, Math.max(5, ((budgetMax - 0) / (35000000 - 0)) * 100))}%`,
+            }}
+          >
+            <span className="px-2.5 py-1 rounded-lg bg-purple-600 text-white text-[11px] font-bold shadow-md whitespace-nowrap">
+              Max: Rp {(budgetMax / 1000000).toFixed(0)} Jt
+            </span>
+            <div className="w-1.5 h-1.5 bg-purple-600 rotate-45 -mt-0.5" />
+          </div>
+
+          {/* Unified Track */}
+          <div className="relative h-2.5 w-full rounded-full bg-slate-200 dark:bg-slate-800">
+            {/* Active Range Highlight */}
+            <div
+              className="absolute h-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+              style={{
+                left: `${((budgetMin - 0) / (35000000 - 0)) * 100}%`,
+                width: `${(((budgetMax - budgetMin) - 0) / (35000000 - 0)) * 100}%`,
+              }}
+            />
+
+            {/* Min Range Input */}
+            <input
+              type="range"
+              min={0}
+              max={35000000}
+              step={500000}
+              value={budgetMin}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (val <= budgetMax - 500000) {
+                  onChangeMin(val);
+                }
+              }}
+              className="absolute left-0 top-0 w-full h-full appearance-none bg-transparent pointer-events-none z-30 cursor-pointer
+                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white dark:[&::-webkit-slider-thumb]:border-slate-900 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform
+                [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-indigo-600 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white dark:[&::-moz-range-thumb]:border-slate-900 [&::-moz-range-thumb]:shadow-lg [&::-moz-range-thumb]:hover:scale-110 [&::-moz-range-thumb]:transition-transform"
+              aria-label="Batas Minimum Anggaran"
+            />
+
+            {/* Max Range Input */}
+            <input
+              type="range"
+              min={0}
+              max={35000000}
+              step={500000}
+              value={budgetMax}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (val >= budgetMin + 500000) {
+                  onChangeMax(val);
+                }
+              }}
+              className="absolute left-0 top-0 w-full h-full appearance-none bg-transparent pointer-events-none z-30 cursor-pointer
+                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-600 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white dark:[&::-webkit-slider-thumb]:border-slate-900 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform
+                [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-purple-600 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white dark:[&::-moz-range-thumb]:border-slate-900 [&::-moz-range-thumb]:shadow-lg [&::-moz-range-thumb]:hover:scale-110 [&::-moz-range-thumb]:transition-transform"
+              aria-label="Batas Maksimum Anggaran"
+            />
+          </div>
+
+          <div className="flex justify-between items-center text-[11px] font-semibold text-slate-400 mt-5">
+            <span>Rp 0 (Entry Level)</span>
+            <span>Rp 35.000.000+ (Ultra High-End)</span>
+          </div>
         </div>
       </div>
     </div>

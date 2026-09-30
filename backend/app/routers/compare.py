@@ -2,10 +2,14 @@
 CompareBuy — Comparison Router
 Side-by-side product comparison with auto-highlighting.
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from typing import Optional
+from sqlalchemy.orm import Session
 
 from app.models import CompareRequest, CompareResponse, SpecHighlight, Product
-from app.products import get_product_by_id
+from app.products import get_product_by_id as get_fallback_product
+from app.db import get_db
+from app.repositories import catalog_repo
 
 router = APIRouter(prefix="/api", tags=["compare"])
 
@@ -54,14 +58,27 @@ def _determine_best(field: str, product_values: dict[str, str]) -> str | None:
 
 
 @router.post("/compare", response_model=CompareResponse)
-def compare_products(req: CompareRequest):
+def compare_products(req: CompareRequest, db: Optional[Session] = Depends(get_db)):
     """
     Compare 2-4 products side by side.
     Returns product data and auto-highlighted best specs.
     """
+    if len(set(req.product_ids)) != len(req.product_ids):
+        raise HTTPException(
+            status_code=400,
+            detail="ID produk yang dibandingkan harus unik (tidak boleh ada produk yang sama)."
+        )
+
     products: list[Product] = []
     for pid in req.product_ids:
-        product = get_product_by_id(pid)
+        product = None
+        if db is not None:
+            try:
+                product = catalog_repo.get_product_by_id(db, pid)
+            except Exception:
+                pass
+        if not product:
+            product = get_fallback_product(pid)
         if not product:
             raise HTTPException(
                 status_code=404,

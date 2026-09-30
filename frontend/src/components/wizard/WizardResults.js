@@ -6,6 +6,22 @@ import ScoreBadge from '@/components/ui/ScoreBadge';
 import PriceTag from '@/components/ui/PriceTag';
 import { useCompare } from '@/context/CompareContext';
 
+// Helper to format bold markdown syntax (**text**) into strong tags
+const formatMarkdownText = (text) => {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={index} className="font-bold text-white dark:text-indigo-200">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
+
 export default function WizardResults({ results = [], onReset, wizardInput }) {
   const { addToCompare, isInCompare, openProductModal } = useCompare();
 
@@ -33,6 +49,21 @@ export default function WizardResults({ results = [], onReset, wizardInput }) {
   }
 
   const topPick = results[0];
+  const dimensionLabels = {
+    performance: 'Performa',
+    camera: 'Kamera',
+    battery: 'Baterai',
+    display: 'Layar',
+    build_quality: 'Build Quality',
+    value: 'Value for Money',
+    audio: 'Audio',
+    software: 'Software',
+  };
+  const budgetFitLabels = {
+    within: 'Sesuai budget',
+    below: 'Di bawah budget',
+    above: 'Di atas budget',
+  };
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -75,12 +106,16 @@ export default function WizardResults({ results = [], onReset, wizardInput }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            {/* Image */}
-            <div className="md:col-span-4 aspect-square rounded-2xl bg-white/10 p-2 overflow-hidden backdrop-blur-md border border-white/10">
+            {/* Image with real photo, object-contain, and error fallback */}
+            <div className="md:col-span-4 aspect-square rounded-2xl bg-white/10 dark:bg-white/5 p-3 overflow-hidden backdrop-blur-md border border-white/10 flex items-center justify-center">
               <img
-                src={topPick.product.image}
+                src={topPick.product.image || topPick.product.image_url || '/default-placeholder.svg'}
                 alt={topPick.product.name}
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full h-full object-contain rounded-xl"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/default-placeholder.svg';
+                }}
               />
             </div>
 
@@ -96,12 +131,36 @@ export default function WizardResults({ results = [], onReset, wizardInput }) {
                 <div className="flex items-center gap-3 mt-2">
                   <PriceTag price={topPick.product.price} size="lg" className="text-white" />
                   <ScoreBadge score={topPick.total_score} size="md" showLabel={true} />
+                  <span className="text-xs font-semibold text-indigo-200">
+                    {budgetFitLabels[topPick.budget_fit] || 'Status budget tidak tersedia'}
+                  </span>
                 </div>
               </div>
 
-              {/* Contextual Narrative: Why this product */}
+              {topPick.score_breakdown?.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {topPick.score_breakdown.map((item) => (
+                    <div
+                      key={item.dimension}
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                    >
+                      <div className="text-[10px] font-semibold text-indigo-200">
+                        {dimensionLabels[item.dimension] || item.dimension}
+                      </div>
+                      <div className="text-sm font-bold text-white">
+                        {item.raw_score}/100
+                      </div>
+                      <div className="text-[10px] text-indigo-200/80">
+                        Bobot {(item.weight * 100).toFixed(1)}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Contextual Narrative: Why this product with markdown bold formatting */}
               <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-xs sm:text-sm text-indigo-100 leading-relaxed whitespace-pre-line">
-                {topPick.why_this_product}
+                {formatMarkdownText(topPick.why_this_product)}
               </div>
 
               {/* Actions */}
@@ -161,11 +220,16 @@ export default function WizardResults({ results = [], onReset, wizardInput }) {
                     #{item.rank}
                   </div>
 
-                  <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
+                  {/* Real photo thumbnail with object-contain & error fallback */}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-100 dark:bg-slate-800 p-1.5 flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-200 dark:border-slate-700">
                     <img
-                      src={item.product.image}
+                      src={item.product.image || item.product.image_url || '/default-placeholder.svg'}
                       alt={item.product.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-placeholder.svg';
+                      }}
                     />
                   </div>
 
