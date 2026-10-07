@@ -36,8 +36,10 @@ def _extract_numeric(value: str) -> float | None:
 
 
 def _higher_is_better(field: str) -> bool:
-    """For most specs, higher numeric value = better. Exception: weight."""
-    return field not in ("weight",)
+    """For most specs, higher numeric value = better.
+    Exceptions (lower is better): weight, price.
+    """
+    return field not in ("weight", "price")
 
 
 def _determine_best(field: str, product_values: dict[str, str]) -> str | None:
@@ -62,12 +64,8 @@ def compare_products(req: CompareRequest, db: Optional[Session] = Depends(get_db
     """
     Compare 2-4 products side by side.
     Returns product data and auto-highlighted best specs.
+    Duplicate ID validation is handled upstream by CompareRequest.validate_distinct_ids.
     """
-    if len(set(req.product_ids)) != len(req.product_ids):
-        raise HTTPException(
-            status_code=400,
-            detail="ID produk yang dibandingkan harus unik (tidak boleh ada produk yang sama)."
-        )
 
     products: list[Product] = []
     for pid in req.product_ids:
