@@ -9,6 +9,7 @@ frontend/.env.test.local
 frontend/.env.production.local
 
 # Python
+*.env
 backend/__pycache__/
 backend/*/__pycache__/
 backend/*/*/__pycache__/
@@ -24,3 +25,7 @@ backend/.pytest_cache/
 .vscode/
 .idea/
 Thumbs.db
+
+# Allow .env.example files to be tracked
+!.env.example
+!*/.env.example
