@@ -8,6 +8,7 @@ import random
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+from urllib.parse import urlparse
 
 import httpx
 from bs4 import BeautifulSoup
@@ -140,6 +141,26 @@ FALLBACK_PRICES: dict[str, list[MarketplacePrice]] = {
         MarketplacePrice(marketplace="Lazada", price=2949000, url="https://www.lazada.co.id/catalog/?q=amazfit+gtr+4", seller="Amazfit Store", available=True),
     ],
 }
+
+OFFICIAL_MARKETPLACE_DOMAINS = ("tokopedia.com", "shopee.co.id", "lazada.co.id")
+
+
+def is_valid_marketplace_url(url: str) -> bool:
+    """Return True only for http/https URLs on an official marketplace domain or its subdomain."""
+    if not url or not isinstance(url, str):
+        return False
+    try:
+        parsed = urlparse(url.strip())
+        hostname = parsed.hostname
+    except ValueError:
+        return False
+    if parsed.scheme not in ("http", "https") or not hostname:
+        return False
+    hostname = hostname.lower().rstrip(".")
+    return any(
+        hostname == domain or hostname.endswith("." + domain)
+        for domain in OFFICIAL_MARKETPLACE_DOMAINS
+    )
 
 
 # ──────────────────────────────────────────────

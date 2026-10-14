@@ -28,6 +28,16 @@ def _extract_numeric(value: str) -> float | None:
     if not value or value == "N/A":
         return None
     import re
+    # Currency amount (Rp / IDR) — isolate the number after the currency token
+    currency_match = re.search(r'\b(?:rp|idr)\b\.?\s*([\d\.,]+)', value, re.IGNORECASE)
+    if currency_match:
+        digits = re.sub(r'[\.,]', '', currency_match.group(1))
+        if digits:
+            return float(digits)
+    # Dot-separated thousands (e.g. 19.999.000) — only the matched text is used
+    thousands_match = re.search(r'\b\d{1,3}(?:\.\d{3})+\b', value)
+    if thousands_match:
+        return float(thousands_match.group(0).replace(".", ""))
     # Find first number (possibly decimal)
     match = re.search(r'(\d+(?:\.\d+)?)', value.replace(",", ""))
     if match:

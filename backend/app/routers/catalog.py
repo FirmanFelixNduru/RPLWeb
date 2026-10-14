@@ -33,6 +33,12 @@ def list_products(
     db: Optional[Session] = Depends(get_db)
 ):
     """List all products with search, filter, and sort from DB or memory fallback."""
+    if min_price is not None and max_price is not None and min_price > max_price:
+        raise HTTPException(
+            status_code=422,
+            detail="min_price tidak boleh lebih besar dari max_price."
+        )
+
     # Attempt PostgreSQL repository lookup if DB session is active
     if db is not None:
         try:

@@ -45,6 +45,13 @@ class WarrantyInfo(BaseModel):
     official_service_centers: int = Field(default=0, ge=0, description="Number of service centers")
     score: float = Field(default=0.0, ge=0, le=100, description="Computed warranty index 0-100")
 
+    @field_validator("coverage")
+    @classmethod
+    def validate_coverage_not_blank(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("coverage tidak boleh kosong atau hanya berisi spasi.")
+        return v
+
 
 class ReviewSentiment(BaseModel):
     overall_score: float = Field(..., ge=0, le=5, description="Overall rating 0-5")
@@ -52,6 +59,13 @@ class ReviewSentiment(BaseModel):
     pros: list[str] = Field(default_factory=list)
     cons: list[str] = Field(default_factory=list)
     summary: str = Field(default="")
+
+    @field_validator("pros", "cons")
+    @classmethod
+    def validate_items_not_blank(cls, v: list[str]) -> list[str]:
+        if any(not item.strip() for item in v):
+            raise ValueError("Elemen pros/cons tidak boleh kosong atau hanya berisi spasi.")
+        return v
 
 
 class MarketplacePrice(BaseModel):
