@@ -13,6 +13,8 @@ import unittest
 # Pastikan modul app dapat diimpor dari direktori backend
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from tests import _pretty  # noqa: F401  (format output [OK] ...)
+
 from fastapi.testclient import TestClient
 from app.main import app
 from app.routers.compare import (
@@ -396,5 +398,44 @@ class TestHighlightStructure(unittest.TestCase):
                 f"bukan '{price_h['best_product_id']}'")
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Test Suite 6 — Regresi _extract_numeric: Rupiah, Ribuan, & Kata "Sharp"
+# ═══════════════════════════════════════════════════════════════════
+class TestExtractNumericRegression(unittest.TestCase):
+    """Regresi US-02: format Rupiah, pemisah ribuan titik, dan false-positive 'Rp'."""
+
+    def test_sharp_is_not_treated_as_rupiah(self):
+        """Kata 'Sharp' tidak boleh dianggap token Rp; hasilnya 6.8."""
+        self.assertEqual(_extract_numeric('Sharp 6.8" Dynamic AMOLED'), 6.8)
+
+    def test_rupiah_with_dot_thousands(self):
+        """'Rp 19.999.000' harus menjadi 19999000.0."""
+        self.assertEqual(_extract_numeric("Rp 19.999.000"), 19999000.0)
+
+    def test_rupiah_with_dot_after_prefix(self):
+        """'Rp. 50.000' harus menjadi 50000.0."""
+        self.assertEqual(_extract_numeric("Rp. 50.000"), 50000.0)
+
+    def test_model_number_not_merged_with_thousands(self):
+        """Angka model '15' tidak boleh tergabung dengan harga 19.999.000."""
+        self.assertEqual(_extract_numeric("Model 15, harga 19.999.000"), 19999000.0)
+
+    def test_version_string_not_treated_as_thousands(self):
+        """'Version 1.2.3' bukan format ribuan; angka pertama 1.2 yang diambil."""
+        self.assertEqual(_extract_numeric("Version 1.2.3"), 1.2)
+
+    def test_determine_best_price_with_rupiah_strings(self):
+        """Harga berformat Rupiah titik: termurah (lower-is-better) harus menang."""
+        values = {
+            "sm-001": "Rp 19.999.000",
+            "sm-002": "Rp 22.499.000",
+            "sm-003": "Rp 12.999.000",
+        }
+        self.assertEqual(_determine_best("price", values), "sm-003")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+

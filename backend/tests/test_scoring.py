@@ -14,6 +14,8 @@ from pydantic import ValidationError
 # Pastikan modul app dapat diimpor dari direktori backend
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from tests import _pretty  # noqa: F401  (format output [OK] ...)
+
 from app.models import WizardInput, ProductCategory, UsageScenario
 from app.scoring import (
     _build_weight_vector,
