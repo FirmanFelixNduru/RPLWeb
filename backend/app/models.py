@@ -76,6 +76,7 @@ class MarketplacePrice(BaseModel):
     available: bool = True
     source: MarketplacePriceSource = Field(default=MarketplacePriceSource.FALLBACK)
     captured_at: Optional[str] = Field(default=None, description="ISO timestamp")
+    target_configuration: Optional[str] = Field(default=None, description="Configuration targeted by this offer/fallback")
 
 
 class ProductSpecs(BaseModel):
@@ -102,6 +103,8 @@ class ProductSpecs(BaseModel):
     special_features: Optional[str] = None
     ports: Optional[str] = None
     charging: Optional[str] = None
+    base_configuration: Optional[str] = None
+    variants_note: Optional[str] = None
 
 
 class Product(BaseModel):

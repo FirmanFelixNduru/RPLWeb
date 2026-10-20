@@ -30,7 +30,9 @@ export const PRODUCTS = [
       resolution: "3120 x 1440 (QHD+)",
       water_resistance: "IP68 (1.5m hingga 30 menit)",
       build_material: "Titanium Frame, Corning Gorilla Armor",
-      special_features: "Built-in S Pen, Galaxy AI Live Translate, Circle to Search"
+      special_features: "Built-in S Pen, Galaxy AI Live Translate, Circle to Search",
+      base_configuration: "12 GB RAM / 256 GB UFS 4.0",
+      variants_note: "Tersedia varian 12 GB / 512 GB (Rp23.999.000) dan 12 GB / 1 TB (Rp27.999.000) resmi Samsung Newsroom ID."
     },
     review_sentiment: {
       overall_score: 4.6,
@@ -97,7 +99,9 @@ export const PRODUCTS = [
       resolution: "2796 x 1290",
       water_resistance: "IP68 (6m hingga 30 menit)",
       build_material: "Grade 5 Titanium Frame, Ceramic Shield Depan",
-      special_features: "Action Button yang dapat dikustomisasi, Port USB-C 10Gbps, ProRes Video Recording"
+      special_features: "Action Button yang dapat dikustomisasi, Port USB-C 10Gbps, ProRes Video Recording",
+      base_configuration: "8 GB RAM / 256 GB Penyimpanan Flash Internal",
+      variants_note: "Varian 512 GB dan 1 TB tersedia di jaringan distributor ritel; harga alternatif saat ini belum terverifikasi per SKU."
     },
     review_sentiment: {
       overall_score: 4.7,
@@ -164,7 +168,9 @@ export const PRODUCTS = [
       resolution: "2992 x 1344",
       water_resistance: "IP68",
       build_material: "Bingkai Aluminium Polish, Corning Gorilla Glass Victus 2",
-      special_features: "Sensor Suhu Objek, Best Take, Magic Audio Eraser, Video Boost"
+      special_features: "Sensor Suhu Objek, Best Take, Magic Audio Eraser, Video Boost",
+      base_configuration: "12 GB RAM / 128 GB UFS 3.1",
+      variants_note: "Varian 256 GB dan 512 GB belum terverifikasi harga resminya (pasar impor non-ATPM)."
     },
     review_sentiment: {
       overall_score: 4.4,
@@ -230,7 +236,9 @@ export const PRODUCTS = [
       resolution: "3200 x 1440 (2K WQHD+)",
       water_resistance: "IP68",
       build_material: "Aluminium CNC unibody, Kulit Vegan Nano-Tech",
-      special_features: "Diafragma Mekanikal Berubah-ubah, Aksesoris Photography Kit Grip, Perekaman 8K Log"
+      special_features: "Diafragma Mekanikal Berubah-ubah, Aksesoris Photography Kit Grip, Perekaman 8K Log",
+      base_configuration: "16 GB LPDDR5X / 512 GB UFS 4.0",
+      variants_note: "Varian 1 TB belum terverifikasi harga resminya (pasar impor non-ATPM)."
     },
     review_sentiment: {
       overall_score: 4.5,
@@ -296,7 +304,9 @@ export const PRODUCTS = [
       resolution: "2712 x 1220 (1.5K)",
       water_resistance: "IP54 (Tahan cipratan air)",
       build_material: "Rangka Polikarbonat, Corning Gorilla Glass 5",
-      special_features: "LiquidCool Technology 2.0, In-Display Fingerprint, Dual Stereo Speakers Dolby Atmos"
+      special_features: "LiquidCool Technology 2.0, In-Display Fingerprint, Dual Stereo Speakers Dolby Atmos",
+      base_configuration: "12 GB LPDDR5X / 512 GB UFS 4.0",
+      variants_note: "Varian tunggal resmi yang dirilis di Indonesia (12 GB RAM / 512 GB Storage)."
     },
     review_sentiment: {
       overall_score: 4.3,
@@ -362,7 +372,9 @@ export const PRODUCTS = [
       resolution: "2340 x 1080 (FHD+)",
       water_resistance: "IP67 (Kedalaman 1m hingga 30 menit)",
       build_material: "Frame Aluminium Solid, Gorilla Glass Victus+ Depan/Belakang",
-      special_features: "Samsung Knox Vault Hardware-level, Nightography, Stereo Speakers"
+      special_features: "Samsung Knox Vault Hardware-level, Nightography, Stereo Speakers",
+      base_configuration: "8 GB RAM / 256 GB UFS 3.1",
+      variants_note: "Tersedia varian 8 GB / 128 GB (Rp5.999.000) resmi Samsung Newsroom ID."
     },
     review_sentiment: {
       overall_score: 4.3,
@@ -429,7 +441,9 @@ export const PRODUCTS = [
       screen_size: "13.6 inch",
       resolution: "2560 x 1664",
       build_material: "100% Aluminium Daur Ulang Anodized",
-      special_features: "Desain Fanless Tanpa Kipas Hening 100%, Touch ID, Speaker Spatial Audio 4-Unit"
+      special_features: "Desain Fanless Tanpa Kipas Hening 100%, Touch ID, Speaker Spatial Audio 4-Unit",
+      base_configuration: "8 GB Unified Memory / 256 GB SSD",
+      variants_note: "Varian memori (16 GB / 24 GB) dan SSD (512 GB) tersedia di ritel resmi; harga resmi alternatif belum terverifikasi secara terpisah."
     },
     review_sentiment: {
       overall_score: 4.7,
@@ -495,7 +509,9 @@ export const PRODUCTS = [
       refresh_rate: "120Hz",
       resolution: "2880 x 1800 (3K OLED)",
       build_material: "CNC Unibody Aluminium Alloy dengan Slash Lighting LED",
-      special_features: "Layar OLED Kalibrasi Pantone, 6 Speaker Woofer Dual-force, ROG Intelligent Cooling"
+      special_features: "Layar OLED Kalibrasi Pantone, 6 Speaker Woofer Dual-force, ROG Intelligent Cooling",
+      base_configuration: "Ryzen 9 8945HS / RTX 4060 / 16 GB LPDDR5X / 1 TB SSD PCIe 4.0",
+      variants_note: "Harga acuan observasi toko resmi mengacu pada konfigurasi 16 GB RAM / 1 TB SSD. Varian RTX 4070 / 32 GB RAM belum terverifikasi harga resminya."
     },
     review_sentiment: {
       overall_score: 4.5,
@@ -560,7 +576,9 @@ export const PRODUCTS = [
       screen_size: "14 inch",
       resolution: "2880 x 1800",
       build_material: "Tutup Serat Karbon Anyam, Rangka Magnesium Campuran",
-      special_features: "TrackPoint Merah Khas, Uji Ketangguhan 12 Standar Militer, ThinkShield Security"
+      special_features: "TrackPoint Merah Khas, Uji Ketangguhan 12 Standar Militer, ThinkShield Security",
+      base_configuration: "Intel Core i7-1365U / 16 GB LPDDR5 / 512 GB PCIe Gen4 SSD",
+      variants_note: "Harga acuan katalog belum terverifikasi mengacu pada konfigurasi RAM 16 GB / SSD 512 GB. Varian RAM 32 GB dan SSD 1 TB belum terverifikasi harga resminya."
     },
     review_sentiment: {
       overall_score: 4.6,
@@ -625,7 +643,9 @@ export const PRODUCTS = [
       screen_size: "15.6 inch",
       resolution: "1920 x 1080 (FHD)",
       build_material: "Top Cover Aluminium Metal, Bodi Bawah Polikarbonat",
-      special_features: "Fingerprint Scanner di Trackpad, Port Thunderbolt 4 Serbaguna, Desain Engsel Elevasi Ergonomis"
+      special_features: "Fingerprint Scanner di Trackpad, Port Thunderbolt 4 Serbaguna, Desain Engsel Elevasi Ergonomis",
+      base_configuration: "Intel Core i5-1335U / 8 GB LPDDR5 / 512 GB SSD PCIe Gen4",
+      variants_note: "Katalog mencatat varian RAM 8 GB / SSD 512 GB dengan harga acuan belum terverifikasi. Varian RAM 16 GB belum terverifikasi dan tidak diasumsikan berlaku pada SKU atau harga yang sama."
     },
     review_sentiment: {
       overall_score: 4.2,
@@ -691,7 +711,9 @@ export const PRODUCTS = [
       refresh_rate: "144Hz",
       resolution: "1920 x 1080 (FHD)",
       build_material: "Polycarbonate-ABS dengan pendingin ganda knalpot belakang",
-      special_features: "Lenovo AI Engine+ dengan chip LA1 AI, Keyboard Legion TrueStrike dengan white backlight"
+      special_features: "Lenovo AI Engine+ dengan chip LA1 AI, Keyboard Legion TrueStrike dengan white backlight",
+      base_configuration: "Intel Core i5-13450HX / RTX 4050 / 16 GB DDR5 / 512 GB PCIe 4.0 SSD",
+      variants_note: "Harga acuan observasi toko resmi mengacu pada konfigurasi 16 GB RAM / 512 GB SSD. Konfigurasi prosesor atau kapasitas RAM lain belum terverifikasi harga resminya."
     },
     review_sentiment: {
       overall_score: 4.2,
@@ -758,7 +780,9 @@ export const PRODUCTS = [
       screen_size: "11 inch",
       resolution: "2360 x 1640",
       build_material: "Aluminium Unibody 100% Daur Ulang",
-      special_features: "Dukungan Apple Pencil Pro dengan Barrel Roll & Haptic, Magic Keyboard, Touch ID di tombol atas"
+      special_features: "Dukungan Apple Pencil Pro dengan Barrel Roll & Haptic, Magic Keyboard, Touch ID di tombol atas",
+      base_configuration: "Apple M2 / 8 GB RAM / 128 GB Penyimpanan Flash",
+      variants_note: "Harga acuan katalog belum terverifikasi mengacu pada varian 128 GB Wi-Fi. Pilihan kapasitas 256 GB, 512 GB, dan 1 TB belum terverifikasi harga resminya."
     },
     review_sentiment: {
       overall_score: 4.5,
@@ -824,7 +848,9 @@ export const PRODUCTS = [
       resolution: "2304 x 1440",
       water_resistance: "IP68 (Tablet dan S Pen tahan air dan debu)",
       build_material: "Bodi Aluminium Armor yang kokoh",
-      special_features: "Stylus S Pen bawaan gratis tanpa baterai, Antarmuka PC Samsung DeX, Dual Speaker AKG"
+      special_features: "Stylus S Pen bawaan gratis tanpa baterai, Antarmuka PC Samsung DeX, Dual Speaker AKG",
+      base_configuration: "Exynos 1380 / 6 GB RAM / 128 GB UFS",
+      variants_note: "Varian Wi-Fi 6 GB / 128 GB. Versi seluler 5G atau model Tab S9 FE+ memiliki harga terpisah yang belum terverifikasi pada model ini."
     },
     review_sentiment: {
       overall_score: 4.2,
@@ -887,7 +913,9 @@ export const PRODUCTS = [
       connectivity: "Bluetooth 5.3, Chip Apple H2 di earbud, Chip Apple U1 di casing",
       water_resistance: "IP54 (Tahan debu, keringat, dan cipratan air untuk earbud dan casing)",
       build_material: "Polikarbonat Putih Glossy, Eartips Silikon 4 Ukuran (XS, S, M, L)",
-      special_features: "Speaker di Casing untuk Find My, Kontrol Sentuh Volume Swipe, Pengisian MagSafe/Apple Watch Charger"
+      special_features: "Speaker di Casing untuk Find My, Kontrol Sentuh Volume Swipe, Pengisian MagSafe/Apple Watch Charger",
+      base_configuration: "Model Tunggal Standar (MagSafe Case USB-C)",
+      variants_note: "Model tunggal standar resmi Apple (tanpa varian memori/storage)."
     },
     review_sentiment: {
       overall_score: 4.7,
@@ -948,7 +976,9 @@ export const PRODUCTS = [
       connectivity: "Bluetooth 5.3, Dukungan Multipoint Connection 2 Perangkat Sekaligus",
       water_resistance: "IPX4 (Tahan percikan air dan keringat olahraga)",
       build_material: "Bodi Finishing Glossy Elegan, Noise Isolation Earbud Tips Berbahan Polyurethane Foam",
-      special_features: "Head Tracking 360 Reality Audio, Speak-to-Chat, Sensor Konduksi Tulang untuk Mikrofon Jernih"
+      special_features: "Head Tracking 360 Reality Audio, Speak-to-Chat, Sensor Konduksi Tulang untuk Mikrofon Jernih",
+      base_configuration: "Model Tunggal Standar (Dual Dynamic Driver X, ANC)",
+      variants_note: "Model tunggal standar resmi Sony (tanpa varian memori/storage)."
     },
     review_sentiment: {
       overall_score: 4.6,
@@ -1009,7 +1039,9 @@ export const PRODUCTS = [
       connectivity: "Bluetooth 5.4 dengan Auto Switch antar ekosistem Samsung",
       water_resistance: "IP57 (Tahan debu dan celupan air hingga 1 meter)",
       build_material: "Rancangan Tangkai Segitiga (Blade Design) dengan Strip LED",
-      special_features: "Live Interpreter Galaxy AI langsung ke telinga, 360 Audio dengan perekaman suara 3D, Kontrol Cubit dan Usap"
+      special_features: "Live Interpreter Galaxy AI langsung ke telinga, 360 Audio dengan perekaman suara 3D, Kontrol Cubit dan Usap",
+      base_configuration: "Model Tunggal Standar (Dual Driver 2-way, Blade Light, ANC)",
+      variants_note: "Model tunggal standar resmi rilis 2024 (tanpa varian memori/storage)."
     },
     review_sentiment: {
       overall_score: 4.3,
@@ -1070,7 +1102,9 @@ export const PRODUCTS = [
       connectivity: "Bluetooth 5.2",
       water_resistance: "IPX5 (Tahan keringat dan rintik hujan gerimis)",
       build_material: "Bodi Polikarbonat Ringan Matte",
-      special_features: "Low Latency Game Mode, Mode Transparansi, 6 Mikrofon ENC Noise Reduction, Kustomisasi via QCY App & Equalizer"
+      special_features: "Low Latency Game Mode, Mode Transparansi, 6 Mikrofon ENC Noise Reduction, Kustomisasi via QCY App & Equalizer",
+      base_configuration: "Model Tunggal Standar (10mm Driver, 40 dB Hybrid ANC, Bluetooth 5.2)",
+      variants_note: "Model tunggal standar QCY HT05 (tanpa varian memori/storage)."
     },
     review_sentiment: {
       overall_score: 4.1,
@@ -1134,7 +1168,9 @@ export const PRODUCTS = [
       resolution: "502 x 410",
       water_resistance: "100 meter (Sertifikasi Selam Rekreasi EN13319 hingga 40m, Standar Militer MIL-STD 810H)",
       build_material: "Bodi Titanium Aerospace Grade 95% Daur Ulang dengan Tombol Action Kustom Berwarna Oranye",
-      special_features: "Sirene Darurat 86 Desibel terdengar hingga 180m, Gestur Sentuhan Ganda (Double Tap), Komputer Selam Oceanic+"
+      special_features: "Sirene Darurat 86 Desibel terdengar hingga 180m, Gestur Sentuhan Ganda (Double Tap), Komputer Selam Oceanic+",
+      base_configuration: "Kasus Titanium 49mm GPS + Cellular",
+      variants_note: "Konfigurasi tunggal 49mm Titanium GPS + Cellular (pilihan hanya pada jenis strap)."
     },
     review_sentiment: {
       overall_score: 4.7,
@@ -1196,7 +1232,9 @@ export const PRODUCTS = [
       resolution: "432 x 432",
       water_resistance: "5ATM + IP68 + Standar Militer MIL-STD-810H",
       build_material: "Rangka Armor Aluminium yang ringan dan elegan",
-      special_features: "Energy Score harian bertenaga AI, Deteksi Sleep Apnea Medis Resmi, Balas Pesan Cerdas AI, Wear OS Powered by Samsung"
+      special_features: "Energy Score harian bertenaga AI, Deteksi Sleep Apnea Medis Resmi, Balas Pesan Cerdas AI, Wear OS Powered by Samsung",
+      base_configuration: "Kasus Aluminium 40mm Bluetooth",
+      variants_note: "Konfigurasi standar 40mm Bluetooth. Varian 44mm atau LTE memiliki harga terpisah yang belum diverifikasi."
     },
     review_sentiment: {
       overall_score: 4.3,
@@ -1258,7 +1296,9 @@ export const PRODUCTS = [
       resolution: "466 x 466",
       water_resistance: "5 ATM (Tahan tekanan air setara kedalaman 50 meter)",
       build_material: "Bingkai Paduan Aluminium Kelas Penerbangan, Tombol Putar Mahkota Navigasi",
-      special_features: "Penyimpanan Musik Offline Bawaan, Panggilan Telepon Bluetooth via Speaker & Mikrofon, 150+ Mode Olahraga dengan Pengenalan Latihan Kekuatan Otomatis"
+      special_features: "Penyimpanan Musik Offline Bawaan, Panggilan Telepon Bluetooth via Speaker & Mikrofon, 150+ Mode Olahraga dengan Pengenalan Latihan Kekuatan Otomatis",
+      base_configuration: "Kasus Aluminium 46mm AMOLED GPS",
+      variants_note: "Konfigurasi standar 46mm dengan bodi aluminium dan sensor BioTracker 4.0."
     },
     review_sentiment: {
       overall_score: 4.3,

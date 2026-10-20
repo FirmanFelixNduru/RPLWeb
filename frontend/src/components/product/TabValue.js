@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ShoppingBag, ExternalLink, RefreshCw, Sparkles, TrendingDown, DollarSign, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, ExternalLink, RefreshCw, Sparkles, TrendingDown, DollarSign, CheckCircle2, Info } from 'lucide-react';
 import { getLiveMarketplacePrices } from '@/lib/api';
 import PriceTag from '@/components/ui/PriceTag';
 
@@ -122,11 +122,23 @@ export default function TabValue({ product }) {
 
       {/* MSRP vs Best Deal Highlight */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-            {priceLabel}
-          </span>
-          <PriceTag price={product.price} size="lg" className="text-slate-600 dark:text-slate-400" />
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+          <div>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+              {priceLabel}
+            </span>
+            <PriceTag price={product.price} size="lg" className="text-slate-600 dark:text-slate-400" />
+          </div>
+          {product.specs?.base_configuration && (
+            <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-700">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+                Konfigurasi Dasar yang Diwakili Harga:
+              </span>
+              <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-indigo-700 dark:text-indigo-300">
+                {product.specs.base_configuration}
+              </span>
+            </div>
+          )}
         </div>
 
         {hasVerifiedOffers ? (
@@ -144,24 +156,41 @@ export default function TabValue({ product }) {
             <PriceTag price={verifiedLowestPrice} size="lg" className="text-emerald-700 dark:text-emerald-300" />
           </div>
         ) : (
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Penawaran Live Terverifikasi
-              </span>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                Belum Tersedia
-              </span>
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Penawaran Live Terverifikasi
+                </span>
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                  Belum Tersedia
+                </span>
+              </div>
+              <div className="text-sm font-semibold text-slate-600 dark:text-slate-300 mt-2">
+                Mode Acuan Offline (Fallback)
+              </div>
             </div>
-            <div className="text-sm font-semibold text-slate-600 dark:text-slate-300 mt-2">
-              Mode Acuan Offline (Fallback)
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
               Penawaran marketplace live belum terverifikasi secara real-time. Tidak dihitung ke potensi hemat.
             </p>
           </div>
         )}
       </div>
+
+      {/* Catatan Varian Spesifikasi & Alternatif */}
+      {product.specs?.variants_note && (
+        <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <span className="font-bold block text-blue-950 dark:text-blue-300">
+              Informasi Konfigurasi & Varian Alternatif:
+            </span>
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+              {product.specs.variants_note}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Live Marketplace Comparison Cards */}
       <div className="space-y-3">
@@ -226,11 +255,24 @@ export default function TabValue({ product }) {
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {isVerifiedScraped
-                          ? (item.available ? 'Harga terdeteksi; periksa stok di toko' : 'Tidak tersedia')
-                          : 'Estimasi acuan statis (Belum diverifikasi live ke toko)'}
-                      </span>
+
+                      <div className="flex flex-col gap-1 mt-0.5">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {isVerifiedScraped
+                            ? (item.available ? 'Harga terdeteksi; periksa stok di toko' : 'Tidak tersedia')
+                            : 'Estimasi acuan statis (Belum diverifikasi live ke toko)'}
+                        </span>
+                        {item.target_configuration && (
+                          <div className="flex flex-wrap items-center gap-1 text-[10px] text-slate-600 dark:text-slate-400">
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 font-medium">
+                              {item.target_configuration}
+                            </span>
+                            <span className="italic text-slate-500 dark:text-slate-400">
+                              (Bukan pencocokan live ke listing toko)
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
