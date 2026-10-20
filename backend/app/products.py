@@ -988,7 +988,7 @@ PRODUCTS: list[Product] = [
     # ═══════════════════════════════════════════
     Product(
         id="tw-004",
-        name="QCY MeloBuds ANC",
+        name="QCY MeloBuds ANC (HT05)",
         brand="QCY",
         category=ProductCategory.TWS,
         price=349000,
@@ -997,14 +997,14 @@ PRODUCTS: list[Product] = [
         specs=ProductSpecs(
             display="N/A",
             battery="7.5h (ANC On) + 30h (Case)",
-            connectivity="Bluetooth 5.3",
             weight="4.7g per earbud",
+            connectivity="Bluetooth 5.2",
             water_resistance="IPX5",
             driver_size="10mm Dynamic Driver",
-            anc="Hybrid ANC -43dB",
+            anc="Hybrid ANC 40dB",
             codec="AAC, SBC",
             build_material="Plastic, Silicone Tips",
-            special_features="App EQ Customization, Game Mode 60ms, Transparency Mode"
+            special_features="Low Latency Game Mode, Mode Transparansi, 6 Mikrofon ENC Noise Reduction, Kustomisasi via QCY App & Equalizer"
         ),
         review_sentiment=ReviewSentiment(
             overall_score=4.1,

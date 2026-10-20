@@ -1025,7 +1025,7 @@ export const PRODUCTS = [
       anc: "Hybrid Active Noise Cancellation hingga kedalaman 40dB dengan 3 mode (Indoor, Commuting, Boosted)",
       codec: "AAC, SBC",
       build_material: "Bodi Polikarbonat Ringan Matte",
-      special_features: "Aplikasi Pendukung QCY App untuk kustomisasi kontrol sentuh dan equalizer grafis, 6 Mikrofon ENC Noise Reduction"
+      special_features: "Low Latency Game Mode, Mode Transparansi, 6 Mikrofon ENC Noise Reduction, Kustomisasi via QCY App & Equalizer"
     },
     review_sentiment: {
       overall_score: 4.1,
