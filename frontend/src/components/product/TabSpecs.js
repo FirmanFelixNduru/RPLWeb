@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Cpu, Smartphone, Battery, Camera, Wifi, HardDrive, ShieldAlert, Sparkles, Monitor, Layers } from 'lucide-react';
+import { Cpu, Smartphone, Battery, Camera, Wifi, HardDrive, ShieldAlert, Sparkles, Monitor, Layers, Zap, Cable, Volume2, Activity } from 'lucide-react';
 
 export default function TabSpecs({ product }) {
   if (!product) return null;
@@ -10,9 +10,16 @@ export default function TabSpecs({ product }) {
     { label: 'Layar & Resolusi', value: product.specs.display, icon: Monitor },
     { label: 'Refresh Rate', value: product.specs.refresh_rate, icon: Sparkles },
     { label: 'Prosesor / Chipset', value: product.specs.processor, icon: Cpu },
+    { label: 'Kartu Grafis / GPU', value: product.specs.gpu, icon: Cpu },
     { label: 'RAM / Memori', value: product.specs.ram, icon: Layers },
     { label: 'Penyimpanan Internal', value: product.specs.storage, icon: HardDrive },
     { label: 'Kapasitas Baterai', value: product.specs.battery, icon: Battery },
+    { label: 'Pengisian Daya / Charger', value: product.specs.charging, icon: Zap },
+    { label: 'Port & Konektor I/O', value: product.specs.ports, icon: Cable },
+    { label: 'Ukuran Driver Audio', value: product.specs.driver_size, icon: Volume2 },
+    { label: 'Peredam Bising (ANC)', value: product.specs.anc, icon: ShieldAlert },
+    { label: 'Dukungan Codec Audio', value: product.specs.codec, icon: Sparkles },
+    { label: 'Sensor & Pelacakan', value: product.specs.sensors, icon: Activity },
     { label: 'Konfigurasi Kamera', value: product.specs.camera, icon: Camera },
     { label: 'Sistem Operasi', value: product.specs.os, icon: Smartphone },
     { label: 'Bobot Perangkat', value: product.specs.weight, icon: Layers },

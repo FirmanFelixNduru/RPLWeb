@@ -100,6 +100,8 @@ class ProductSpecs(BaseModel):
     sensors: Optional[str] = None
     build_material: Optional[str] = None
     special_features: Optional[str] = None
+    ports: Optional[str] = None
+    charging: Optional[str] = None
 
 
 class Product(BaseModel):
