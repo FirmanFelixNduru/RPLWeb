@@ -51,14 +51,14 @@ FALLBACK_PRICES: dict[str, list[MarketplacePrice]] = {
         MarketplacePrice(marketplace="Lazada", price=22099000, url="https://www.lazada.co.id/catalog/?q=iphone+15+pro+max", seller="Apple Official", available=True),
     ],
     "sm-003": [
-        MarketplacePrice(marketplace="Tokopedia", price=13999000, url="https://www.tokopedia.com/search?q=google+pixel+8+pro", seller="Google Store ID", available=True),
-        MarketplacePrice(marketplace="Shopee", price=14299000, url="https://shopee.co.id/search?keyword=google+pixel+8+pro", seller="Pixel Official", available=True),
-        MarketplacePrice(marketplace="Lazada", price=14499000, url="https://www.lazada.co.id/catalog/?q=google+pixel+8+pro", seller="Google Official", available=True),
+        MarketplacePrice(marketplace="Tokopedia", price=13999000, url="https://www.tokopedia.com/search?q=google+pixel+8+pro", seller="Marketplace Seller / Impor", available=True),
+        MarketplacePrice(marketplace="Shopee", price=14299000, url="https://shopee.co.id/search?keyword=google+pixel+8+pro", seller="Marketplace Seller / Impor", available=True),
+        MarketplacePrice(marketplace="Lazada", price=14499000, url="https://www.lazada.co.id/catalog/?q=google+pixel+8+pro", seller="Marketplace Seller / Impor", available=True),
     ],
     "sm-004": [
-        MarketplacePrice(marketplace="Tokopedia", price=14499000, url="https://www.tokopedia.com/search?q=xiaomi+14+ultra", seller="Xiaomi Official Store", available=True),
-        MarketplacePrice(marketplace="Shopee", price=14699000, url="https://shopee.co.id/search?keyword=xiaomi+14+ultra", seller="Xiaomi Official", available=True),
-        MarketplacePrice(marketplace="Lazada", price=14399000, url="https://www.lazada.co.id/catalog/?q=xiaomi+14+ultra", seller="Xiaomi Flagship", available=True),
+        MarketplacePrice(marketplace="Tokopedia", price=14499000, url="https://www.tokopedia.com/search?q=xiaomi+14+ultra", seller="Marketplace Seller / Impor", available=True),
+        MarketplacePrice(marketplace="Shopee", price=14699000, url="https://shopee.co.id/search?keyword=xiaomi+14+ultra", seller="Marketplace Seller / Impor", available=True),
+        MarketplacePrice(marketplace="Lazada", price=14399000, url="https://www.lazada.co.id/catalog/?q=xiaomi+14+ultra", seller="Marketplace Seller / Impor", available=True),
     ],
     "sm-005": [
         MarketplacePrice(marketplace="Tokopedia", price=3849000, url="https://www.tokopedia.com/search?q=poco+x6+pro", seller="POCO Official", available=True),
@@ -164,37 +164,112 @@ def is_valid_marketplace_url(url: str) -> bool:
 
 
 # ──────────────────────────────────────────────
+# Price Parsing & Validation Helper
+# ──────────────────────────────────────────────
+def parse_marketplace_price(
+    raw_text: str,
+    listing_title: str = "",
+    expected_product_name: str = "",
+    title: str = ""
+) -> Optional[int]:
+    """
+    Parse and validate marketplace price string.
+    - Validates product relevance (rejects non-gadget accessories like cases, straps, tempered glass).
+    - Rejects installment / cicilan formats (/bln, /bulan, /mo, per bulan, cicilan, installment).
+    - Normalizes Rupiah format (removes decimal sen, dot separators, Rp/IDR tokens).
+    - Handles price ranges (extracts lower bound).
+    - Bounds checking: returns None if outside realistic range (Rp 50.000 - Rp 150.000.000).
+    """
+    if not raw_text or not isinstance(raw_text, str):
+        return None
+
+    actual_title = listing_title or title
+
+    # 1. Product relevance check
+    if actual_title:
+        title_lower = actual_title.lower()
+        accessory_keywords = [
+            "casing", "case ", " case", "silikon", "silicone",
+            "tempered glass", "anti gores", "antigores", "hydrogel",
+            "strap ", "strap", "tali jam", "charger only", "kabel charger", "kabel only", "adapter only"
+        ]
+        expected_lower = expected_product_name.lower() if expected_product_name else ""
+        if not any(k in expected_lower for k in ["case", "strap"]):
+            if any(k in title_lower for k in accessory_keywords):
+                return None
+
+    # 2. Reject installment / cicilan patterns
+    text_lower = raw_text.lower()
+    installment_patterns = ["/bln", "/bulan", "/mo", "per bulan", "cicilan", "installment", "/ bln", "/ bulan"]
+    if any(pat in text_lower for pat in installment_patterns):
+        return None
+
+    # 3. Handle price range (e.g. "Rp 18.000.000 - Rp 20.000.000")
+    if " - " in raw_text or " – " in raw_text or " — " in raw_text:
+        import re
+        parts = re.split(r'\s*[-–—]\s*', raw_text)
+        if parts:
+            raw_text = parts[0]
+
+    # 4. Normalize Rupiah string
+    import re
+    # Remove Rp or IDR prefix case-insensitively
+    cleaned = re.sub(r'(?i)(?:rp|idr)\.?\s*', '', raw_text).strip()
+    # Remove decimal sen suffix like ,00 or .00 at the end
+    cleaned = re.sub(r'[,.]\d{2}$', '', cleaned)
+    # Remove dots, commas, and whitespace
+    digits_only = re.sub(r'[\.,\s]', '', cleaned)
+
+    if not digits_only.isdigit():
+        return None
+
+    price = int(digits_only)
+
+    # 5. Sanity bounds check
+    if price < 50_000 or price > 150_000_000:
+        return None
+
+    return price
+
+
+
+# ──────────────────────────────────────────────
 # Scraping Helpers
 # ──────────────────────────────────────────────
 async def _scrape_tokopedia(product_name: str) -> Optional[MarketplacePrice]:
-    """Attempt to scrape Tokopedia search results."""
+    """Attempt to scrape Tokopedia search results with validation."""
     try:
         search_url = f"https://www.tokopedia.com/search?q={product_name.replace(' ', '+')}"
         async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(search_url)
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.text, "html.parser")
-                # Look for price elements
                 price_el = soup.select_one('[data-testid="spnSRPProdPrice"]')
+                title_el = soup.select_one('[data-testid="spnSRPProdName"]')
+                listing_title = title_el.text.strip() if title_el else ""
                 if price_el:
-                    price_text = price_el.text.replace("Rp", "").replace(".", "").strip()
-                    price = int(price_text)
-                    return MarketplacePrice(
-                        marketplace="Tokopedia",
-                        price=price,
-                        url=search_url,
-                        seller="Tokopedia Seller",
-                        available=True,
-                        source="scraped",
-                        captured_at=datetime.now(timezone.utc).isoformat()
+                    price = parse_marketplace_price(
+                        price_el.text,
+                        listing_title=listing_title,
+                        expected_product_name=product_name
                     )
+                    if price:
+                        return MarketplacePrice(
+                            marketplace="Tokopedia",
+                            price=price,
+                            url=search_url,
+                            seller="Tokopedia Seller",
+                            available=True,
+                            source="scraped",
+                            captured_at=datetime.now(timezone.utc).isoformat()
+                        )
     except Exception as e:
         logger.warning(f"Tokopedia scraping failed: {e}")
     return None
 
 
 async def _scrape_shopee(product_name: str) -> Optional[MarketplacePrice]:
-    """Attempt to scrape Shopee search results."""
+    """Attempt to scrape Shopee search results with validation."""
     try:
         search_url = f"https://shopee.co.id/search?keyword={product_name.replace(' ', '+')}"
         async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
@@ -202,25 +277,31 @@ async def _scrape_shopee(product_name: str) -> Optional[MarketplacePrice]:
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.text, "html.parser")
                 price_el = soup.select_one(".shopee-price")
+                title_el = soup.select_one(".shopee-search-item-result__item-name")
+                listing_title = title_el.text.strip() if title_el else ""
                 if price_el:
-                    price_text = price_el.text.replace("Rp", "").replace(".", "").strip()
-                    price = int(price_text)
-                    return MarketplacePrice(
-                        marketplace="Shopee",
-                        price=price,
-                        url=search_url,
-                        seller="Shopee Seller",
-                        available=True,
-                        source="scraped",
-                        captured_at=datetime.now(timezone.utc).isoformat()
+                    price = parse_marketplace_price(
+                        price_el.text,
+                        listing_title=listing_title,
+                        expected_product_name=product_name
                     )
+                    if price:
+                        return MarketplacePrice(
+                            marketplace="Shopee",
+                            price=price,
+                            url=search_url,
+                            seller="Shopee Seller",
+                            available=True,
+                            source="scraped",
+                            captured_at=datetime.now(timezone.utc).isoformat()
+                        )
     except Exception as e:
         logger.warning(f"Shopee scraping failed: {e}")
     return None
 
 
 async def _scrape_lazada(product_name: str) -> Optional[MarketplacePrice]:
-    """Attempt to scrape Lazada search results."""
+    """Attempt to scrape Lazada search results with validation."""
     try:
         search_url = f"https://www.lazada.co.id/catalog/?q={product_name.replace(' ', '+')}"
         async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
@@ -228,18 +309,24 @@ async def _scrape_lazada(product_name: str) -> Optional[MarketplacePrice]:
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.text, "html.parser")
                 price_el = soup.select_one(".price--NVB62")
+                title_el = soup.select_one(".title--wFj93")
+                listing_title = title_el.text.strip() if title_el else ""
                 if price_el:
-                    price_text = price_el.text.replace("Rp", "").replace(".", "").strip()
-                    price = int(price_text)
-                    return MarketplacePrice(
-                        marketplace="Lazada",
-                        price=price,
-                        url=search_url,
-                        seller="Lazada Seller",
-                        available=True,
-                        source="scraped",
-                        captured_at=datetime.now(timezone.utc).isoformat()
+                    price = parse_marketplace_price(
+                        price_el.text,
+                        listing_title=listing_title,
+                        expected_product_name=product_name
                     )
+                    if price:
+                        return MarketplacePrice(
+                            marketplace="Lazada",
+                            price=price,
+                            url=search_url,
+                            seller="Lazada Seller",
+                            available=True,
+                            source="scraped",
+                            captured_at=datetime.now(timezone.utc).isoformat()
+                        )
     except Exception as e:
         logger.warning(f"Lazada scraping failed: {e}")
     return None
@@ -252,6 +339,7 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
     """
     Attempt live scraping from all 3 marketplaces.
     Falls back to cached/realistic prices if scraping fails.
+    Deterministic fallback — NO random offsets.
     """
     now = datetime.now(WIB).strftime("%Y-%m-%d %H:%M:%S WIB")
     utc_now_iso = datetime.now(timezone.utc).isoformat()
@@ -276,23 +364,21 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
     fallback = FALLBACK_PRICES.get(product_id, [])
     for fb in fallback:
         if fb.marketplace not in scraped_marketplaces:
-            # Add small variation to simulate marketplace dynamics
-            variation = random.randint(-100000, 100000)
-            adjusted_price = max(fb.price + variation, 10000)
+            # Deterministic reference price from official/verified catalog
             prices.append(MarketplacePrice(
                 marketplace=fb.marketplace,
-                price=adjusted_price,
+                price=fb.price,
                 url=fb.url,
                 seller=fb.seller,
                 available=fb.available,
                 source="fallback",
-                captured_at=utc_now_iso
+                captured_at=None  # Explicitly null on API response for fallback
             ))
 
     # Sort by price ascending (best deal first)
     prices.sort(key=lambda p: p.price)
 
-    # Optional: Persist snapshot to database if repository is available
+    # Persist snapshot to database if repository is available
     try:
         from app.repositories.price_repo import save_price_snapshot
         for p in prices:
@@ -309,9 +395,12 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
     except Exception as e:
         logger.debug(f"Snapshot persistence skipped: {e}")
 
+    # Transparent last_updated label
+    last_updated_label = now if len(scraped_marketplaces) > 0 else "Data acuan fallback (Belum diverifikasi live)"
+
     return PriceResponse(
         product_id=product_id,
         product_name=product_name,
         prices=prices,
-        last_updated=now
+        last_updated=last_updated_label
     )

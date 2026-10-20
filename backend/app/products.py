@@ -15,7 +15,7 @@ PRODUCTS: list[Product] = [
         name="Samsung Galaxy S24 Ultra",
         brand="Samsung",
         category=ProductCategory.SMARTPHONE,
-        price=19999000,
+        price=21999000,
         image="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&auto=format&fit=crop&q=80",
         description="Flagship Samsung dengan S Pen, kamera 200MP, dan layar Dynamic AMOLED 2X terbaik di kelasnya.",
         specs=ProductSpecs(
@@ -72,7 +72,7 @@ PRODUCTS: list[Product] = [
         name="iPhone 15 Pro Max",
         brand="Apple",
         category=ProductCategory.SMARTPHONE,
-        price=22499000,
+        price=24999000,
         image="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80",
         description="iPhone termahal dengan chip A17 Pro, kamera periscope 5x, dan body titanium premium.",
         specs=ProductSpecs(
@@ -243,7 +243,7 @@ PRODUCTS: list[Product] = [
         name="POCO X6 Pro 5G",
         brand="POCO",
         category=ProductCategory.SMARTPHONE,
-        price=3999000,
+        price=4999000,
         image="https://images.unsplash.com/photo-1567581935884-3349723552ca?w=600&auto=format&fit=crop&q=80",
         description="Mid-range killer dengan Dimensity 8300 Ultra, layar AMOLED 120Hz, dan pengisian daya 67W.",
         specs=ProductSpecs(
@@ -304,7 +304,7 @@ PRODUCTS: list[Product] = [
         name="MacBook Air M3",
         brand="Apple",
         category=ProductCategory.LAPTOP,
-        price=18499000,
+        price=18999000,
         image="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80",
         description="Laptop ultraportable Apple dengan chip M3, fanless design, dan baterai hingga 18 jam.",
         specs=ProductSpecs(
@@ -647,7 +647,7 @@ PRODUCTS: list[Product] = [
         name="Apple AirPods Pro 2 (USB-C)",
         brand="Apple",
         category=ProductCategory.TWS,
-        price=3799000,
+        price=3999000,
         image="https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&auto=format&fit=crop&q=80",
         description="TWS premium Apple dengan ANC terbaik di kelasnya, Adaptive Audio, dan USB-C.",
         specs=ProductSpecs(
@@ -699,7 +699,7 @@ PRODUCTS: list[Product] = [
         name="Sony WF-1000XM5",
         brand="Sony",
         category=ProductCategory.TWS,
-        price=4299000,
+        price=4399000,
         image="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&auto=format&fit=crop&q=80",
         description="TWS audiophile-grade Sony dengan ANC terbaik, LDAC support, dan suara Hi-Res.",
         specs=ProductSpecs(
@@ -807,7 +807,7 @@ PRODUCTS: list[Product] = [
         name="Apple Watch Ultra 2",
         brand="Apple",
         category=ProductCategory.SMARTWATCH,
-        price=13999000,
+        price=15999000,
         image="https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600&auto=format&fit=crop&q=80",
         description="Smartwatch paling tangguh Apple untuk adventure & diving dengan layar 2000 nits.",
         specs=ProductSpecs(
@@ -917,7 +917,7 @@ PRODUCTS: list[Product] = [
         name="Samsung Galaxy A55 5G",
         brand="Samsung",
         category=ProductCategory.SMARTPHONE,
-        price=5499000,
+        price=6499000,
         image="https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&auto=format&fit=crop&q=80",
         description="Mid-range Samsung terbaik dengan layar Super AMOLED 120Hz, Exynos 1480, dan IP67.",
         specs=ProductSpecs(

@@ -5,6 +5,40 @@ import { ShoppingBag, ExternalLink, RefreshCw, Sparkles, TrendingDown, DollarSig
 import { getLiveMarketplacePrices } from '@/lib/api';
 import PriceTag from '@/components/ui/PriceTag';
 
+const PRICE_STATUS_MAP = {
+  // 1. MSRP Peluncuran Resmi (3 SKU dengan bukti siaran pers peluncuran resmi Indonesia)
+  'sm-001': 'MSRP Peluncuran Resmi (Samsung Indonesia)',
+  'sm-005': 'MSRP Peluncuran Resmi (Xiaomi/POCO Indonesia)',
+  'sm-006': 'MSRP Peluncuran Resmi (Samsung Indonesia)',
+
+  // 2. Harga Ritel Resmi Terkini (5 SKU dengan bukti listing toko ritel resmi/distributor)
+  'sm-002': 'Harga Ritel Resmi Terkini (iBox / Digimap ID)',
+  'lp-001': 'Harga Ritel Resmi Terkini (iBox / Digimap ID)',
+  'tw-001': 'Harga Ritel Resmi Terkini (iBox / Digimap ID)',
+  'tw-002': 'Harga Ritel Resmi Terkini (Sony Indonesia)',
+  'sw-001': 'Harga Ritel Resmi Terkini (iBox / Digimap ID)',
+
+  // 3. Harga Resmi Historis (Samsung Newsroom ID - Rilis 17 Juli 2024)
+  'tw-003': 'Harga Resmi Historis (Samsung Newsroom ID - Rilis 2024)',
+
+  // 4. Harga Ritel Observasi Toko Resmi (5 SKU)
+  'lp-002': 'Harga Ritel Observasi (Toko Resmi ID)',
+  'lp-005': 'Harga Ritel Observasi (Toko Resmi ID)',
+  'tb-002': 'Harga Ritel Observasi (Toko Resmi ID)',
+  'sw-002': 'Harga Ritel Observasi (Toko Resmi ID)',
+  'sw-003': 'Harga Ritel Observasi (Toko Resmi ID)',
+
+  // 5. Pasar Impor / Non-ATPM Resmi (2 SKU)
+  'sm-003': 'Harga Acuan Pasar Impor (Non-ATPM Resmi)',
+  'sm-004': 'Harga Acuan Pasar Impor (Non-ATPM Resmi)',
+
+  // 6. Harga Acuan Katalog Belum Terverifikasi (4 SKU)
+  'tb-001': 'Harga Acuan Katalog (Belum Terverifikasi)',
+  'lp-003': 'Harga Acuan Katalog (Belum Terverifikasi)',
+  'lp-004': 'Harga Acuan Katalog (Belum Terverifikasi)',
+  'tw-004': 'Harga Acuan Katalog (Belum Terverifikasi)',
+};
+
 export default function TabValue({ product }) {
   const [pricingData, setPricingData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,19 +68,30 @@ export default function TabValue({ product }) {
 
   if (!product) return null;
 
+  const priceLabel = PRICE_STATUS_MAP[product.id] || 'Harga Acuan Katalog (Belum Terverifikasi)';
+
   // MSRP vs Best Marketplace Deal
   const prices = pricingData?.prices || [];
-  const lowestPrice = prices.length > 0 ? Math.min(...prices.map((p) => p.price)) : product.price;
-  const lowestOffer = prices.find((offer) => offer.price === lowestPrice);
-  const potentialSavings = lowestOffer?.source === 'scraped'
-    ? Math.max(0, product.price - lowestPrice)
+  
+  // Pisahkan penawaran terverifikasi live (scraped) dari data acuan simulasi/fallback
+  const verifiedOffers = prices.filter((offer) => offer.source === 'scraped');
+  const hasVerifiedOffers = verifiedOffers.length > 0;
+  
+  const verifiedLowestPrice = hasVerifiedOffers
+    ? Math.min(...verifiedOffers.map((p) => p.price))
+    : null;
+    
+  // Potensi hemat HANYA dihitung jika ada penawaran live terverifikasi
+  const potentialSavings = hasVerifiedOffers && verifiedLowestPrice < product.price
+    ? product.price - verifiedLowestPrice
     : 0;
+
   const sourceLabel = prices.length === 0
     ? 'Belum ada penawaran'
     : prices.every((offer) => offer.source === 'scraped')
-      ? 'Hasil scraping'
+      ? 'Hasil scraping live'
       : prices.every((offer) => offer.source === 'fallback')
-        ? 'Data fallback'
+        ? 'Data acuan fallback (Belum diverifikasi live)'
         : 'Scraping dan fallback';
 
   return (
@@ -79,24 +124,43 @@ export default function TabValue({ product }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">
-            Harga Ritel Resmi (MSRP Indonesia)
+            {priceLabel}
           </span>
           <PriceTag price={product.price} size="lg" className="text-slate-600 dark:text-slate-400" />
         </div>
 
-        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-300 dark:border-emerald-800/80">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
-              Harga Marketplace Terendah
-            </span>
-            {potentialSavings > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white">
-                Hemat Rp {potentialSavings.toLocaleString('id-ID')}
+        {hasVerifiedOffers ? (
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-300 dark:border-emerald-800/80">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                Harga Marketplace Terendah (Terverifikasi)
               </span>
-            )}
+              {potentialSavings > 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white">
+                  Hemat Rp {potentialSavings.toLocaleString('id-ID')}
+                </span>
+              )}
+            </div>
+            <PriceTag price={verifiedLowestPrice} size="lg" className="text-emerald-700 dark:text-emerald-300" />
           </div>
-          <PriceTag price={lowestPrice} size="lg" className="text-emerald-700 dark:text-emerald-300" />
-        </div>
+        ) : (
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Penawaran Live Terverifikasi
+              </span>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                Belum Tersedia
+              </span>
+            </div>
+            <div className="text-sm font-semibold text-slate-600 dark:text-slate-300 mt-2">
+              Mode Acuan Offline (Fallback)
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+              Penawaran marketplace live belum terverifikasi secara real-time. Tidak dihitung ke potensi hemat.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Live Marketplace Comparison Cards */}
@@ -118,7 +182,8 @@ export default function TabValue({ product }) {
         ) : (
           <div className="space-y-2.5">
             {prices.map((item, idx) => {
-              const isLowest = item.price === lowestPrice;
+              const isVerifiedScraped = item.source === 'scraped';
+              const isLowest = isVerifiedScraped && item.price === verifiedLowestPrice;
 
               // Marketplace brand colors
               let badgeColor = 'bg-emerald-500 text-white';
@@ -148,8 +213,12 @@ export default function TabValue({ product }) {
                         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                           {item.seller}
                         </span>
-                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                          {item.source === 'scraped' ? 'Hasil scraping' : 'Fallback'}
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
+                          isVerifiedScraped
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                            : 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                        }`}>
+                          {isVerifiedScraped ? 'Terverifikasi Live' : 'Data Acuan Fallback'}
                         </span>
                         {isLowest && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
@@ -158,11 +227,9 @@ export default function TabValue({ product }) {
                         )}
                       </div>
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {item.source !== 'scraped'
-                          ? 'Ketersediaan belum diverifikasi'
-                          : item.available
-                            ? 'Harga terdeteksi; periksa stok di toko'
-                            : 'Tidak tersedia'}
+                        {isVerifiedScraped
+                          ? (item.available ? 'Harga terdeteksi; periksa stok di toko' : 'Tidak tersedia')
+                          : 'Estimasi acuan statis (Belum diverifikasi live ke toko)'}
                       </span>
                     </div>
                   </div>

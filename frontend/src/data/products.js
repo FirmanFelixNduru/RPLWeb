@@ -10,7 +10,7 @@ export const PRODUCTS = [
     name: "Samsung Galaxy S24 Ultra",
     brand: "Samsung",
     category: "smartphone",
-    price: 19999000,
+    price: 21999000,
     image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&auto=format&fit=crop&q=80",
     description: "Flagship Samsung dengan S Pen, kamera 200MP, dan layar Dynamic AMOLED 2X terbaik di kelasnya.",
     specs: {
@@ -77,7 +77,7 @@ export const PRODUCTS = [
     name: "iPhone 15 Pro Max",
     brand: "Apple",
     category: "smartphone",
-    price: 22499000,
+    price: 24999000,
     image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80",
     description: "iPhone tercanggih dengan rangka titanium kelas dirgantara, chip A17 Pro 3nm, dan kamera telefoto 5x.",
     specs: {
@@ -276,7 +276,7 @@ export const PRODUCTS = [
     name: "POCO X6 Pro 5G",
     brand: "POCO",
     category: "smartphone",
-    price: 3999000,
+    price: 4999000,
     image: "https://images.unsplash.com/photo-1567581935884-3349723552ca?w=600&auto=format&fit=crop&q=80",
     description: "Performa monster termurah dengan chipset MediaTek Dimensity 8300-Ultra, layar CrystalRes 120Hz, dan 67W Turbo.",
     specs: {
@@ -342,7 +342,7 @@ export const PRODUCTS = [
     name: "Samsung Galaxy A55 5G",
     brand: "Samsung",
     category: "smartphone",
-    price: 5499000,
+    price: 6499000,
     image: "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&auto=format&fit=crop&q=80",
     description: "Pilihan paling seimbang dengan rangka metal premium, sertifikasi IP67 tahan air, dan update OS hingga 4 tahun.",
     specs: {
@@ -410,7 +410,7 @@ export const PRODUCTS = [
     name: "MacBook Air M3",
     brand: "Apple",
     category: "laptop",
-    price: 18499000,
+    price: 18999000,
     image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80",
     description: "Laptop ultraportable terpopuler di dunia dengan arsitektur chip M3 3nm, desain tanpa kipas (hening total), dan baterai 18 jam.",
     specs: {
@@ -872,7 +872,7 @@ export const PRODUCTS = [
     name: "Apple AirPods Pro 2 (USB-C)",
     brand: "Apple",
     category: "tws",
-    price: 3799000,
+    price: 3999000,
     image: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&auto=format&fit=crop&q=80",
     description: "TWS kelas rujukan dengan Active Noise Cancellation 2x lebih senyap, mode Transparansi Adaptif, dan charging case USB-C MagSafe.",
     specs: {
@@ -933,7 +933,7 @@ export const PRODUCTS = [
     name: "Sony WF-1000XM5",
     brand: "Sony",
     category: "tws",
-    price: 4299000,
+    price: 4399000,
     image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&auto=format&fit=crop&q=80",
     description: "Mahakarya audio nirkabel Sony dengan chip Integrated Processor V2, driver Dynamic Driver X 8.4mm, dan dukungan codec Hi-Res LDAC.",
     specs: {
@@ -1118,7 +1118,7 @@ export const PRODUCTS = [
     name: "Apple Watch Ultra 2",
     brand: "Apple",
     category: "smartwatch",
-    price: 13999000,
+    price: 15999000,
     image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600&auto=format&fit=crop&q=80",
     description: "Jam tangan pintar petualangan paling tangguh dengan bodi titanium 49mm, layar 3000 nits, GPS frekuensi ganda presisi tinggi, dan ketahanan menyelam 40 meter.",
     specs: {

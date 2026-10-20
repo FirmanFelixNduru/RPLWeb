@@ -233,7 +233,8 @@ class TestGetLivePrices(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(prices, sorted(prices))
 
     async def test_response_metadata_matches_request(self):
-        """Metadata respons sesuai dengan permintaan."""
+        """Metadata respons sesuai dengan permintaan, jujur menandai fallback vs live scraped."""
+        # 1. Kasus fallback murni: last_updated menandai data referensi dan captured_at is None
         with _no_snapshot(), \
              patch.object(scraper, "_scrape_tokopedia", AsyncMock(return_value=None)), \
              patch.object(scraper, "_scrape_shopee", AsyncMock(return_value=None)), \
@@ -241,7 +242,101 @@ class TestGetLivePrices(unittest.IsolatedAsyncioTestCase):
             result = await get_live_prices("sw-001", "Apple Watch Ultra 2")
         self.assertEqual(result.product_id, "sw-001")
         self.assertEqual(result.product_name, "Apple Watch Ultra 2")
-        self.assertTrue(result.last_updated.endswith("WIB"))
+        self.assertEqual(result.last_updated, "Data acuan fallback (Belum diverifikasi live)")
+        for p in result.prices:
+            self.assertIsNone(p.captured_at, msg="Fallback offer harus memiliki captured_at: None")
+
+        # 2. Kasus ada data scraped sungguhan: last_updated berakhiran WIB
+        scraped = _scraped_price("Tokopedia", 15500000, "https://www.tokopedia.com/search?q=apple+watch+ultra+2")
+        with _no_snapshot(), \
+             patch.object(scraper, "_scrape_tokopedia", AsyncMock(return_value=scraped)), \
+             patch.object(scraper, "_scrape_shopee", AsyncMock(return_value=None)), \
+             patch.object(scraper, "_scrape_lazada", AsyncMock(return_value=None)):
+            scraped_result = await get_live_prices("sw-001", "Apple Watch Ultra 2")
+        self.assertTrue(scraped_result.last_updated.endswith("WIB"))
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Test Suite 4 — Robust Price Parser & Rejection (Revisi 5)
+# ═══════════════════════════════════════════════════════════════════
+class TestPriceParser(unittest.TestCase):
+    """Pengujian parser harga: normalisasi Rupiah, penolakan cicilan, penanganan rentang, dan filter aksesoris."""
+
+    def test_parse_standard_rupiah_formats(self):
+        """Format standar Rp, titik ribuan, atau koma desimal diparsing dengan benar."""
+        from app.scraper import parse_marketplace_price
+        self.assertEqual(parse_marketplace_price("Rp 21.999.000"), 21999000)
+        self.assertEqual(parse_marketplace_price("Rp21999000"), 21999000)
+        self.assertEqual(parse_marketplace_price("21.999.000"), 21999000)
+        self.assertEqual(parse_marketplace_price("Rp 4.999.000,00"), 4999000)
+        self.assertEqual(parse_marketplace_price("IDR 6.499.000"), 6499000)
+
+    def test_parse_price_range_takes_lower_bound(self):
+        """Rentang harga mengambil batas bawah yang valid."""
+        from app.scraper import parse_marketplace_price
+        self.assertEqual(parse_marketplace_price("Rp 4.500.000 - Rp 5.000.000"), 4500000)
+        self.assertEqual(parse_marketplace_price("3.500.000 - 4.000.000"), 3500000)
+
+    def test_reject_installments(self):
+        """Format cicilan bulanan ditolak demi mencegah misleading low price."""
+        from app.scraper import parse_marketplace_price
+        self.assertIsNone(parse_marketplace_price("Rp 1.500.000 / bln"))
+        self.assertIsNone(parse_marketplace_price("Rp 500.000 /bulan"))
+        self.assertIsNone(parse_marketplace_price("Cicilan Rp 350.000 / bln"))
+        self.assertIsNone(parse_marketplace_price("Rp 1.200.000/bln"))
+
+    def test_reject_irrelevant_accessories_in_title(self):
+        """Aksesoris seperti casing, kabel, strap, tempered glass ditolak saat validasi judul."""
+        from app.scraper import parse_marketplace_price
+        # Judul aksesoris ditolak
+        self.assertIsNone(parse_marketplace_price("Rp 150.000", title="Casing Silicone Samsung S24 Ultra"))
+        self.assertIsNone(parse_marketplace_price("Rp 85.000", title="Tempered Glass iPhone 15 Pro Max"))
+        self.assertIsNone(parse_marketplace_price("Rp 250.000", title="Strap Apple Watch Ultra 2 Trail Loop"))
+        self.assertIsNone(parse_marketplace_price("Rp 99.000", title="Kabel Charger Type C to C 60W"))
+        # Judul produk perangkat utama diterima
+        self.assertEqual(
+            parse_marketplace_price("Rp 21.999.000", title="Samsung Galaxy S24 Ultra 12/256GB Garansi Resmi"),
+            21999000
+        )
+
+    def test_reject_out_of_bounds_prices(self):
+        """Harga di luar batas wajar (< 50.000 atau > 150.000.000) ditolak."""
+        from app.scraper import parse_marketplace_price
+        self.assertIsNone(parse_marketplace_price("Rp 15.000"))
+        self.assertIsNone(parse_marketplace_price("Rp 250.000.000"))
+
+    def test_invalid_and_empty_inputs(self):
+        """Input kosong atau bukan angka menghasilkan None."""
+        from app.scraper import parse_marketplace_price
+        self.assertIsNone(parse_marketplace_price(""))
+        self.assertIsNone(parse_marketplace_price(None))
+        self.assertIsNone(parse_marketplace_price("Stok Habis"))
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Test Suite 5 — Determinisme Fallback Tanpa Random Variation (Revisi 5)
+# ═══════════════════════════════════════════════════════════════════
+class TestFallbackDeterminism(unittest.IsolatedAsyncioTestCase):
+    """Memastikan harga fallback tidak lagi menggunakan variasi acak (random.randint)."""
+
+    async def test_fallback_prices_are_strictly_deterministic(self):
+        """Panggilan berulang ke get_live_prices saat fallback selalu menghasilkan harga identik."""
+        with _no_snapshot(), \
+             patch.object(scraper, "_scrape_tokopedia", AsyncMock(return_value=None)), \
+             patch.object(scraper, "_scrape_shopee", AsyncMock(return_value=None)), \
+             patch.object(scraper, "_scrape_lazada", AsyncMock(return_value=None)):
+            
+            run1 = await get_live_prices("sm-001", "Samsung Galaxy S24 Ultra")
+            run2 = await get_live_prices("sm-001", "Samsung Galaxy S24 Ultra")
+            run3 = await get_live_prices("sm-001", "Samsung Galaxy S24 Ultra")
+
+        prices1 = [(p.marketplace, p.price) for p in run1.prices]
+        prices2 = [(p.marketplace, p.price) for p in run2.prices]
+        prices3 = [(p.marketplace, p.price) for p in run3.prices]
+
+        self.assertEqual(prices1, prices2)
+        self.assertEqual(prices2, prices3)
+
 
 
 if __name__ == "__main__":
