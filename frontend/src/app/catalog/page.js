@@ -6,8 +6,10 @@ import { getProducts } from '@/lib/api';
 import ProductCard from '@/components/catalog/ProductCard';
 import SearchBar from '@/components/catalog/SearchBar';
 import FilterPanel from '@/components/catalog/FilterPanel';
+import { useCompare } from '@/context/CompareContext';
 
 export default function CatalogPage() {
+  const { compareList } = useCompare();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +101,7 @@ export default function CatalogPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 ${compareList.length > 0 ? 'pb-32 sm:pb-24' : ''}`}>
       {/* Header Title */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
