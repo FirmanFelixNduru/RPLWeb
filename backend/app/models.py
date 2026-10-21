@@ -228,12 +228,28 @@ class CompareRequest(BaseModel):
 class SpecHighlight(BaseModel):
     spec_name: str
     values: dict[str, str]  # product_id → value
-    best_product_id: str
+    best_product_id: str = ""
+    best_product_ids: list[str] = Field(default_factory=list)
+    is_tie: bool = False
+
+
+class SectorWinSummary(BaseModel):
+    product_id: str
+    product_name: str
+    win_count: int
+    winning_sectors: list[str] = Field(default_factory=list)
+    tied_sectors: list[str] = Field(default_factory=list)
+    solo_wins: int = 0
+    shared_wins: int = 0
 
 
 class CompareResponse(BaseModel):
     products: list[Product]
     highlights: list[SpecHighlight]
+    is_same_category: bool = True
+    category: Optional[str] = None
+    win_summary: list[SectorWinSummary] = Field(default_factory=list)
+    tied_sectors_summary: list[str] = Field(default_factory=list)
 
 
 # ──────────────────────────────────────────────

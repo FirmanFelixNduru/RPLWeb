@@ -134,6 +134,9 @@ export default function ComparePage() {
         <ComparisonMatrix
           products={comparisonData?.products || compareList}
           highlights={comparisonData?.highlights || []}
+          isSameCategory={comparisonData?.is_same_category}
+          winSummary={comparisonData?.win_summary}
+          tiedSectorsSummary={comparisonData?.tied_sectors_summary}
         />
       )}
     </div>

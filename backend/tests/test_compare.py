@@ -21,7 +21,10 @@ from app.routers.compare import (
     _extract_numeric,
     _higher_is_better,
     _determine_best,
+    _determine_best_with_ties,
 )
+from app.scoring import calculate_scores
+from app.models import WizardInput, ProductCategory, UsageScenario
 
 client = TestClient(app)
 
@@ -432,6 +435,314 @@ class TestExtractNumericRegression(unittest.TestCase):
             "sm-003": "Rp 12.999.000",
         }
         self.assertEqual(_determine_best("price", values), "sm-003")
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Test Suite 7 — Revisi 10: Auto-Highlighting, Win-Count, & Normalisasi
+# ═══════════════════════════════════════════════════════════════════
+class TestCompareRevision10Features(unittest.TestCase):
+    """Pengujian komprehensif fitur Revisi 10 Compare Score & Auto-Highlighting."""
+
+    def test_storage_1tb_beats_512gb(self):
+        """Storage 1 TB dinormalisasi menjadi 1024 GB dan mengalahkan 512 GB."""
+        self.assertEqual(_extract_numeric("1 TB SSD", "storage"), 1024.0)
+        self.assertEqual(_extract_numeric("512 GB SSD", "storage"), 512.0)
+        best_id, winners, is_tie = _determine_best_with_ties("storage", {
+            "p1": "1 TB NVMe SSD",
+            "p2": "512 GB NVMe SSD"
+        })
+        self.assertEqual(best_id, "p1")
+        self.assertEqual(winners, ["p1"])
+        self.assertFalse(is_tie)
+
+    def test_weight_kg_vs_g_normalization(self):
+        """Bobot 1.4 kg dinormalisasi menjadi 1400 g; 232 g menang karena lower-is-better."""
+        self.assertEqual(_extract_numeric("1.4 kg", "weight"), 1400.0)
+        self.assertEqual(_extract_numeric("232 g", "weight"), 232.0)
+        best_id, winners, is_tie = _determine_best_with_ties("weight", {
+            "p_heavy": "1.4 kg",
+            "p_light": "232 g"
+        })
+        self.assertEqual(best_id, "p_light")
+        self.assertEqual(winners, ["p_light"])
+        self.assertFalse(is_tie)
+
+    def test_descriptive_fields_do_not_extract_arbitrary_numbers(self):
+        """Field deskriptif tidak boleh mengekstrak angka acak dari teks."""
+        descriptive_cases = [
+            ("processor", "Snapdragon 8 Gen 3"),
+            ("os", "Windows 11 Home 64-bit"),
+            ("ports", "2x Thunderbolt 4, 1x HDMI 2.1"),
+            ("build_material", "Titanium frame with Gorilla Glass Victus 2"),
+            ("connectivity", "Wi-Fi 7, Bluetooth 5.4"),
+            ("special_features", "S-Pen support, IP68 water resistance"),
+            ("sensors", "Fingerprint (under display, ultrasonic), accelerometer")
+        ]
+        for field, text in descriptive_cases:
+            self.assertIsNone(_extract_numeric(text, field), f"Field {field} mengekstrak angka dari '{text}'")
+
+        best_id, winners, is_tie = _determine_best_with_ties("processor", {
+            "p1": "Intel Core i9 14900HX",
+            "p2": "Apple M3 Max"
+        })
+        self.assertIsNone(best_id)
+        self.assertEqual(winners, [])
+        self.assertFalse(is_tie)
+
+    def test_incompatible_battery_units_return_none(self):
+        """Baterai dengan satuan tidak sepadan (mAh vs Wh) tidak boleh dibandingkan."""
+        best_id, winners, is_tie = _determine_best_with_ties("battery", {
+            "p_phone": "5000 mAh",
+            "p_laptop": "52.6 Wh"
+        })
+        self.assertIsNone(best_id)
+        self.assertEqual(winners, [])
+        self.assertFalse(is_tie)
+
+        # Satuan yang sama tetap dapat dibandingkan
+        best_mah, _, _ = _determine_best_with_ties("battery", {
+            "p1": "5000 mAh",
+            "p2": "4500 mAh"
+        })
+        self.assertEqual(best_mah, "p1")
+
+        best_wh, _, _ = _determine_best_with_ties("battery", {
+            "l1": "73 Wh",
+            "l2": "90 Wh"
+        })
+        self.assertEqual(best_wh, "l2")
+
+    def test_empty_and_single_and_zero_values(self):
+        """Penanganan nilai kosong, placeholder dash, data tunggal, dan nilai nol."""
+        # Semua kosong
+        best_id, winners, is_tie = _determine_best_with_ties("storage", {
+            "p1": "",
+            "p2": "—",
+            "p3": "N/A"
+        })
+        self.assertIsNone(best_id)
+        self.assertEqual(winners, [])
+        self.assertFalse(is_tie)
+
+        # Satu produk valid, lainnya kosong
+        best_id, winners, is_tie = _determine_best_with_ties("storage", {
+            "p1": "512 GB",
+            "p2": "—",
+            "p3": ""
+        })
+        self.assertEqual(best_id, "p1")
+        self.assertEqual(winners, ["p1"])
+        self.assertFalse(is_tie)
+
+        # Nilai numerik 0
+        self.assertEqual(_extract_numeric("0 GB"), 0.0)
+
+    def test_tie_highlight_and_shared_win(self):
+        """Highlight seri: produk dengan nilai tertinggi sama mendapat status tie, best_product_id kosong,
+        dan setiap produk seri memperoleh +1 shared win di win-count."""
+        best_id, winners, is_tie = _determine_best_with_ties("ram", {
+            "p1": "16 GB",
+            "p2": "16 GB",
+            "p3": "8 GB"
+        })
+        self.assertTrue(is_tie)
+        self.assertEqual(set(winners), {"p1", "p2"})
+        self.assertEqual(best_id, "")  # Poin 1: kosongkan saat seri!
+
+        # Uji via endpoint /api/compare untuk produk dengan refresh rate sama (120 Hz)
+        res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        rr_h = next((h for h in data["highlights"] if h["spec_name"] == "refresh_rate"), None)
+        if rr_h and len(rr_h["best_product_ids"]) > 1:
+            self.assertTrue(rr_h["is_tie"])
+            self.assertEqual(rr_h["best_product_id"], "")  # Poin 1: kosongkan saat seri!
+            self.assertIn("sm-001", rr_h["best_product_ids"])
+            self.assertIn("sm-002", rr_h["best_product_ids"])
+
+        # Uji shared wins pada dimensi kinerja: tw-001 dan tw-002 memiliki score_performance = 70 (seri)
+        res_tws = client.post("/api/compare", json={"product_ids": ["tw-001", "tw-002"]})
+        self.assertEqual(res_tws.status_code, 200)
+        d_tws = res_tws.json()
+
+        perf_h = next((h for h in d_tws["highlights"] if h["spec_name"] == "Skor Performa"), None)
+        self.assertIsNotNone(perf_h)
+        self.assertTrue(perf_h["is_tie"])
+        self.assertEqual(perf_h["best_product_id"], "")
+        self.assertEqual(set(perf_h["best_product_ids"]), {"tw-001", "tw-002"})
+
+        # Verifikasi win_summary: kedua produk memperoleh +1 shared win untuk Skor Performa
+        w_map = {w["product_id"]: w for w in d_tws["win_summary"]}
+        self.assertIn("tw-001", w_map)
+        self.assertIn("tw-002", w_map)
+
+        tw1_summary = w_map["tw-001"]
+        tw2_summary = w_map["tw-002"]
+
+        self.assertIn("Skor Performa (Seri)", tw1_summary["tied_sectors"])
+        self.assertIn("Skor Performa (Seri)", tw2_summary["tied_sectors"])
+        self.assertEqual(tw1_summary["shared_wins"], 1)
+        self.assertEqual(tw2_summary["shared_wins"], 1)
+
+        # win_count = solo_wins + shared_wins
+        self.assertEqual(tw1_summary["win_count"], tw1_summary["solo_wins"] + tw1_summary["shared_wins"])
+        self.assertEqual(tw2_summary["win_count"], tw2_summary["solo_wins"] + tw2_summary["shared_wins"])
+
+        # Akumulasi total win_count (4 + 3 = 7) melampaui jumlah 6 sektor fisik unik TWS
+        total_wins = tw1_summary["win_count"] + tw2_summary["win_count"]
+        self.assertEqual(total_wins, 7)
+        self.assertGreater(total_wins, 6)
+
+        # Ringkasan transparan menyebutkan sektor seri
+        self.assertTrue(any("Skor Performa: Seri" in s for s in d_tws["tied_sectors_summary"]))
+
+    def test_dimension_relevance_tws(self):
+        """Kategori TWS: Kamera dan Layar tidak berlaku ('— (Tidak Berlaku)') dan tidak dihitung win."""
+        res = client.post("/api/compare", json={"product_ids": ["tw-001", "tw-002"]})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        dim_h = {h["spec_name"]: h for h in data["highlights"]}
+
+        self.assertIn("Skor Kamera", dim_h)
+        self.assertEqual(dim_h["Skor Kamera"]["values"]["tw-001"], "— (Tidak Berlaku)")
+        self.assertEqual(dim_h["Skor Kamera"]["best_product_id"], "")
+        self.assertEqual(dim_h["Skor Kamera"]["best_product_ids"], [])
+
+        self.assertIn("Skor Layar", dim_h)
+        self.assertEqual(dim_h["Skor Layar"]["values"]["tw-001"], "— (Tidak Berlaku)")
+        self.assertEqual(dim_h["Skor Layar"]["best_product_id"], "")
+        self.assertEqual(dim_h["Skor Layar"]["best_product_ids"], [])
+
+        for summary in data["win_summary"]:
+            self.assertNotIn("Skor Kamera", summary["winning_sectors"])
+            self.assertNotIn("Skor Layar", summary["winning_sectors"])
+
+    def test_dimension_relevance_smartwatch(self):
+        """Kategori Smartwatch: Kamera tidak berlaku, namun Layar tetap berlaku."""
+        res = client.post("/api/compare", json={"product_ids": ["sw-001", "sw-002"]})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        dim_h = {h["spec_name"]: h for h in data["highlights"]}
+
+        self.assertIn("Skor Kamera", dim_h)
+        self.assertEqual(dim_h["Skor Kamera"]["values"]["sw-001"], "— (Tidak Berlaku)")
+        self.assertEqual(dim_h["Skor Kamera"]["best_product_id"], "")
+        self.assertEqual(dim_h["Skor Kamera"]["best_product_ids"], [])
+
+        self.assertIn("Skor Layar", dim_h)
+        self.assertNotEqual(dim_h["Skor Layar"]["values"]["sw-001"], "— (Tidak Berlaku)")
+
+    def test_cross_category_comparison_no_universal_winner(self):
+        """Komparasi lintas kategori: tidak ada pemenang universal dan win_summary kosong."""
+        res = client.post("/api/compare", json={"product_ids": ["lp-001", "sm-001"]})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+
+        self.assertFalse(data["is_same_category"])
+        self.assertEqual(data["win_summary"], [])
+
+        for h in data["highlights"]:
+            if h["spec_name"].startswith("Skor "):
+                self.assertEqual(h["best_product_id"], "")
+                self.assertEqual(h["best_product_ids"], [])
+
+    def test_price_cross_category_and_verification_rules(self):
+        """Komparasi lintas kategori tidak boleh menetapkan pemenang harga universal; data varian tetap utuh."""
+        res = client.post("/api/compare", json={"product_ids": ["lp-001", "sm-001"]})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        price_h = next((h for h in data["highlights"] if h["spec_name"] == "Harga (IDR)"), None)
+        self.assertIsNotNone(price_h)
+        self.assertEqual(price_h["best_product_id"], "")
+        self.assertEqual(price_h["best_product_ids"], [])
+
+    def test_price_tie_clears_best_product_id(self):
+        """Poin 1: Seri harga (sm-003 & sm-004 @ Rp 14.999.000) mengosongkan best_product_id dan mengisi best_product_ids."""
+        res = client.post("/api/compare", json={"product_ids": ["sm-003", "sm-004"]})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        price_h = next((h for h in data["highlights"] if h["spec_name"] == "Harga (IDR)"), None)
+        self.assertIsNotNone(price_h)
+        self.assertTrue(price_h["is_tie"])
+        self.assertEqual(price_h["best_product_id"], "")
+        self.assertEqual(set(price_h["best_product_ids"]), {"sm-003", "sm-004"})
+
+    def test_price_eligibility_and_configuration_comparability(self):
+        """Poin 3: Verifikasi bahwa harga tidak mendapat highlight termurah bila unverified atau konfigurasi berbeda."""
+        import subprocess
+        import json
+        node_script = """
+        const fs = require('fs');
+        const content = fs.readFileSync('frontend/src/components/compare/ComparisonMatrix.js', 'utf8');
+        const match = content.match(/export function checkPriceHighlightEligibility[\\s\\S]*?\\n\\}/);
+        if (!match) throw new Error("checkPriceHighlightEligibility not found");
+        eval(match[0].replace('export function', 'function'));
+
+        const results = {
+            unverified_acer: checkPriceHighlightEligibility([
+                { id: 'lp-004', price: 8499000, specs: { base_configuration: '8 GB RAM', variants_note: 'belum terverifikasi' } },
+                { id: 'lp-001', price: 29999000, specs: { base_configuration: '32 GB RAM' } }
+            ], true),
+            import_pixel: checkPriceHighlightEligibility([
+                { id: 'sm-003', price: 14999000, specs: { base_configuration: '12 GB RAM / 128 GB' }, warranty: { warranty_type: 'impor non-ATPM' } },
+                { id: 'sm-001', price: 21999000, specs: { base_configuration: '12 GB RAM / 256 GB' } }
+            ], true),
+            diff_ram: checkPriceHighlightEligibility([
+                { id: 'p1', price: 10000000, specs: { base_configuration: '8 GB RAM / 256 GB' } },
+                { id: 'p2', price: 15000000, specs: { base_configuration: '16 GB RAM / 256 GB' } }
+            ], true),
+            diff_storage: checkPriceHighlightEligibility([
+                { id: 'p1', price: 10000000, specs: { base_configuration: '16 GB RAM / 256 GB' } },
+                { id: 'p2', price: 15000000, specs: { base_configuration: '16 GB RAM / 512 GB' } }
+            ], true),
+            cross_cat: checkPriceHighlightEligibility([
+                { id: 'p1', price: 10000000, specs: { base_configuration: '16 GB RAM / 256 GB' } },
+                { id: 'p2', price: 2000000, specs: { base_configuration: '16 GB RAM / 256 GB' } }
+            ], false),
+            comparable: checkPriceHighlightEligibility([
+                { id: 'lp-005', price: 13999000, specs: { base_configuration: '16 GB RAM / 512 GB' } },
+                { id: 'lp-003', price: 24999000, specs: { base_configuration: '16 GB RAM / 512 GB' } }
+            ], true)
+        };
+        console.log(JSON.stringify(results));
+        """
+        proc = subprocess.run(
+            ["node", "-e", node_script],
+            capture_output=True,
+            text=True,
+            cwd=os.path.join(os.path.dirname(__file__), "..", "..")
+        )
+        self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertFalse(data["unverified_acer"]["eligible"], "Acer unverified tidak boleh eligible")
+        self.assertFalse(data["import_pixel"]["eligible"], "Pixel impor tidak boleh eligible")
+        self.assertFalse(data["diff_ram"]["eligible"], "RAM berbeda tidak boleh eligible")
+        self.assertFalse(data["diff_storage"]["eligible"], "Storage berbeda tidak boleh eligible")
+        self.assertFalse(data["cross_cat"]["eligible"], "Lintas kategori tidak boleh eligible")
+        self.assertTrue(data["comparable"]["eligible"], "Konfigurasi identik dan terverifikasi harus eligible")
+
+    def test_warranty_unverified_scope_integrity(self):
+        """Produk dengan garansi unverified (lp-002 ASUS ROG) tidak boleh memenangkan highlight garansi sepihak."""
+        res = client.post("/api/compare", json={"product_ids": ["lp-001", "lp-002"]})
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        warranty_h = next((h for h in data["highlights"] if h["spec_name"] == "Garansi"), None)
+        if warranty_h:
+            self.assertNotEqual(warranty_h["best_product_id"], "lp-002")
+
+    def test_smart_wizard_non_regression(self):
+        """Smart Wizard non-regression: perhitungan skor MCDA tetap utuh dan berfungsi normal."""
+        wizard = WizardInput(
+            category=ProductCategory.SMARTPHONE,
+            budget_min=5000000,
+            budget_max=15000000,
+            scenarios=[UsageScenario.GAMING],
+            priorities={"performance": 5, "battery": 4}
+        )
+        response = calculate_scores(wizard)
+        self.assertGreater(len(response.results), 0)
+        self.assertGreater(response.results[0].total_score, 0)
+        self.assertIn("skor tinggi karena:", response.results[0].why_this_product)
 
 
 if __name__ == "__main__":
