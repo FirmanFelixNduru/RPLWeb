@@ -6,6 +6,47 @@ import { useCompare } from '@/context/CompareContext';
 import PriceTag from '@/components/ui/PriceTag';
 import ScoreBadge from '@/components/ui/ScoreBadge';
 
+/**
+ * Menentukan label badge garansi dengan mengevaluasi warranty_type dan verification_status secara konservatif.
+ * Label pasti "Garansi X Bln" HANYA diberikan jika verification_status secara eksplisit menyatakan
+ * ketentuan SKU terverifikasi dan tipe garansinya sesuai (resmi produsen/distributor resmi).
+ * Status unverified, pasar impor, garansi toko/penjual, status kosong/null, atau status baru tidak dikenal
+ * secara konservatif menggunakan label netral "Acuan X Bln" (atau "Belum Terverifikasi" jika duration_months tidak tersedia).
+ */
+export function getWarrantyBadgeLabel(warranty) {
+  if (!warranty) return 'Belum Terverifikasi';
+  const months = warranty.duration_months;
+  if (months === null || months === undefined || typeof months !== 'number' || months <= 0) {
+    return 'Belum Terverifikasi';
+  }
+
+  const wType = (warranty.warranty_type || '').trim().toLowerCase();
+  const vStatus = (warranty.verification_status || '').trim().toLowerCase();
+
+  // Evaluasi secara eksplisit apakah ketentuan SKU terverifikasi
+  const isSkuVerified =
+    vStatus === 'ketentuan spesifik sku terverifikasi' ||
+    vStatus.includes('spesifik sku terverifikasi');
+
+  // Evaluasi apakah tipe garansi merupakan garansi resmi ATPM produsen atau distributor resmi
+  const isOfficialWarranty =
+    wType.includes('resmi produsen') ||
+    wType.includes('resmi distributor') ||
+    wType.includes('authorized reseller') ||
+    wType.includes('sein');
+
+  const isImport = wType.includes('impor') || wType.includes('non-atpm');
+
+  // Hanya jika status secara eksplisit terverifikasi per SKU dan tipe garansi resmi yang sah
+  if (isSkuVerified && isOfficialWarranty && !isImport) {
+    return `Garansi ${months} Bln`;
+  }
+
+  // Konservatif: status SKU belum terverifikasi, pasar impor, penjual/distributor unverified,
+  // serta status null, kosong, atau status baru yang tidak dikenal menggunakan label acuan
+  return `Acuan ${months} Bln`;
+}
+
 export default function ProductCard({ product }) {
   const { addToCompare, isInCompare, openProductModal } = useCompare();
   const inCompare = isInCompare(product.id);
@@ -94,7 +135,7 @@ export default function ProductCard({ product }) {
             </div>
             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px]">
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Garansi {product.warranty?.duration_months || 12} Bln</span>
+              <span>{getWarrantyBadgeLabel(product.warranty)}</span>
             </div>
           </div>
         </div>

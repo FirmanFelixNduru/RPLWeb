@@ -34,7 +34,15 @@ def _entity_to_pydantic(entity: ProductEntity) -> ProductModel:
         coverage=entity.warranty.coverage if entity.warranty else "",
         claim_ease=entity.warranty.claim_ease if entity.warranty else 7,
         official_service_centers=entity.warranty.official_service_centers if entity.warranty else 0,
-        score=entity.warranty.score if entity.warranty else 0.0
+        score=entity.warranty.score if entity.warranty else 0.0,
+        parts_warranty_months=getattr(entity.warranty, "parts_warranty_months", None) if entity.warranty else None,
+        labor_warranty_months=getattr(entity.warranty, "labor_warranty_months", None) if entity.warranty else None,
+        warranty_type=getattr(entity.warranty, "warranty_type", None) if entity.warranty else None,
+        battery_warranty_months=getattr(entity.warranty, "battery_warranty_months", None) if entity.warranty else None,
+        charger_warranty_months=getattr(entity.warranty, "charger_warranty_months", None) if entity.warranty else None,
+        service_type=getattr(entity.warranty, "service_type", None) if entity.warranty else None,
+        warranty_source_url=getattr(entity.warranty, "warranty_source_url", None) if entity.warranty else None,
+        verification_status=getattr(entity.warranty, "verification_status", None) if entity.warranty else None,
     )
 
     links = {}

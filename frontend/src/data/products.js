@@ -53,10 +53,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi SEIN (Samsung Electronics Indonesia) — Perlindungan penuh hardware & software",
+      coverage: "Garansi resmi Samsung Electronics Indonesia (SEIN) 1 tahun perlindungan hardware dan software manufaktur. Baterai bawaan 12 bulan. Kerusakan akibat cairan atau fisik tidak ditanggung.",
       claim_ease: 8,
       official_service_centers: 350,
-      score: 82.0
+      score: 82.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (SEIN)",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.samsung.com/id/support/warranty/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=samsung+galaxy+s24+ultra",
@@ -122,10 +130,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi iBox / Digimap / GDN Indonesia — Layanan perbaikan Apple Authorized Service Provider",
+      coverage: "Garansi terbatas Apple 1 tahun di Apple Authorised Service Provider (AASP: iBox, Digimap, Mitracare). Baterai bawaan terlindungi 12 bulan. Dapat diperpanjang via AppleCare+.",
       claim_ease: 9,
       official_service_centers: 45,
-      score: 88.0
+      score: 88.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Distributor / Authorized Reseller",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.apple.com/id/legal/warranty/products/ios-warranty-rest-of-apac-indonesian.html",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=iphone+15+pro+max",
@@ -190,10 +206,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Distributor / Impor Terdaftar IMEI Kemenperin",
+      coverage: "Unit pasar impor (non-ATPM). Garansi resmi lokal produsen tidak berlaku di Indonesia. Durasi 12 bulan merupakan acuan katalog; klaim bergantung pada ketentuan penjual/toko marketplace dan IMEI terdaftar.",
       claim_ease: 5,
       official_service_centers: 10,
-      score: 58.0
+      score: 58.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Pasar Impor / Toko Non-ATPM",
+      battery_warranty_months: null,
+      charger_warranty_months: null,
+      service_type: "Kirim ke Toko / Luar Negeri",
+      warranty_source_url: "https://support.google.com/pixelphone/answer/9218411",
+      verification_status: "Garansi distributor atau penjual tertentu"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=google+pixel+8+pro",
@@ -258,10 +282,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Xiaomi Indonesia 15 Bulan + Layanan VIP Pick-up Service",
+      coverage: "Model tidak terdaftar dalam rilis resmi PT Xiaomi Technology Indonesia. Unit acuan merupakan pasar impor non-ATPM dengan garansi toko/penjual independen. Pusat servis resmi lokal tidak menjamin suku cadang resmi.",
       claim_ease: 7,
       official_service_centers: 280,
-      score: 74.0
+      score: 74.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Pasar Impor / Toko Non-ATPM",
+      battery_warranty_months: null,
+      charger_warranty_months: null,
+      service_type: "Kirim ke Toko / Importir",
+      warranty_source_url: "https://www.mi.co.id/id/service/warranty/",
+      verification_status: "Garansi distributor atau penjual tertentu"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=xiaomi+14+ultra",
@@ -325,11 +357,19 @@ export const PRODUCTS = [
       summary: "Ponsel gaming budget terbaik bagi pelajar, mahasiswa, dan gamer kompetitif dengan anggaran terbatas."
     },
     warranty: {
-      duration_months: 12,
-      coverage: "Garansi Resmi Xiaomi/POCO Indonesia 15 Bulan",
+      duration_months: 15,
+      coverage: "Garansi resmi PT Xiaomi Technology Indonesia 15 bulan suku cadang dan perbaikan telepon genggam di Exclusive Service Center. Adaptor charger bawaan bergaransi 6 bulan. Durasi terpisah baterai tanam belum terverifikasi.",
       claim_ease: 7,
       official_service_centers: 280,
-      score: 74.0
+      score: 74.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (PT Xiaomi Technology Indonesia)",
+      battery_warranty_months: null,
+      charger_warranty_months: 6,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.mi.co.id/id/service/warranty/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=poco+x6+pro",
@@ -394,10 +434,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi SEIN Indonesia dengan jaringan 350+ service center",
+      coverage: "Garansi resmi SEIN 1 tahun hardware dan software manufaktur di Samsung Service Center resmi seluruh Indonesia. Baterai bawaan 12 bulan.",
       claim_ease: 8,
       official_service_centers: 350,
-      score: 82.0
+      score: 82.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (SEIN)",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.samsung.com/id/support/warranty/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=samsung+galaxy+a55+5g",
@@ -463,10 +511,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Apple 1 Tahun Internasional & Indonesia, dapat diperpanjang via AppleCare+",
+      coverage: "Garansi terbatas Apple 1 tahun internasional dan resmi Indonesia melalui jaringan AASP (iBox, Digimap, Mitracare). Baterai dan adaptor daya bawaan terlindungi 12 bulan.",
       claim_ease: 9,
       official_service_centers: 45,
-      score: 88.0
+      score: 88.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Distributor / Authorized Reseller",
+      battery_warranty_months: 12,
+      charger_warranty_months: 12,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.apple.com/id/legal/warranty/products/mac-indonesian.html",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=macbook+air+m3",
@@ -531,10 +587,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 24,
-      coverage: "Garansi Resmi ASUS Indonesia 2 Tahun Global + 1 Tahun ASUS Perfect Warranty (kerusakan akibat kelalaian ditanggung)",
+      coverage: "Kebijakan umum produsen mencakup 2 tahun garansi standar hardware global serta perlindungan tambahan kerusakan akibat kelalaian melalui ASUS VIP Perfect Warranty untuk ROG (menanggung 100% biaya jasa perbaikan dan 100% biaya suku cadang untuk satu klaim pada tahun pertama, sesuai syarat dan ketentuan program). Baterai dan adaptor standar 12 bulan. Ketentuan spesifik penerapan per SKU belum diverifikasi mandiri.",
       claim_ease: 8,
       official_service_centers: 180,
-      score: 85.0
+      score: 85.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (PT ASUS Technology Indonesia)",
+      battery_warranty_months: 12,
+      charger_warranty_months: 12,
+      service_type: "Carry-in & On-site",
+      warranty_source_url: "https://www.asus.com/id/content/asus-vip-perfect-warranty/",
+      verification_status: "Kebijakan umum produsen terverifikasi, tetapi ketentuan SKU belum terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=asus+rog+zephyrus+g14+2024",
@@ -598,10 +662,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 36,
-      coverage: "Garansi Resmi Lenovo Indonesia 3 Tahun On-Site Premier Support (Teknisi datang ke kantor/rumah)",
+      coverage: "Garansi resmi Lenovo Indonesia 3 tahun Premier Support On-Site (teknisi bersertifikasi datang langsung ke lokasi pengguna dengan respon prioritas). Baterai internal standar 12 bulan.",
       claim_ease: 9,
       official_service_centers: 200,
-      score: 92.0
+      score: 92.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (PT Lenovo Indonesia)",
+      battery_warranty_months: 12,
+      charger_warranty_months: 12,
+      service_type: "On-site",
+      warranty_source_url: "https://www.lenovo.com/id/in/services/premier-support/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=thinkpad+x1+carbon+gen+11",
@@ -665,10 +737,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Acer Indonesia 1 Tahun Sparepart + 3 Tahun Biaya Service",
+      coverage: "Program resmi Acer Care format 1*3*0 mencakup 1 tahun suku cadang dan 3 tahun jasa servis di Acer Customer Service Center (ACSC). Baterai dan adaptor 12 bulan. Penerapan paket servis 3 tahun pada SKU acuan tertentu belum terverifikasi mutlak tanpa registrasi garansi.",
       claim_ease: 7,
       official_service_centers: 150,
-      score: 70.0
+      score: 70.0,
+      parts_warranty_months: 12,
+      labor_warranty_months: 36,
+      warranty_type: "Resmi Produsen (PT Acer Indonesia)",
+      battery_warranty_months: 12,
+      charger_warranty_months: 12,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.acerid.com/acer-care-extended-warranty/",
+      verification_status: "Kebijakan umum produsen terverifikasi, tetapi ketentuan SKU belum terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=acer+aspire+5+a515",
@@ -733,10 +813,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 24,
-      coverage: "Garansi Resmi Lenovo Indonesia 2 Tahun Premium Care + 2 Tahun Accidental Damage Protection (ADP)",
+      coverage: "Garansi resmi Lenovo Indonesia 2 tahun Premium Care On-Site + 2 tahun Accidental Damage Protection (ADP) menanggung perbaikan akibat tumpahan cairan atau benturan tak sengaja.",
       claim_ease: 8,
       official_service_centers: 200,
-      score: 85.0
+      score: 85.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (PT Lenovo Indonesia)",
+      battery_warranty_months: 12,
+      charger_warranty_months: 12,
+      service_type: "On-site",
+      warranty_source_url: "https://www.lenovo.com/id/in/services/premium-care/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=lenovo+loq+15irx9",
@@ -802,10 +890,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Apple 1 Tahun iBox/Digimap",
+      coverage: "Garansi resmi Apple 1 tahun melalui distributor resmi (iBox / Digimap / Blibli). Klaim perbaikan di seluruh AASP resmi Indonesia. Baterai bawaan 12 bulan.",
       claim_ease: 9,
       official_service_centers: 45,
-      score: 88.0
+      score: 88.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Distributor / Authorized Reseller",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.apple.com/id/legal/warranty/products/ipad-indonesian.html",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=ipad+air+m2+2024",
@@ -870,10 +966,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi SEIN Indonesia 1 Tahun",
+      coverage: "Garansi resmi SEIN 1 tahun hardware dan perbaikan. Stylus S-Pen bawaan dalam kotak terlindungi garansi 12 bulan bersama unit utama. Baterai 12 bulan.",
       claim_ease: 8,
       official_service_centers: 350,
-      score: 82.0
+      score: 82.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (SEIN)",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.samsung.com/id/support/warranty/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=samsung+galaxy+tab+s9+fe",
@@ -935,10 +1039,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Apple Indonesia 1 Tahun (iBox/Digimap)",
+      coverage: "Garansi resmi Apple 1 tahun untuk casing pengisi daya dan kedua earbud melalui AASP resmi Indonesia. Kerusakan cacat pabrik diselesaikan lewat penggantian komponen orisinal.",
       claim_ease: 9,
       official_service_centers: 45,
-      score: 88.0
+      score: 88.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Distributor / Authorized Reseller",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.apple.com/id/legal/warranty/products/accessory-warranty-indonesian.html",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=airpods+pro+2+usb-c",
@@ -998,10 +1110,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Sony Indonesia 1 Tahun",
+      coverage: "Garansi resmi PT Sony Indonesia 1 tahun untuk unit earbuds dan charging case di Sony Authorized Service Center dengan melampirkan kartu garansi dan bukti pembelian resmi.",
       claim_ease: 7,
       official_service_centers: 80,
-      score: 75.0
+      score: 75.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (PT Sony Indonesia)",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.sony.co.id/id/electronics/support/warranty",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=sony+wf-1000xm5",
@@ -1061,10 +1181,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi SEIN Indonesia 1 Tahun",
+      coverage: "Garansi resmi SEIN 1 tahun untuk unit earbuds dan charging case di Samsung Service Center resmi di seluruh Indonesia.",
       claim_ease: 8,
       official_service_centers: 350,
-      score: 82.0
+      score: 82.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (SEIN)",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.samsung.com/id/support/warranty/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=samsung+galaxy+buds3+pro",
@@ -1124,10 +1252,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 6,
-      coverage: "Garansi Distributor Resmi QCY Indonesia 6 Bulan Ganti Baru",
+      coverage: "Garansi 6 bulan distributor toko resmi e-commerce QCY Indonesia. Klaim kerusakan cacat pabrik ditangani via retur tukar unit baru. Adaptor charger berdaya tinggi di luar 5V/1A dilarang.",
       claim_ease: 4,
       official_service_centers: 20,
-      score: 40.0
+      score: 40.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Garansi distributor atau penjual tertentu",
+      battery_warranty_months: null,
+      charger_warranty_months: null,
+      service_type: "Kirim ke Distributor",
+      warranty_source_url: "https://www.tokopedia.com/qcyofficial",
+      verification_status: "Garansi distributor atau penjual tertentu"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=qcy+melobuds+anc",
@@ -1190,10 +1326,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Apple 1 Tahun (iBox/Digimap), Perlindungan Global",
+      coverage: "Garansi resmi Apple 1 tahun di AASP resmi Indonesia. Baterai bawaan 12 bulan. Kerusakan fisik, strap, dan penurunan kapasitas normal baterai akibat siklus pemakaian tidak ditanggung.",
       claim_ease: 9,
       official_service_centers: 45,
-      score: 88.0
+      score: 88.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Distributor / Authorized Reseller",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.apple.com/id/legal/warranty/products/watch-indonesian.html",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=apple+watch+ultra+2",
@@ -1254,10 +1398,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi SEIN Indonesia 1 Tahun",
+      coverage: "Garansi resmi SEIN 1 tahun hardware jam tangan pintar di Samsung Service Center resmi seluruh Indonesia. Baterai bawaan terlindungi 12 bulan.",
       claim_ease: 8,
       official_service_centers: 350,
-      score: 82.0
+      score: 82.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Produsen (SEIN)",
+      battery_warranty_months: 12,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.samsung.com/id/support/warranty/",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=samsung+galaxy+watch+7",
@@ -1318,10 +1470,18 @@ export const PRODUCTS = [
     },
     warranty: {
       duration_months: 12,
-      coverage: "Garansi Resmi Amazfit Indonesia 1 Tahun Ganti Unit",
+      coverage: "Garansi resmi distributor Amazfit Indonesia 1 tahun melalui mitra servis Unicom Care. Kerusakan mesin/layar akibat cacat pabrik diselesaikan lewat penggantian unit (replacement). Strap tidak bergaransi.",
       claim_ease: 6,
       official_service_centers: 50,
-      score: 62.0
+      score: 62.0,
+      parts_warranty_months: null,
+      labor_warranty_months: null,
+      warranty_type: "Resmi Distributor / Authorized Reseller",
+      battery_warranty_months: null,
+      charger_warranty_months: null,
+      service_type: "Carry-in",
+      warranty_source_url: "https://www.amazfit.co.id/pages/warranty",
+      verification_status: "Ketentuan spesifik SKU terverifikasi"
     },
     marketplace_links: {
       tokopedia: "https://www.tokopedia.com/search?q=amazfit+gtr+4",

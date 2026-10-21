@@ -119,6 +119,17 @@ class WarrantyInfo(Base):
     claim_ease = Column(Integer, default=7, nullable=False)
     official_service_centers = Column(Integer, default=0, nullable=False)
     score = Column(Float, default=0.0, nullable=False)
+
+    # Revision 6 structured columns (strictly nullable, no fake defaults)
+    parts_warranty_months = Column(Integer, nullable=True)
+    labor_warranty_months = Column(Integer, nullable=True)
+    warranty_type = Column(String(100), nullable=True)
+    battery_warranty_months = Column(Integer, nullable=True)
+    charger_warranty_months = Column(Integer, nullable=True)
+    service_type = Column(String(50), nullable=True)
+    warranty_source_url = Column(String(255), nullable=True)
+    verification_status = Column(String(100), nullable=True)
+
     updated_at = Column(DateTime(timezone=True), server_default=func.current_timestamp(), onupdate=func.current_timestamp())
 
     __table_args__ = (
@@ -126,6 +137,10 @@ class WarrantyInfo(Base):
         CheckConstraint("claim_ease >= 1 AND claim_ease <= 10", name="ck_warranty_claim_ease"),
         CheckConstraint("official_service_centers >= 0", name="ck_warranty_service_centers"),
         CheckConstraint("score >= 0.0 AND score <= 100.0", name="ck_warranty_score_range"),
+        CheckConstraint("parts_warranty_months IS NULL OR parts_warranty_months >= 0", name="ck_warranty_parts_months"),
+        CheckConstraint("labor_warranty_months IS NULL OR labor_warranty_months >= 0", name="ck_warranty_labor_months"),
+        CheckConstraint("battery_warranty_months IS NULL OR battery_warranty_months >= 0", name="ck_warranty_battery_months"),
+        CheckConstraint("charger_warranty_months IS NULL OR charger_warranty_months >= 0", name="ck_warranty_charger_months"),
     )
 
     product = relationship("Product", back_populates="warranty")

@@ -39,17 +39,34 @@ class MarketplacePriceSource(str, Enum):
 # Product Models
 # ──────────────────────────────────────────────
 class WarrantyInfo(BaseModel):
-    duration_months: int = Field(..., ge=0, description="Warranty duration in months")
-    coverage: str = Field(..., description="What the warranty covers")
+    duration_months: int = Field(..., ge=0, description="Baseline catalog warranty duration in months")
+    coverage: str = Field(..., description="Comprehensive warranty coverage summary")
     claim_ease: int = Field(..., ge=1, le=10, description="Ease of claim 1-10")
     official_service_centers: int = Field(default=0, ge=0, description="Number of service centers")
     score: float = Field(default=0.0, ge=0, le=100, description="Computed warranty index 0-100")
+
+    # Structured fields for Revision 6 (strictly Optional / Nullable)
+    parts_warranty_months: Optional[int] = Field(default=None, ge=0, description="Specific spare parts warranty in months")
+    labor_warranty_months: Optional[int] = Field(default=None, ge=0, description="Specific repair labor warranty in months")
+    warranty_type: Optional[str] = Field(default=None, description="Warranty type classification")
+    battery_warranty_months: Optional[int] = Field(default=None, ge=0, description="Specific battery warranty in months")
+    charger_warranty_months: Optional[int] = Field(default=None, ge=0, description="Specific charger warranty in months")
+    service_type: Optional[str] = Field(default=None, description="Service delivery: On-site, Carry-in, Kirim ke Distributor, Belum Terverifikasi")
+    warranty_source_url: Optional[str] = Field(default=None, description="Direct URL of official terms")
+    verification_status: Optional[str] = Field(default=None, description="Verification status of the warranty claim")
 
     @field_validator("coverage")
     @classmethod
     def validate_coverage_not_blank(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("coverage tidak boleh kosong atau hanya berisi spasi.")
+        return v
+
+    @field_validator("warranty_type", "service_type", "verification_status", "warranty_source_url")
+    @classmethod
+    def validate_string_fields(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
+            raise ValueError("Field tidak boleh hanya berisi spasi.")
         return v
 
 

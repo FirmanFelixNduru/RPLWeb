@@ -9,6 +9,9 @@ Menggunakan standar library unittest Python.
 """
 import sys
 import os
+import json
+import re
+import subprocess
 import unittest
 
 # Pastikan modul app dapat diimpor dari direktori backend
@@ -224,6 +227,244 @@ class TestBestWarrantySelection(unittest.TestCase):
         ids = ["sw-001", "sw-002"]
         _, highlight = self._garansi_highlight(ids)
         self.assertEqual(set(highlight["values"].keys()), set(ids))
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Test Suite 5 — Validasi Struktur Garansi Revisi 6
+# ═══════════════════════════════════════════════════════════════════
+class TestWarrantyRevision6StructuredValidation(unittest.TestCase):
+
+    def setUp(self):
+        self.products = get_all_products()
+        self.product_map = {p.id: p for p in self.products}
+
+    def test_nullable_structured_fields_accepted(self):
+        """Field baru bertipe Optional menerima None tanpa error."""
+        w = _warranty(
+            parts_warranty_months=None,
+            labor_warranty_months=None,
+            warranty_type=None,
+            battery_warranty_months=None,
+            charger_warranty_months=None,
+            service_type=None,
+            warranty_source_url=None,
+            verification_status=None,
+        )
+        self.assertIsNone(w.parts_warranty_months)
+        self.assertIsNone(w.labor_warranty_months)
+        self.assertIsNone(w.warranty_type)
+        self.assertIsNone(w.battery_warranty_months)
+        self.assertIsNone(w.charger_warranty_months)
+        self.assertIsNone(w.service_type)
+        self.assertIsNone(w.warranty_source_url)
+        self.assertIsNone(w.verification_status)
+
+    def test_negative_durations_rejected(self):
+        """Durasi garansi spesifik bernilai negatif ditolak."""
+        for field in ("parts_warranty_months", "labor_warranty_months", "battery_warranty_months", "charger_warranty_months"):
+            with self.assertRaises(ValidationError, msg=f"{field}=-1"):
+                _warranty(**{field: -1})
+
+    def test_whitespace_only_strings_rejected(self):
+        """Field string baru tidak boleh hanya berisi spasi."""
+        for field in ("warranty_type", "service_type", "verification_status", "warranty_source_url"):
+            with self.assertRaises(ValidationError, msg=f"{field} whitespace only"):
+                _warranty(**{field: "   "})
+
+    def test_no_automatic_fallback_from_duration_months(self):
+        """duration_months tidak otomatis mengisi parts atau labor jika tidak disuplai."""
+        w = _warranty(duration_months=12)
+        self.assertEqual(w.duration_months, 12)
+        self.assertIsNone(w.parts_warranty_months)
+        self.assertIsNone(w.labor_warranty_months)
+
+    def test_acer_aspire_lp004_special_case(self):
+        """lp-004 Acer Aspire 5 membedakan 12 bln suku cadang dan 36 bln servis dengan status SKU belum terverifikasi."""
+        p = self.product_map["lp-004"]
+        self.assertEqual(p.warranty.duration_months, 12)
+        self.assertEqual(p.warranty.parts_warranty_months, 12)
+        self.assertEqual(p.warranty.labor_warranty_months, 36)
+        self.assertEqual(p.warranty.battery_warranty_months, 12)
+        self.assertEqual(p.warranty.charger_warranty_months, 12)
+        self.assertEqual(p.warranty.service_type, "Carry-in")
+        self.assertEqual(p.warranty.warranty_type, "Resmi Produsen (PT Acer Indonesia)")
+        self.assertEqual(
+            p.warranty.verification_status,
+            "Kebijakan umum produsen terverifikasi, tetapi ketentuan SKU belum terverifikasi"
+        )
+
+    def test_asus_rog_lp002_special_case(self):
+        """lp-002 ASUS ROG Zephyrus G14 tidak membedakan parts/labor durasi terpisah dan menandai SKU belum terverifikasi."""
+        p = self.product_map["lp-002"]
+        self.assertEqual(p.warranty.duration_months, 24)
+        self.assertIsNone(p.warranty.parts_warranty_months)
+        self.assertIsNone(p.warranty.labor_warranty_months)
+        self.assertEqual(p.warranty.battery_warranty_months, 12)
+        self.assertEqual(p.warranty.charger_warranty_months, 12)
+        self.assertEqual(p.warranty.service_type, "Carry-in & On-site")
+        self.assertEqual(
+            p.warranty.verification_status,
+            "Kebijakan umum produsen terverifikasi, tetapi ketentuan SKU belum terverifikasi"
+        )
+        self.assertEqual(p.warranty.warranty_source_url, "https://www.asus.com/id/content/asus-vip-perfect-warranty/")
+        self.assertIn("100% biaya jasa perbaikan dan 100% biaya suku cadang", p.warranty.coverage)
+        self.assertIn("ASUS VIP Perfect Warranty", p.warranty.coverage)
+        self.assertNotIn("20%", p.warranty.coverage)
+
+    def test_import_market_products_pixel_and_xiaomi14ultra(self):
+        """sm-003 Pixel 8 Pro dan sm-004 Xiaomi 14 Ultra ditandai sebagai Pasar Impor / Toko Non-ATPM."""
+        for pid in ("sm-003", "sm-004"):
+            p = self.product_map[pid]
+            self.assertEqual(p.warranty.warranty_type, "Pasar Impor / Toko Non-ATPM")
+            self.assertEqual(p.warranty.verification_status, "Garansi distributor atau penjual tertentu")
+            self.assertIsNone(p.warranty.parts_warranty_months)
+            self.assertIsNone(p.warranty.labor_warranty_months)
+            self.assertIsNone(p.warranty.battery_warranty_months)
+            self.assertIsNone(p.warranty.charger_warranty_months)
+
+    def test_poco_x6pro_sm005_battery_is_none_charger_is_6(self):
+        """sm-005 POCO X6 Pro baterai None (belum terverifikasi terpisah), charger 6 bulan."""
+        p = self.product_map["sm-005"]
+        self.assertEqual(p.warranty.duration_months, 15)
+        self.assertIsNone(p.warranty.parts_warranty_months)
+        self.assertIsNone(p.warranty.labor_warranty_months)
+        self.assertIsNone(p.warranty.battery_warranty_months)
+        self.assertEqual(p.warranty.charger_warranty_months, 6)
+        self.assertEqual(p.warranty.verification_status, "Ketentuan spesifik SKU terverifikasi")
+
+    def test_all_20_products_have_valid_warranty_type_and_verification_status(self):
+        """Seluruh 20 produk memiliki warranty_type dan verification_status yang terdaftar."""
+        valid_types = {
+            "Resmi Produsen (SEIN)",
+            "Resmi Produsen (PT Acer Indonesia)",
+            "Resmi Produsen (PT ASUS Technology Indonesia)",
+            "Resmi Produsen (PT Lenovo Indonesia)",
+            "Resmi Produsen (PT Xiaomi Technology Indonesia)",
+            "Resmi Produsen (PT Sony Indonesia)",
+            "Resmi Distributor / Authorized Reseller",
+            "Pasar Impor / Toko Non-ATPM",
+            "Garansi distributor atau penjual tertentu"
+        }
+        valid_statuses = {
+            "Ketentuan spesifik SKU terverifikasi",
+            "Kebijakan umum produsen terverifikasi, tetapi ketentuan SKU belum terverifikasi",
+            "Garansi distributor atau penjual tertentu",
+            "Belum terverifikasi"
+        }
+        for p in self.products:
+            self.assertIn(p.warranty.warranty_type, valid_types, msg=f"{p.id} warranty_type")
+            self.assertIn(p.warranty.verification_status, valid_statuses, msg=f"{p.id} verification_status")
+            self.assertTrue(p.warranty.warranty_source_url and p.warranty.warranty_source_url.startswith("http"), msg=p.id)
+
+    def test_api_products_serializes_structured_fields(self):
+        """GET /api/products dan GET /api/products/lp-004 mengembalikan field-field terstruktur baru."""
+        res = client.get("/api/products/lp-004")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        w = data["warranty"]
+        self.assertEqual(w["duration_months"], 12)
+        self.assertEqual(w["parts_warranty_months"], 12)
+        self.assertEqual(w["labor_warranty_months"], 36)
+        self.assertEqual(w["warranty_type"], "Resmi Produsen (PT Acer Indonesia)")
+        self.assertEqual(w["service_type"], "Carry-in")
+        self.assertEqual(w["verification_status"], "Kebijakan umum produsen terverifikasi, tetapi ketentuan SKU belum terverifikasi")
+
+    def test_frontend_data_matches_backend_warranty(self):
+        """Memverifikasi frontend/src/data/products.js konsisten dengan backend/app/products.py."""
+        frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "src", "data", "products.js")
+        if not os.path.exists(frontend_path):
+            self.skipTest("Frontend path not found from current directory")
+        with open(frontend_path, "r", encoding="utf-8") as f:
+            fe_text = f.read()
+        for p in self.products:
+            self.assertTrue(f"id: '{p.id}'" in fe_text or f'id: "{p.id}"' in fe_text, msg=p.id)
+            self.assertIn(f"duration_months: {p.warranty.duration_months}", fe_text)
+
+    def test_product_card_badge_label_evaluation(self):
+        """Memverifikasi bahwa fungsi JavaScript getWarrantyBadgeLabel di ProductCard.js
+        mengevaluasi badge secara konservatif langsung melalui runtime Node.js."""
+        frontend_card_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "frontend", "src", "components", "catalog", "ProductCard.js"
+        )
+        if not os.path.exists(frontend_card_path):
+            self.skipTest("ProductCard.js not found from current directory")
+
+        with open(frontend_card_path, "r", encoding="utf-8") as f:
+            code = f.read()
+
+        match = re.search(r"export function getWarrantyBadgeLabel\s*\([\s\S]*?\n\}", code)
+        self.assertIsNotNone(match, "getWarrantyBadgeLabel function must be exported from ProductCard.js")
+        fn_code = match.group(0).replace("export function", "function")
+
+        def evaluate_in_node(warranty_dict):
+            js_script = f"""
+            const vm = require('vm');
+            {fn_code}
+            const input = JSON.parse(process.argv[1]);
+            const res = getWarrantyBadgeLabel(input);
+            process.stdout.write(res === undefined ? 'undefined' : String(res));
+            """
+            proc = subprocess.run(
+                ["node", "-e", js_script, json.dumps(warranty_dict)],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            return proc.stdout
+
+        # 1. Status SKU belum terverifikasi: ASUS ROG Zephyrus G14 (lp-002) -> "Acuan 24 Bln"
+        asus = self.product_map["lp-002"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(asus), "Acuan 24 Bln")
+
+        # 2. Status SKU belum terverifikasi: Acer Aspire 5 (lp-004) -> "Acuan 12 Bln"
+        acer = self.product_map["lp-004"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(acer), "Acuan 12 Bln")
+
+        # 3. Produk impor: Google Pixel 8 Pro (sm-003) -> "Acuan 12 Bln"
+        pixel = self.product_map["sm-003"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(pixel), "Acuan 12 Bln")
+
+        # 4. Produk impor: Xiaomi 14 Ultra (sm-004) -> "Acuan 12 Bln"
+        xiaomi = self.product_map["sm-004"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(xiaomi), "Acuan 12 Bln")
+
+        # 5. Garansi distributor/penjual tertentu: QCY MeloBuds ANC (tw-004) -> "Acuan 6 Bln"
+        qcy = self.product_map["tw-004"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(qcy), "Acuan 6 Bln")
+
+        # 6. Status SKU terverifikasi resmi:
+        sein = self.product_map["sm-001"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(sein), "Garansi 12 Bln")
+
+        apple = self.product_map["sm-002"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(apple), "Garansi 12 Bln")
+
+        poco = self.product_map["sm-005"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(poco), "Garansi 15 Bln")
+
+        lenovo = self.product_map["lp-003"].warranty.model_dump()
+        self.assertEqual(evaluate_in_node(lenovo), "Garansi 36 Bln")
+
+        # 7. Status null atau kosong (harus konservatif acuan, bukan klaim resmi)
+        null_status = {"duration_months": 12, "warranty_type": "Resmi Produsen (SEIN)", "verification_status": None}
+        self.assertEqual(evaluate_in_node(null_status), "Acuan 12 Bln")
+
+        empty_status = {"duration_months": 12, "warranty_type": "Resmi Produsen (SEIN)", "verification_status": ""}
+        self.assertEqual(evaluate_in_node(empty_status), "Acuan 12 Bln")
+
+        # 8. Status baru yang tidak dikenal (harus konservatif acuan)
+        unknown_status = {"duration_months": 24, "warranty_type": "Resmi Produsen", "verification_status": "Status Baru Belum Terdaftar"}
+        self.assertEqual(evaluate_in_node(unknown_status), "Acuan 24 Bln")
+
+        # 9. duration_months bernilai null / tidak tersedia (tidak boleh ada angka fallback)
+        null_duration = {"duration_months": None, "warranty_type": "Resmi Produsen (SEIN)", "verification_status": "Ketentuan spesifik SKU terverifikasi"}
+        self.assertEqual(evaluate_in_node(null_duration), "Belum Terverifikasi")
+
+        zero_duration = {"duration_months": 0, "warranty_type": "Resmi Produsen (SEIN)", "verification_status": "Ketentuan spesifik SKU terverifikasi"}
+        self.assertEqual(evaluate_in_node(zero_duration), "Belum Terverifikasi")
+
+        # 10. warranty bernilai null
+        self.assertEqual(evaluate_in_node(None), "Belum Terverifikasi")
 
 
 if __name__ == "__main__":

@@ -59,8 +59,11 @@ export default function ComparisonMatrix({ products = [], highlights = [] }) {
   // Find lowest price
   const lowestPrice = Math.min(...products.map((p) => p.price));
 
-  // Find longest warranty
-  const longestWarrantyMonths = Math.max(...products.map((p) => p.warranty?.duration_months || 12));
+  // Find longest warranty (only among valid numbers, no arbitrary 12 fallback)
+  const validWarrantyDurations = products
+    .map((p) => p.warranty?.duration_months)
+    .filter((d) => typeof d === 'number' && d > 0);
+  const longestWarrantyMonths = validWarrantyDurations.length > 0 ? Math.max(...validWarrantyDurations) : null;
 
   return (
     <div className="space-y-6">
@@ -167,10 +170,15 @@ export default function ComparisonMatrix({ products = [], highlights = [] }) {
             {/* 2. Warranty Row */}
             <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
               <td className="p-4 font-bold text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-950/20">
-                Garansi Resmi
+                <div>
+                  <span>Garansi Purna Jual</span>
+                  <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">
+                    Acuan durasi & status cakupan
+                  </span>
+                </div>
               </td>
               {products.map((p) => {
-                const isBestWarranty = p.warranty?.duration_months === longestWarrantyMonths;
+                const isBestWarranty = longestWarrantyMonths !== null && p.warranty?.duration_months === longestWarrantyMonths;
                 return (
                   <td
                     key={p.id}
@@ -181,9 +189,68 @@ export default function ComparisonMatrix({ products = [], highlights = [] }) {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span>{p.warranty?.duration_months || 12} Bulan</span>
+                      <div>
+                        <span>
+                          {p.warranty?.duration_months !== null && p.warranty?.duration_months !== undefined
+                            ? `${p.warranty.duration_months} Bulan`
+                            : 'Belum Terverifikasi'}
+                        </span>
+                        <div className="text-[10px] font-normal mt-0.5">
+                          {(() => {
+                            const w = p.warranty;
+                            const status = (w?.verification_status || '').toLowerCase();
+                            const type = (w?.warranty_type || '').toLowerCase();
+                            const isSkuUnverified = status.includes('sku belum terverifikasi');
+                            const isImport = type.includes('impor') || type.includes('non-atpm');
+                            const isAcer = p.id === 'lp-004' && w?.labor_warranty_months === 36;
+                            const isDistributor = type.includes('distributor') && (type.includes('resmi') || type.includes('authorized reseller'));
+                            const isSeller = type.includes('penjual') || (type.includes('distributor') && !type.includes('resmi'));
+
+                            if (isAcer) {
+                              return (
+                                <span className="text-teal-600 dark:text-teal-400 font-semibold" title="1 Thn Suku Cadang + 3 Thn Jasa Servis (Program Acer Care, SKU belum terverifikasi)">
+                                  1 Thn Parts / 3 Thn Servis (SKU Belum Terverifikasi)*
+                                </span>
+                              );
+                            }
+                            if (isSkuUnverified) {
+                              return (
+                                <span className="text-sky-600 dark:text-sky-400 font-medium" title="Kebijakan umum produsen terverifikasi, tetapi ketentuan SKU belum terverifikasi">
+                                  (Resmi - SKU Belum Terverifikasi)
+                                </span>
+                              );
+                            }
+                            if (isImport) {
+                              return (
+                                <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                  (Acuan Pasar Impor / Toko)
+                                </span>
+                              );
+                            }
+                            if (isDistributor) {
+                              return (
+                                <span className="text-indigo-600 dark:text-indigo-400 font-medium">
+                                  (Resmi Distributor)
+                                </span>
+                              );
+                            }
+                            if (isSeller) {
+                              return (
+                                <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                  (Garansi Distributor/Toko)
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="text-slate-500 dark:text-slate-400">
+                                (Garansi Resmi Produsen)
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      </div>
                       {isBestWarranty && products.length > 1 && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow-sm">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow-sm self-start">
                           Terlama
                         </span>
                       )}
