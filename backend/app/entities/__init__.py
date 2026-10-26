@@ -154,6 +154,10 @@ class Tag(Base):
 
     products = relationship("Product", secondary="product_tags", back_populates="tags")
 
+    __table_args__ = (
+        CheckConstraint("length(trim(name)) > 0", name="ck_tag_name_nonempty"),
+    )
+
 
 class ProductTag(Base):
     __tablename__ = "product_tags"
@@ -162,7 +166,6 @@ class ProductTag(Base):
     tag_id = Column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True)
 
     __table_args__ = (
-        CheckConstraint("length(trim(name)) > 0", name="ck_tag_name_nonempty"),
         Index("ix_product_tag_pair", "product_id", "tag_id"),
     )
 
