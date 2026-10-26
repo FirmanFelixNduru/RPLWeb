@@ -5,6 +5,7 @@ import { Scale, Check, Star, ShieldCheck, Eye, Cpu, Battery } from 'lucide-react
 import { useCompare } from '@/context/CompareContext';
 import PriceTag from '@/components/ui/PriceTag';
 import ScoreBadge from '@/components/ui/ScoreBadge';
+import { getCatalogScore } from '@/lib/catalogScore';
 
 /**
  * Menentukan label badge garansi dengan mengevaluasi warranty_type dan verification_status secara konservatif.
@@ -52,13 +53,7 @@ export default function ProductCard({ product }) {
   const inCompare = isInCompare(product.id);
 
   // Compute aggregate visual score (0-100)
-  const averageScore = Math.round(
-    ((product.score_performance || 50) +
-      (product.score_camera || 50) +
-      (product.score_battery || 50) +
-      (product.score_display || 50) +
-      (product.score_value || 50)) / 5
-  );
+  const averageScore = getCatalogScore(product);
 
   return (
     <div className="group relative rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-black/40 transition-all duration-300 flex flex-col overflow-hidden">
@@ -145,6 +140,8 @@ export default function ProductCard({ product }) {
           <button
             type="button"
             onClick={() => addToCompare(product)}
+            aria-pressed={inCompare}
+            aria-label={`${inCompare ? 'Hapus dari komparasi' : 'Tambah ke komparasi'}: ${product.name}`}
             className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
               inCompare
                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
@@ -152,7 +149,7 @@ export default function ProductCard({ product }) {
             }`}
           >
             {inCompare ? <Check className="w-3.5 h-3.5" /> : <Scale className="w-3.5 h-3.5" />}
-            <span>{inCompare ? 'Bandingkan' : '+ Komparasi'}</span>
+            <span>{inCompare ? 'Hapus dari komparasi' : 'Tambah ke komparasi'}</span>
           </button>
 
           <button

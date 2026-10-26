@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Layers, Filter, X } from 'lucide-react';
 import { getProducts } from '@/lib/api';
+import { getCatalogScore } from '@/lib/catalogScore';
 import ProductCard from '@/components/catalog/ProductCard';
 import SearchBar from '@/components/catalog/SearchBar';
 import FilterPanel from '@/components/catalog/FilterPanel';
@@ -81,12 +82,10 @@ export default function CatalogPage() {
     } else if (sortBy === 'name') {
       list.sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      // Default: average performance score
-      list.sort((a, b) => {
-        const scoreA = (a.score_performance + a.score_camera + a.score_battery + a.score_display) / 4;
-        const scoreB = (b.score_performance + b.score_camera + b.score_battery + b.score_display) / 4;
-        return scoreB - scoreA;
-      });
+      // Match the displayed card score; resolve ties by stable product ID.
+      list.sort((a, b) =>
+        getCatalogScore(b) - getCatalogScore(a) || a.id.localeCompare(b.id)
+      );
     }
 
     return list;
