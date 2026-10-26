@@ -7,17 +7,17 @@ export default function ScoreBadge({ score, size = 'md', showLabel = false, labe
   const numScore = typeof score === 'number' ? Math.round(score * 10) / 10 : parseFloat(score) || 0;
 
   // Determine dynamic gradient badge colors based on score
-  let colorClasses = 'from-emerald-500 to-teal-600 text-white shadow-emerald-500/25';
+  let colorClasses = 'from-emerald-700 to-teal-700 text-white shadow-emerald-500/25';
   let badgeText = 'Superb';
 
   if (numScore >= 90) {
-    colorClasses = 'from-emerald-500 to-teal-600 text-white shadow-emerald-500/30';
+    colorClasses = 'from-emerald-700 to-teal-700 text-white shadow-emerald-500/30';
     badgeText = 'Sangat Direkomendasikan';
   } else if (numScore >= 80) {
-    colorClasses = 'from-indigo-500 to-blue-600 text-white shadow-indigo-500/30';
+    colorClasses = 'from-indigo-600 to-blue-700 text-white shadow-indigo-500/30';
     badgeText = 'Pilihan Unggul';
   } else if (numScore >= 70) {
-    colorClasses = 'from-amber-500 to-orange-600 text-white shadow-amber-500/30';
+    colorClasses = 'from-amber-800 to-orange-800 text-white shadow-amber-500/30';
     badgeText = 'Layak Dipertimbangkan';
   } else {
     colorClasses = 'from-slate-500 to-gray-600 text-white shadow-slate-500/20';
@@ -37,7 +37,7 @@ export default function ScoreBadge({ score, size = 'md', showLabel = false, labe
       >
         <Zap className="w-3.5 h-3.5 fill-current" />
         <span>{numScore}</span>
-        <span className="opacity-80 text-[10px]">/100</span>
+        <span className="text-[10px]">/100</span>
       </span>
       {showLabel && (
         <span className="text-xs font-medium text-slate-500 dark:text-slate-400">

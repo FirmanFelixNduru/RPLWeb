@@ -86,8 +86,7 @@ export default function ProductCard({ product }) {
         <div className="space-y-2">
           {/* Title */}
           <h3
-            onClick={() => openProductModal(product)}
-            className="text-base sm:text-lg font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer transition-colors"
+            className="text-base sm:text-lg font-bold text-slate-900 dark:text-white line-clamp-1"
           >
             {product.name}
           </h3>
@@ -95,7 +94,7 @@ export default function ProductCard({ product }) {
           {/* Price */}
           <div className="flex items-baseline gap-2">
             <PriceTag price={product.price} size="md" />
-            <span className="text-[11px] text-slate-400">MSRP</span>
+            <span className="text-[11px] text-slate-600 dark:text-slate-300">MSRP</span>
           </div>
 
           {/* Description snippet */}
@@ -121,10 +120,10 @@ export default function ProductCard({ product }) {
 
           {/* Social Proof & Warranty Indicators */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-            <div className="flex items-center gap-1 text-amber-500 font-semibold">
-              <Star className="w-3.5 h-3.5 fill-current" />
+            <div className="flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold">
+              <Star className="w-3.5 h-3.5 fill-current text-amber-600 dark:text-amber-400" />
               <span>{product.review_sentiment?.overall_score || 4.5}</span>
-              <span className="text-slate-400 font-normal text-[10px]">
+              <span className="text-slate-600 dark:text-slate-300 font-normal text-[10px]">
                 ({product.review_sentiment?.total_reviews ? (product.review_sentiment.total_reviews > 999 ? (product.review_sentiment.total_reviews / 1000).toFixed(1) + 'k' : product.review_sentiment.total_reviews) : '1k+'})
               </span>
             </div>
@@ -142,9 +141,9 @@ export default function ProductCard({ product }) {
             onClick={() => addToCompare(product)}
             aria-pressed={inCompare}
             aria-label={`${inCompare ? 'Hapus dari komparasi' : 'Tambah ke komparasi'}: ${product.name}`}
-            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+            className={`min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400 ${
               inCompare
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+                ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm'
                 : 'bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400'
             }`}
           >
@@ -155,7 +154,7 @@ export default function ProductCard({ product }) {
           <button
             type="button"
             onClick={() => openProductModal(product)}
-            className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all"
+            className="min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400"
           >
             <Eye className="w-3.5 h-3.5" />
             <span>Lihat Detail</span>
