@@ -2,7 +2,6 @@
 CompareBuy — SQLAlchemy Database Entities
 Implements all 10 persistent domain models specified in requirement-revisi.md.
 """
-from datetime import datetime, timezone
 from sqlalchemy import (
     Column, String, Integer, BigInteger, Float, Boolean,
     DateTime, ForeignKey, Text, JSON, CheckConstraint,

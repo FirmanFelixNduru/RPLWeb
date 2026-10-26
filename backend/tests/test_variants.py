@@ -4,7 +4,6 @@ Verifies base_configuration, variants_note, target_configuration,
 consistency between backend and frontend, and API payload integrity.
 """
 import unittest
-import re
 import os
 from fastapi.testclient import TestClient
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { X, Trophy, Sparkles, Scale, ShieldCheck, Eye, Cpu, Camera, Battery, Monitor, Layers, DollarSign, Volume2, Smartphone } from 'lucide-react';
+import { X, Trophy, Scale, Eye, Cpu, Camera, Battery, Monitor, Layers, DollarSign, Volume2, Smartphone } from 'lucide-react';
 import PriceTag from '@/components/ui/PriceTag';
 import { useCompare } from '@/context/CompareContext';
 
@@ -475,7 +475,6 @@ export default function ComparisonMatrix({
 
             {dimensionDefinitions.map((dim) => {
               const highlight = getHighlightForSpec(dim.key, dim.label);
-              const isApplicable = !isSameCategory || applicableDimensions.includes(dim.key);
               const Icon = dim.icon;
 
               return (

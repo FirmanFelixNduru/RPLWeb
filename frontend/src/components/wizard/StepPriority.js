@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Sliders, Sparkles, Zap, Award } from 'lucide-react';
 import { TRADE_OFF_FACTORS } from '@/data/products';
 
 export default function StepPriority({ priorities = {}, onChangePriority }) {

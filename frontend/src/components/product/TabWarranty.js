@@ -4,7 +4,6 @@ import React from 'react';
 import {
   Shield,
   ShieldCheck,
-  ShieldAlert,
   MapPin,
   Clock,
   Wrench,

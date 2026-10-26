@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { ShoppingBag, ExternalLink, RefreshCw, Sparkles, TrendingDown, DollarSign, CheckCircle2, Info } from 'lucide-react';
+import { ShoppingBag, ExternalLink, RefreshCw, Sparkles, Info } from 'lucide-react';
 import { getLiveMarketplacePrices } from '@/lib/api';
 import PriceTag from '@/components/ui/PriceTag';
 

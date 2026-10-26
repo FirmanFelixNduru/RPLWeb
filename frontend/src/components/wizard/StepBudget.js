@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { DollarSign, Sparkles, TrendingUp } from 'lucide-react';
 import PriceTag from '@/components/ui/PriceTag';
 
 export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin, onChangeMax }) {

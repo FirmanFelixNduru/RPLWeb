@@ -10,11 +10,8 @@ import {
   ShoppingBag,
   ArrowRight,
   CheckCircle2,
-  Cpu,
   Layers,
   Star,
-  ChevronRight,
-  TrendingUp,
 } from 'lucide-react';
 import { PRODUCTS, CATEGORIES } from '@/data/products';
 import ProductCard from '@/components/catalog/ProductCard';

@@ -4,7 +4,6 @@ Fetches prices from Tokopedia, Shopee, and Lazada.
 Uses httpx + BeautifulSoup with graceful fallback to cached prices.
 """
 import asyncio
-import random
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional

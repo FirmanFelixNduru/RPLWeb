@@ -16,13 +16,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from tests import _pretty  # noqa: F401  (format output [OK] ...)
 
-from app.models import WizardInput, ProductCategory, UsageScenario
+from app.models import WizardInput, UsageScenario
 from app.scoring import (
     _build_weight_vector,
     _budget_modifier,
     _budget_fit_label,
-    _generate_why_narrative,
-    _get_product_score,
     calculate_scores,
     DIMENSIONS,
     SCENARIO_BOOSTS,

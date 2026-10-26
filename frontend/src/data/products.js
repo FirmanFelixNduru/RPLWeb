@@ -1509,18 +1509,6 @@ export const CATEGORIES = [
   { id: "smartwatch", label: "Smartwatch", icon: "Watch", desc: "Pantau Kesehatan, Kebugaran, & Petualangan" },
 ];
 
-export const SCENARIOS = [
-  { id: "gaming", label: "Gaming Berat", desc: "Performa GPU tinggi & refresh rate mulus" },
-  { id: "productivity", label: "Kerja & Produktivitas", desc: "Multitasking, keyboard nyaman, baterai tahan lama" },
-  { id: "photography", label: "Fotografi & Kamera", desc: "Sensor lensa jernih, zoom optik, & akurasi warna" },
-  { id: "content_creation", label: "Kreasi Konten / Video", desc: "Render cepat, layar akurat warna, & audio jernih" },
-  { id: "business", label: "Bisnis & Mobilitas", desc: "Ringan, bodi tangguh, & keamanan data enterprise" },
-  { id: "student", label: "Kuliah & Pelajar", desc: "Value terbaik, hemat anggaran, & awet bertahun-tahun" },
-  { id: "fitness", label: "Olahraga & Outdoor", desc: "Tahan air IP68, sensor komprehensif, & GPS presisi" },
-  { id: "multimedia", label: "Nonton & Hiburan", desc: "Layar cerah kontras tinggi & audio speaker mantap" },
-  { id: "casual", label: "Penggunaan Sehari-hari", desc: "Baterai awet, navigasi sosial media lancar" },
-];
-
 export const TRADE_OFF_FACTORS = [
   { id: "performance", label: "Performa & Kecepatan", desc: "Kecepatan chipset, RAM, dan kemampuan beban berat" },
   { id: "camera", label: "Kualitas Kamera / Sensor", desc: "Detail gambar, zoom malam, dan rekaman video" },

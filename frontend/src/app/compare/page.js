@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Scale, Plus, Trash2, ArrowLeft, Loader2, Sparkles, Layers } from 'lucide-react';
+import { Scale, Plus, Trash2, Loader2 } from 'lucide-react';
 import { useCompare } from '@/context/CompareContext';
 import { compareProducts } from '@/lib/api';
 import ComparisonMatrix from '@/components/compare/ComparisonMatrix';

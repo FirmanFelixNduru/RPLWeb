@@ -4,9 +4,9 @@ Multi-Criteria Decision Analysis (MCDA) with user-weighted preferences.
 """
 from app.models import (
     WizardInput, ScoredProduct, ScoringResponse,
-    ScoreBreakdown, Product, UsageScenario
+    ScoreBreakdown, Product
 )
-from app.products import get_all_products, get_products_by_category
+from app.products import get_products_by_category
 
 
 # ──────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Scale, Heart, Shield, Cpu, ExternalLink } from 'lucide-react';
+import { Scale, Shield, Cpu } from 'lucide-react';
 
 export default function Footer() {
   return (

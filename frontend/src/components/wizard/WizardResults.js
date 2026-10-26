@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Trophy, ArrowRight, RotateCcw, Scale, Check, Eye, HelpCircle, ShieldCheck } from 'lucide-react';
+import { Sparkles, Trophy, RotateCcw, Scale, Check, Eye, HelpCircle } from 'lucide-react';
 import ScoreBadge from '@/components/ui/ScoreBadge';
 import PriceTag from '@/components/ui/PriceTag';
 import { useCompare } from '@/context/CompareContext';

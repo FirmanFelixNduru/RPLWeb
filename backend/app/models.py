@@ -2,7 +2,7 @@
 CompareBuy Backend — Pydantic Models & Schemas
 """
 from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
-from typing import Literal, Optional
+from typing import Optional
 from enum import Enum
 
 
@@ -255,18 +255,6 @@ class CompareResponse(BaseModel):
 # ──────────────────────────────────────────────
 # Catalog Query Models
 # ──────────────────────────────────────────────
-class CatalogQuery(BaseModel):
-    search: Optional[str] = None
-    category: Optional[ProductCategory] = None
-    brand: Optional[str] = None
-    min_price: Optional[int] = None
-    max_price: Optional[int] = None
-    tags: Optional[list[str]] = None
-    sort_by: Optional[Literal["score", "price_asc", "price_desc", "name"]] = "score"
-    page: int = 1
-    per_page: int = 20
-
-
 class CatalogResponse(BaseModel):
     products: list[Product]
     total: int

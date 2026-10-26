@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Scale, Check, Star, ShieldCheck, Eye, Cpu, Battery, Smartphone } from 'lucide-react';
+import { Scale, Check, Star, ShieldCheck, Eye, Cpu, Battery } from 'lucide-react';
 import { useCompare } from '@/context/CompareContext';
 import PriceTag from '@/components/ui/PriceTag';
 import ScoreBadge from '@/components/ui/ScoreBadge';

@@ -109,23 +109,6 @@ export async function getProducts(params = {}) {
 }
 
 /**
- * Fetch a single product by ID
- */
-export async function getProductById(productId) {
-  try {
-    const res = await fetch(`${API_BASE}/api/products/${productId}`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) throw new Error('Product not found');
-    return await res.json();
-  } catch (err) {
-    const fallback = PRODUCTS.find((p) => p.id === productId);
-    if (!fallback) throw new Error('Product not found');
-    return fallback;
-  }
-}
-
-/**
  * Execute Weighted Dynamic Scoring Engine for Wizard input
  */
 export async function scoreRecommendations(wizardInput) {

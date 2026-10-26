@@ -216,9 +216,7 @@ print('[OK] Comparison validation correctly rejects duplicate product IDs')
 
 # 8. Database and Entity schema verification
 from app.entities import (
-    Brand, Product, ProductSpecs, ReviewSentiment,
-    WarrantyInfo, Tag, ProductTag, Marketplace,
-    MarketplaceLink, MarketplacePrice
+    Brand, Product, ProductSpecs, MarketplacePrice
 )
 assert Product.__tablename__ == 'products'
 assert Brand.__tablename__ == 'brands'

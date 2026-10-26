@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Award, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 export default function ScoreBadge({ score, size = 'md', showLabel = false, label = 'Match Score' }) {
   const numScore = typeof score === 'number' ? Math.round(score * 10) / 10 : parseFloat(score) || 0;

@@ -6,7 +6,7 @@ from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 
-from app.entities import Product as ProductEntity, Brand, Tag, ProductSpecs, ReviewSentiment, WarrantyInfo, MarketplaceLink
+from app.entities import Product as ProductEntity, Brand, Tag, MarketplaceLink
 from app.models import (
     Product as ProductModel,
     ProductSpecs as SpecsModel,

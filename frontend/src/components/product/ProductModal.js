@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Scale, Check, Sliders, MessageSquare, Shield, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Scale, Check, Sliders, MessageSquare, Shield, ShoppingBag } from 'lucide-react';
 import { useCompare } from '@/context/CompareContext';
 import PriceTag from '@/components/ui/PriceTag';
 import TabSpecs from './TabSpecs';

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Filter, SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { Filter, RotateCcw } from 'lucide-react';
 import { CATEGORIES } from '@/data/products';
 
 export default function FilterPanel({

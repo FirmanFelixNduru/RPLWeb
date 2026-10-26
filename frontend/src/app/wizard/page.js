@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, ArrowLeft, RotateCcw, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { scoreRecommendations } from '@/lib/api';
 import StepCategory from '@/components/wizard/StepCategory';
 import StepBudget from '@/components/wizard/StepBudget';

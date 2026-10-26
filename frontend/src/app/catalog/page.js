@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Layers, Sparkles, Filter, X } from 'lucide-react';
+import { Layers, Filter, X } from 'lucide-react';
 import { getProducts } from '@/lib/api';
 import ProductCard from '@/components/catalog/ProductCard';
 import SearchBar from '@/components/catalog/SearchBar';
