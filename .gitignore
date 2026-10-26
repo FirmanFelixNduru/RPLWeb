@@ -29,3 +29,8 @@ Thumbs.db
 # Allow .env.example files to be tracked
 !.env.example
 !*/.env.example
+
+# Local-only developer instructions and task planning
+/AGENTS.md
+/AGENT_HANDOFF.md
+/TUGAS/

@@ -84,6 +84,11 @@ Konsumen modern sering mengalami hambatan kritis saat hendak membeli perangkat t
 
 ```
 Rekayasa Perangkat Lunak/
+├── docs/
+│   ├── HowToRun.md                      # Panduan menjalankan aplikasi
+│   ├── checklist_mvp.md                 # Checklist dan hasil verifikasi historis
+│   ├── demo.mp4                         # Rekaman demo yang tersedia
+│   └── ...                             # Dokumen proyek lainnya
 ├── backend/                             # Python FastAPI Microservice
 │   ├── app/
 │   │   ├── __init__.py
@@ -161,6 +166,10 @@ Rekayasa Perangkat Lunak/
 │
 └── README.md                            # Dokumentasi lengkap proyek
 ```
+
+Indeks dokumen:
+
+- [Panduan menjalankan aplikasi](docs/HowToRun.md), [checklist MVP](docs/checklist_mvp.md), dan [video demo](docs/demo.mp4). Keberadaan artefak bukan bukti pengujian ulang atau deployment saat ini.
 
 ---
 
