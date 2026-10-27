@@ -335,7 +335,7 @@ function contrast(foreground, background) {
 
 test('metadata, rating, filter count, empty state and search placeholder meet normal-text contrast in both themes', () => {
   const { tree: card } = comparisonHarness().card(product('sm-001'));
-  const metadata = findElements(card, (node) => node.type === 'span' && textContent(node) === 'MSRP')[0];
+  const metadata = findElements(card, (node) => node.type === 'span' && textContent(node) === 'Harga katalog')[0];
   const rating = findElements(card, (node) => React.Children.toArray(node.props.children)
     .some((child) => child.props?.children === product('sm-001').review_sentiment.overall_score))[0];
   const count = findElements(card, (node) => node.props.className?.includes('font-normal') && textContent(node).startsWith('('))[0];
@@ -652,6 +652,105 @@ test('mobile filter closes on the desktop breakpoint and removes its media liste
     }
     cleanup();
     assert.equal(changes.length, 0);
+  }
+});
+
+function reviewSurfaces(review) {
+  const item = { ...product('sm-001'), review_sentiment: review };
+  const { tree } = comparisonHarness().card(item);
+  const card = findElements(tree, (node) => node.props.className?.includes('justify-between pt-2 border-t'))[0];
+  const TabReviews = loadSource('components/product/TabReviews.js').default;
+  return [card, TabReviews({ product: item })];
+}
+
+test('card and modal header label unchanged product prices as catalog prices regardless of product ID', () => {
+  for (const id of ['sm-001', 'sm-003', 'lp-004']) {
+    const item = product(id);
+    const card = comparisonHarness().card(item).tree;
+    const ProductModal = loadSource('components/product/ProductModal.js', {
+      react: { ...React, useState: () => ['specs', () => {}] },
+      '@/lib/api': { getLiveMarketplacePrices: () => { throw new Error('Unexpected API request'); } },
+      '@/lib/useModalDialog': { useModalDialog: () => ({ dialogRef: {}, titleRef: {} }) },
+      '@/context/CompareContext': { useCompare: () => ({ activeProductModal: item, isInCompare: () => false }) },
+    }).default;
+    for (const tree of [card, ProductModal()]) {
+      assert.ok(textContent(tree).includes('Harga katalog'));
+      assert.doesNotMatch(textContent(tree), /MSRP/);
+      assert.equal(findElements(tree, (node) => Object.hasOwn(node.props, 'price'))[0].props.price, item.price);
+    }
+  }
+});
+
+test('supplied positive reviews keep their rating, count, summary and pros/cons without changing the dataset', () => {
+  const snapshot = JSON.stringify(PRODUCTS);
+  for (const item of PRODUCTS) {
+    const review = item.review_sentiment;
+    const [card, tab] = reviewSurfaces(review);
+    for (const tree of [card, tab]) {
+      assert.ok(findElements(tree, (node) => node.type === 'span' && node.props.children === review.overall_score).length);
+      assert.doesNotMatch(textContent(tree), /Data ulasan belum tersedia/);
+    }
+    const compact = review.total_reviews > 999 ? (review.total_reviews / 1000).toFixed(1) + 'k' : review.total_reviews;
+    assert.ok(textContent(card).includes(`(${compact} ulasan)`));
+    assert.ok(textContent(tab).includes(review.total_reviews.toLocaleString('id-ID')));
+    assert.ok(textContent(tab).includes(review.summary));
+    for (const text of [...review.pros, ...review.cons]) assert.ok(textContent(tab).includes(text));
+  }
+  assert.equal(JSON.stringify(PRODUCTS), snapshot);
+});
+
+test('missing, null and zero-count reviews never invent rating or counts, including the backend default object', () => {
+  const cases = [undefined, null, {}, { overall_score: 4.5, total_reviews: 0, pros: [], cons: [], summary: '' },
+    { overall_score: 4.5 }, { overall_score: 4.5, total_reviews: null }];
+  for (const review of cases) {
+    for (const tree of reviewSurfaces(review)) {
+      assert.ok(textContent(tree).includes('Data ulasan belum tersedia'));
+      assert.doesNotMatch(textContent(tree), /4\.5|1k\+|1\.200\+|0 ulasan/);
+      assert.equal(findElements(tree, (node) => node.type?.displayName === 'Star').length, 0);
+      assert.doesNotMatch(renderToStaticMarkup(tree), /lucide-star/);
+    }
+  }
+});
+
+test('zero rating is preserved when a positive review count supports the aggregate', () => {
+  for (const tree of reviewSurfaces({ overall_score: 0, total_reviews: 12 })) {
+    assert.ok(findElements(tree, (node) => node.type === 'span' && node.props.children === 0).length);
+    assert.ok(textContent(tree).includes('12'));
+    assert.doesNotMatch(textContent(tree), /4\.5|Data ulasan belum tersedia/);
+  }
+});
+
+test('partial or invalid numeric reviews display only supported fields', () => {
+  for (const rating of [undefined, null, NaN, Infinity, -1, 6, '4.5']) {
+    const [card, tab] = reviewSurfaces({ overall_score: rating, total_reviews: 12 });
+    assert.ok(textContent(card).trim().startsWith('(12 ulasan)'));
+    assert.ok(textContent(tab).includes('12 ulasan tercatat dalam data katalog.'));
+    assert.ok(textContent(tab).includes('Rating belum tersedia'));
+    for (const tree of [card, tab]) assert.doesNotMatch(renderToStaticMarkup(tree), /lucide-star/);
+  }
+  for (const count of [-1, 1.5, NaN, '12']) {
+    for (const tree of reviewSurfaces({ overall_score: 4.2, total_reviews: count })) {
+      assert.ok(textContent(tree).includes('Data ulasan belum tersedia'));
+      assert.doesNotMatch(textContent(tree), /4\.2/);
+    }
+  }
+});
+
+test('partial review text renders safely without absent arrays or unsupported section placeholders', () => {
+  const [, tab] = reviewSurfaces({ summary: 'Ringkasan tersedia', pros: ['Kelebihan tersedia', null, ' '], cons: null });
+  assert.ok(textContent(tab).includes('Ringkasan tersedia'));
+  assert.ok(textContent(tab).includes('Kelebihan tersedia'));
+  assert.doesNotMatch(textContent(tab), /Kekurangan yang dicatat/);
+  assert.equal(findElements(tab, (node) => node.type === 'li').length, 1);
+  const [, consOnly] = reviewSurfaces({ cons: ['Kekurangan tersedia'], pros: {}, summary: null });
+  assert.ok(textContent(consOnly).includes('Kekurangan tersedia'));
+  assert.doesNotMatch(textContent(consOnly), /Ringkasan ulasan|Kelebihan yang dicatat/);
+});
+
+test('reviews do not claim verification, real-time provenance or a fixed sentiment distribution', () => {
+  for (const review of [undefined, {}, product('sm-001').review_sentiment]) {
+    const [, tab] = reviewSurfaces(review);
+    assert.doesNotMatch(renderToStaticMarkup(tab), /Anti-Fake Verified|Real User Sentiment|ulasan nyata|Reddit|88%|12%/);
   }
 });
 

@@ -64,7 +64,7 @@ export default function ProductModal() {
               <div className="flex items-center gap-2 mt-1">
                 <PriceTag price={product.price} size="md" />
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  (MSRP Indonesia)
+                  Harga katalog
                 </span>
               </div>
             </div>

@@ -54,6 +54,10 @@ export default function ProductCard({ product }) {
 
   // Compute aggregate visual score (0-100)
   const averageScore = getCatalogScore(product);
+  const review = product.review_sentiment;
+  const hasReviewCount = Number.isInteger(review?.total_reviews) && review.total_reviews > 0;
+  const hasRating = hasReviewCount && Number.isFinite(review?.overall_score) &&
+    review.overall_score >= 0 && review.overall_score <= 5;
 
   return (
     <div className="group relative rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-600 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-black/40 transition-all duration-300 flex flex-col overflow-hidden">
@@ -94,7 +98,7 @@ export default function ProductCard({ product }) {
           {/* Price */}
           <div className="flex items-baseline gap-2">
             <PriceTag price={product.price} size="md" />
-            <span className="text-[11px] text-slate-600 dark:text-slate-300">MSRP</span>
+            <span className="text-[11px] text-slate-600 dark:text-slate-300">Harga katalog</span>
           </div>
 
           {/* Description snippet */}
@@ -121,10 +125,12 @@ export default function ProductCard({ product }) {
           {/* Social Proof & Warranty Indicators */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
             <div className="flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold">
-              <Star className="w-3.5 h-3.5 fill-current text-amber-600 dark:text-amber-400" />
-              <span>{product.review_sentiment?.overall_score || 4.5}</span>
+              {hasRating && <Star className="w-3.5 h-3.5 fill-current text-amber-600 dark:text-amber-400" />}
+              {hasRating && <span>{review.overall_score}</span>}
               <span className="text-slate-600 dark:text-slate-300 font-normal text-[10px]">
-                ({product.review_sentiment?.total_reviews ? (product.review_sentiment.total_reviews > 999 ? (product.review_sentiment.total_reviews / 1000).toFixed(1) + 'k' : product.review_sentiment.total_reviews) : '1k+'})
+                {hasReviewCount
+                  ? `(${review.total_reviews > 999 ? (review.total_reviews / 1000).toFixed(1) + 'k' : review.total_reviews} ulasan)`
+                  : 'Data ulasan belum tersedia'}
               </span>
             </div>
             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px]">
