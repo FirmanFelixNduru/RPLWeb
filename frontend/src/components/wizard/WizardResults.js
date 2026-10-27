@@ -184,7 +184,7 @@ export default function WizardResults({ results = [], onReset, wizardInput }) {
 
                 <button
                   type="button"
-                  onClick={() => openProductModal(topPick.product)}
+                  onClick={(event) => openProductModal(topPick.product, event.currentTarget)}
                   className="px-5 py-2.5 rounded-xl text-xs font-bold bg-white text-indigo-950 hover:bg-indigo-50 shadow-lg transition-all flex items-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
@@ -238,10 +238,15 @@ export default function WizardResults({ results = [], onReset, wizardInput }) {
                       {item.product.brand}
                     </span>
                     <h4
-                      onClick={() => openProductModal(item.product)}
                       className="text-sm sm:text-base font-bold text-slate-900 dark:text-white hover:text-indigo-600 cursor-pointer"
                     >
-                      {item.product.name}
+                      <button
+                        type="button"
+                        onClick={(event) => openProductModal(item.product, event.currentTarget)}
+                        className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400"
+                      >
+                        {item.product.name}
+                      </button>
                     </h4>
                     <div className="flex items-center gap-2 mt-1">
                       <PriceTag price={item.product.price} size="sm" />
@@ -271,7 +276,7 @@ export default function WizardResults({ results = [], onReset, wizardInput }) {
 
                     <button
                       type="button"
-                      onClick={() => openProductModal(item.product)}
+                      onClick={(event) => openProductModal(item.product, event.currentTarget)}
                       className="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
                     >
                       Rincian

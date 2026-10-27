@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Scale, Check, Sliders, MessageSquare, Shield, ShoppingBag } from 'lucide-react';
 import { useCompare } from '@/context/CompareContext';
+import { useModalDialog } from '@/lib/useModalDialog';
 import PriceTag from '@/components/ui/PriceTag';
 import TabSpecs from './TabSpecs';
 import TabReviews from './TabReviews';
@@ -12,6 +13,7 @@ import TabValue from './TabValue';
 export default function ProductModal() {
   const { activeProductModal, closeProductModal, addToCompare, isInCompare } = useCompare();
   const [activeTab, setActiveTab] = useState('specs');
+  const { dialogRef, titleRef } = useModalDialog(Boolean(activeProductModal), closeProductModal);
 
   if (!activeProductModal) return null;
 
@@ -26,7 +28,13 @@ export default function ProductModal() {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+    <dialog
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-dialog-title"
+      className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none border-0 text-inherit overflow-y-auto bg-slate-950/70 backdrop:bg-transparent backdrop-blur-sm open:flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+    >
       <div
         className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
@@ -50,7 +58,7 @@ export default function ProductModal() {
                   {product.category}
                 </span>
               </div>
-              <h3 className="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">
+              <h3 id="product-dialog-title" ref={titleRef} tabIndex={-1} className="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">
                 {product.name}
               </h3>
               <div className="flex items-center gap-2 mt-1">
@@ -80,7 +88,7 @@ export default function ProductModal() {
               type="button"
               onClick={closeProductModal}
               aria-label="Tutup Modal"
-              className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+              className="min-w-[44px] min-h-[44px] p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400"
             >
               <X className="w-6 h-6" />
             </button>
@@ -88,7 +96,7 @@ export default function ProductModal() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 overflow-x-auto bg-white dark:bg-slate-900">
+        <div className="flex shrink-0 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 overflow-x-auto bg-white dark:bg-slate-900">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -112,7 +120,7 @@ export default function ProductModal() {
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+        <div tabIndex={0} role="region" aria-label="Konten detail produk" className="p-4 sm:p-6 overflow-y-auto flex-1">
           {activeTab === 'specs' && <TabSpecs product={product} />}
           {activeTab === 'reviews' && <TabReviews product={product} />}
           {activeTab === 'warranty' && <TabWarranty product={product} />}
@@ -135,6 +143,6 @@ export default function ProductModal() {
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

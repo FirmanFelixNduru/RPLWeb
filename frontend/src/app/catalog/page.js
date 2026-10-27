@@ -8,6 +8,7 @@ import ProductCard from '@/components/catalog/ProductCard';
 import SearchBar from '@/components/catalog/SearchBar';
 import FilterPanel from '@/components/catalog/FilterPanel';
 import { useCompare } from '@/context/CompareContext';
+import { useModalDialog } from '@/lib/useModalDialog';
 
 export default function CatalogPage() {
   const { compareList } = useCompare();
@@ -19,6 +20,20 @@ export default function CatalogPage() {
   const [selectedPriceRange, setSelectedPriceRange] = useState({ min: 0, max: null });
   const [sortBy, setSortBy] = useState('score');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const { dialogRef: filterDialogRef, titleRef: filterTitleRef } = useModalDialog(
+    mobileFilterOpen, () => setMobileFilterOpen(false)
+  );
+
+  useEffect(() => {
+    if (!mobileFilterOpen) return;
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = () => {
+      if (desktop.matches) setMobileFilterOpen(false);
+    };
+    desktop.addEventListener('change', closeOnDesktop);
+    closeOnDesktop();
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, [mobileFilterOpen]);
 
   useEffect(() => {
     async function loadData() {
@@ -119,7 +134,10 @@ export default function CatalogPage() {
         {/* Mobile Filter Toggle */}
         <button
           type="button"
-          onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+          onClick={(event) => {
+            event.currentTarget.focus({ preventScroll: true });
+            setMobileFilterOpen(!mobileFilterOpen);
+          }}
           aria-expanded={mobileFilterOpen}
           aria-controls={mobileFilterOpen ? 'catalog-mobile-filters' : undefined}
           className="lg:hidden min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold self-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400"
@@ -159,10 +177,17 @@ export default function CatalogPage() {
 
         {/* Mobile Filter Drawer / Modal */}
         {mobileFilterOpen && (
-          <div id="catalog-mobile-filters" className="fixed inset-0 z-50 bg-slate-950/70 p-4 overflow-y-auto lg:hidden">
+          <dialog
+            id="catalog-mobile-filters"
+            ref={filterDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="catalog-filter-title"
+            className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none border-0 text-inherit bg-slate-950/70 backdrop:bg-transparent p-4 overflow-y-auto"
+          >
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-md mx-auto space-y-4">
               <div className="flex items-center justify-between border-b pb-3">
-                <span className="font-bold text-sm">Filter & Pengurutan</span>
+                <h2 id="catalog-filter-title" ref={filterTitleRef} tabIndex={-1} className="font-bold text-sm">Filter & Pengurutan</h2>
                 <button
                   type="button"
                   onClick={() => setMobileFilterOpen(false)}
@@ -196,7 +221,7 @@ export default function CatalogPage() {
                 totalFound={filteredProducts.length}
               />
             </div>
-          </div>
+          </dialog>
         )}
 
         {/* Product Grid Area */}

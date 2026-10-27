@@ -63,7 +63,9 @@ function catalogTree(products, states = {}, onStateChange = () => {}) {
       },
       useEffect: () => {},
       useMemo: (compute) => compute(),
+      useRef: (current) => ({ current }),
     },
+    'next/navigation': { usePathname: () => '/catalog' },
     '@/lib/api': { getProducts: () => { throw new Error('Unexpected API request'); } },
     '@/context/CompareContext': { useCompare: () => ({ compareList: [], isInCompare: () => false }) },
   }).default;
@@ -194,7 +196,7 @@ test('four-product limit, removal at capacity and product detail action retain e
   const { tree } = harness.card(PRODUCTS[1]);
   const detail = findElements(tree, (element) => element.type === 'button' &&
     !Object.hasOwn(element.props, 'aria-pressed'))[0];
-  detail.props.onClick();
+  detail.props.onClick({ currentTarget: { focus: () => {} } });
   assert.equal(harness.context().activeProductModal.id, PRODUCTS[1].id);
   assert.equal(harness.context().compareList.length, 3);
 });
@@ -297,7 +299,7 @@ test('product name is a noninteractive heading while detail remains a keyboard-n
   assert.equal(heading.props.tabIndex, undefined);
   const detail = findElements(tree, (node) => node.type === 'button' && textContent(node) === 'Lihat Detail')[0];
   assert.equal(detail.props.type, 'button');
-  detail.props.onClick();
+  detail.props.onClick({ currentTarget: { focus: () => {} } });
   assert.equal(harness.context().activeProductModal.id, 'sm-001');
 });
 
@@ -412,4 +414,283 @@ test('catalog controls retain visible focus and 44px targets, with contrast for 
       assert.ok(contrast(ink, classColor(button.props.className, 'hover:bg', dark)) >= 4.5);
     }
   }
+});
+
+test('product and mobile filter expose named native modal dialogs and explicit close actions', () => {
+  const calls = [];
+  const ProductModal = loadSource('components/product/ProductModal.js', {
+    react: { ...React, useState: () => ['specs', () => {}] },
+    '@/lib/api': { getLiveMarketplacePrices: () => { throw new Error('Unexpected API request'); } },
+    '@/lib/useModalDialog': { useModalDialog: () => ({ dialogRef: { current: null }, titleRef: { current: null } }) },
+    '@/context/CompareContext': { useCompare: () => ({
+      activeProductModal: product('sm-001'), isInCompare: () => false,
+      closeProductModal: () => calls.push('product'),
+    }) },
+  }).default;
+  const productDialog = ProductModal();
+  const filterDialog = findElements(catalogTree([], { 7: true }, (index, value) => calls.push([index, value])),
+    (node) => node.type === 'dialog')[0];
+  for (const dialog of [productDialog, filterDialog]) {
+    assert.equal(dialog.type, 'dialog');
+    assert.equal(dialog.props.role, 'dialog');
+    assert.equal(dialog.props['aria-modal'], 'true');
+    assert.equal(dialog.props.open, undefined, 'Open through showModal(), not a non-modal open attribute');
+    const title = findElements(dialog, (node) => node.props.id === dialog.props['aria-labelledby'])[0];
+    assert.ok(textContent(title).length > 0);
+    assert.equal(title.props.tabIndex, -1);
+    assert.ok(title.ref);
+  }
+  findElements(productDialog, (node) => node.props['aria-label'] === 'Tutup Modal')[0].props.onClick();
+  findElements(filterDialog, (node) => node.props['aria-label'] === 'Tutup filter dan pengurutan')[0].props.onClick();
+  assert.deepEqual(calls, ['product', [7, false]]);
+});
+
+test('product and filter openers establish the clicked button as the return-focus target', () => {
+  const calls = [];
+  const trigger = { focus: (options) => calls.push(options.preventScroll) };
+  const harness = comparisonHarness();
+  const card = harness.card(product('sm-001')).tree;
+  findElements(card, (node) => node.type === 'button' && textContent(node) === 'Lihat Detail')[0]
+    .props.onClick({ currentTarget: trigger });
+  assert.equal(harness.context().activeProductModal.id, 'sm-001');
+  const catalog = catalogTree([], {}, (index, value) => calls.push([index, value]));
+  findElements(catalog, (node) => Object.hasOwn(node.props, 'aria-expanded'))[0]
+    .props.onClick({ currentTarget: trigger });
+  assert.deepEqual(calls, [true, true, [7, true]]);
+});
+
+// Execute the actual hook's effect setup/cleanup against stubbed browser APIs.
+// This verifies our lifecycle contract, NOT native inertness, Escape key dispatch,
+// browser tab order, a focus trap, layout, or screen-reader behavior.
+function modalLifecycleEnvironment(overflow = '', priority = '') {
+  let value = overflow, importance = priority, currentSession;
+  const document = {
+    body: { style: {
+      getPropertyValue: () => value,
+      getPropertyPriority: () => importance,
+      setProperty: (name, next, nextPriority = '') => { value = next; importance = nextPriority; },
+      removeProperty: () => { value = ''; importance = ''; },
+    } },
+  };
+  let pathname = '/catalog';
+  const { useModalDialog } = loadSource('lib/useModalDialog.js', {
+    react: {
+      useRef: (initial) => currentSession.ref(initial),
+      useEffect: (setup, deps) => currentSession.effects.push({ setup, deps }),
+    },
+    'next/navigation': { usePathname: () => pathname },
+  }, { document, getComputedStyle: (node) => ({ visibility: node.cssHidden ? 'hidden' : 'visible' }) });
+  const element = () => ({
+    isConnected: true, visible: true, inert: false, focused: 0, tabIndex: 0, disabled: false,
+    matches() { return this.disabled; },
+    closest() { return this.inert ? {} : null; },
+    getClientRects() { return this.visible ? [{}] : []; },
+    focus(options) { this.focused++; this.options = options; document.activeElement = this; },
+  });
+  function session() {
+    const refs = [];
+    let index = 0;
+    const trigger = element(), title = element();
+    const listeners = new Map();
+    const dialog = {
+      open: false, shown: 0, closed: 0,
+      controls: [],
+      querySelectorAll() { return this.controls; },
+      contains(node) { return node === title || this.controls.includes(node); },
+      showModal() { this.open = true; this.shown++; },
+      close() { this.open = false; this.closed++; },
+      addEventListener: (name, listener) => listeners.set(name, listener),
+      removeEventListener: (name, listener) => {
+        assert.equal(listeners.get(name), listener);
+        listeners.delete(name);
+      },
+    };
+    const state = {
+      effects: [],
+      ref(initial) { const i = index++; return refs[i] ||= { current: initial }; },
+    };
+    return {
+      trigger, title, dialog, listeners,
+      render(open, onClose) {
+        currentSession = state;
+        index = 0;
+        state.effects = [];
+        const result = useModalDialog(open, onClose);
+        result.dialogRef.current = dialog;
+        result.titleRef.current = title;
+        state.effects[0].setup(); // latest onClose callback
+        return state.effects[1].setup;
+      },
+    };
+  }
+  return {
+    document, session, element,
+    overflow: () => [value, importance],
+    route: (next) => { pathname = next; },
+  };
+}
+
+test('dialog lifecycle requests native modality, title focus, scroll lock and cleans up on close/unmount', () => {
+  const env = modalLifecycleEnvironment('auto', 'important');
+  const modal = env.session();
+  env.document.activeElement = modal.trigger;
+  assert.equal(modal.render(false, () => {})(), undefined);
+  assert.equal(modal.dialog.shown, 0);
+  const cleanup = modal.render(true, () => {})();
+  assert.equal(modal.dialog.shown, 1);
+  assert.equal(modal.title.focused, 1);
+  assert.equal(modal.title.options.preventScroll, true);
+  assert.equal(env.document.activeElement, modal.title);
+  assert.deepEqual(env.overflow(), ['hidden', '']);
+  assert.deepEqual([...modal.listeners.keys()], ['cancel', 'close', 'keydown']);
+  cleanup();
+  assert.equal(modal.dialog.open, false);
+  assert.equal(modal.dialog.closed, 1);
+  assert.equal(modal.listeners.size, 0);
+  assert.equal(env.document.activeElement, modal.trigger);
+  assert.equal(modal.trigger.options.preventScroll, true);
+  assert.deepEqual(env.overflow(), ['auto', 'important']);
+});
+
+test('native cancel/close request the latest React close callback without stale Strict Mode close events', () => {
+  const env = modalLifecycleEnvironment();
+  const modal = env.session();
+  const calls = [];
+  env.document.activeElement = modal.trigger;
+  let cleanup = modal.render(true, () => calls.push('old'))();
+  modal.render(true, () => calls.push('current'));
+  modal.listeners.get('cancel')({ preventDefault: () => calls.push('prevent') });
+  assert.deepEqual(calls, ['prevent', 'current']);
+  cleanup();
+  cleanup = modal.render(true, () => calls.push('reopened'))();
+  modal.listeners.get('close')(); // late close event while the dialog is open again
+  assert.equal(calls.length, 2);
+  modal.dialog.open = false;
+  modal.listeners.get('close')();
+  assert.deepEqual(calls, ['prevent', 'current', 'reopened']);
+  cleanup();
+  assert.deepEqual(env.overflow(), ['', '']);
+  assert.equal(modal.listeners.size, 0);
+});
+
+test('route change closes React state and does not reopen the previous route dialog', () => {
+  const env = modalLifecycleEnvironment();
+  const modal = env.session();
+  let closed = 0;
+  env.document.activeElement = modal.trigger;
+  const cleanup = modal.render(true, () => closed++)();
+  env.route('/compare');
+  cleanup();
+  assert.equal(modal.render(true, () => closed++)(), undefined);
+  assert.equal(closed, 1);
+  assert.equal(modal.dialog.shown, 1);
+  assert.equal(modal.listeners.size, 0);
+  assert.deepEqual(env.overflow(), ['', '']);
+  modal.render(false, () => {})();
+  const nextCleanup = modal.render(true, () => {})();
+  assert.equal(modal.dialog.shown, 2);
+  nextCleanup();
+});
+
+test('cleanup skips missing, hidden or explicitly inert return-focus targets', () => {
+  for (const state of ['missing', 'hidden', 'inert']) {
+    const env = modalLifecycleEnvironment();
+    const modal = env.session();
+    env.document.activeElement = modal.trigger;
+    const cleanup = modal.render(true, () => {})();
+    if (state === 'missing') modal.trigger.isConnected = false;
+    if (state === 'hidden') modal.trigger.visible = false;
+    if (state === 'inert') modal.trigger.inert = true;
+    cleanup();
+    assert.equal(modal.trigger.focused, 0);
+    assert.deepEqual(env.overflow(), ['', '']);
+  }
+});
+
+test('overlapping dialog effects retain scroll lock until the last cleanup, even out of order', () => {
+  const env = modalLifecycleEnvironment('scroll', 'important');
+  const first = env.session(), second = env.session();
+  env.document.activeElement = first.trigger;
+  const cleanupFirst = first.render(true, () => {})();
+  const cleanupSecond = second.render(true, () => {})();
+  cleanupFirst();
+  assert.deepEqual(env.overflow(), ['hidden', '']);
+  cleanupSecond();
+  assert.deepEqual(env.overflow(), ['scroll', 'important']);
+  assert.equal(first.listeners.size + second.listeners.size, 0);
+});
+
+test('mobile filter closes on the desktop breakpoint and removes its media listener on cleanup', () => {
+  for (const initiallyDesktop of [false, true]) {
+    const effects = [], changes = [], calls = [];
+    let index = 0;
+    const media = {
+      matches: initiallyDesktop,
+      addEventListener: (name, callback) => { assert.equal(name, 'change'); changes.push(callback); },
+      removeEventListener: (name, callback) => { assert.equal(name, 'change'); assert.equal(changes.pop(), callback); },
+    };
+    const CatalogPage = loadSource('app/catalog/page.js', {
+      react: {
+        ...React,
+        useState: (initial) => { const i = index++; return [i === 7 ? true : initial, (value) => calls.push([i, value])]; },
+        useMemo: (compute) => compute(),
+        useEffect: (setup) => effects.push(setup),
+      },
+      '@/context/CompareContext': { useCompare: () => ({ compareList: [] }) },
+      '@/lib/useModalDialog': { useModalDialog: () => ({ dialogRef: {}, titleRef: {} }) },
+      '@/lib/api': { getProducts: () => { throw new Error('Unexpected API request'); } },
+    }, { window: { matchMedia: (query) => { assert.equal(query, '(min-width: 1024px)'); return media; } } }).default;
+    CatalogPage();
+    // Only exercise the breakpoint effect; the catalog API effect is not run.
+    const cleanup = effects[0]();
+    if (initiallyDesktop) assert.deepEqual(calls, [[7, false]]);
+    else {
+      assert.equal(calls.length, 0);
+      media.matches = true;
+      changes[0]();
+      assert.deepEqual(calls, [[7, false]]);
+    }
+    cleanup();
+    assert.equal(changes.length, 0);
+  }
+});
+
+test('dialog Tab boundaries wrap between operable controls while preserving normal and browser shortcuts', () => {
+  const env = modalLifecycleEnvironment();
+  const modal = env.session();
+  const first = env.element(), middle = env.element(), last = env.element();
+  const disabled = { ...env.element(), disabled: true };
+  const hidden = { ...env.element(), visible: false };
+  const inert = { ...env.element(), inert: true };
+  const negative = { ...env.element(), tabIndex: -1 };
+  const invisible = { ...env.element(), cssHidden: true };
+  modal.dialog.controls = [disabled, hidden, first, middle, negative, last, inert, invisible];
+  env.document.activeElement = modal.trigger;
+  const cleanup = modal.render(true, () => {})();
+  const keydown = modal.listeners.get('keydown');
+  let prevented = 0;
+  const tab = (extra = {}) => keydown({ key: 'Tab', preventDefault: () => prevented++, ...extra });
+  last.focus();
+  tab();
+  assert.equal(env.document.activeElement, first);
+  first.focus();
+  tab({ shiftKey: true });
+  assert.equal(env.document.activeElement, last);
+  modal.title.focus();
+  tab({ shiftKey: true });
+  assert.equal(env.document.activeElement, last);
+  assert.equal(prevented, 3);
+  middle.focus();
+  tab();
+  assert.equal(env.document.activeElement, middle, 'Interior navigation remains native');
+  last.focus();
+  for (const modifier of ['ctrlKey', 'metaKey', 'altKey']) tab({ [modifier]: true });
+  tab({ key: 'Enter' });
+  assert.equal(prevented, 3);
+  modal.dialog.controls = [];
+  tab();
+  assert.equal(env.document.activeElement, modal.title);
+  assert.equal(prevented, 4);
+  cleanup();
+  assert.equal(modal.listeners.size, 0);
 });

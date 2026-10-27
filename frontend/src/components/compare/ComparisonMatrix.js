@@ -450,7 +450,7 @@ export default function ComparisonMatrix({
 
                     <button
                       type="button"
-                      onClick={() => openProductModal(p)}
+                      onClick={(event) => openProductModal(p, event.currentTarget)}
                       className="w-full py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
                     >
                       <Eye className="w-3.5 h-3.5" />

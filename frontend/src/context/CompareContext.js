@@ -72,7 +72,10 @@ export function CompareProvider({ children }) {
     saveToStorage([]);
   };
 
-  const openProductModal = (product) => {
+  const openProductModal = (product, trigger) => {
+    // Pointer activation does not focus buttons in every browser. Establish the
+    // actual opener before the dialog effect captures the return-focus target.
+    trigger?.focus({ preventScroll: true });
     setActiveProductModal(product);
   };
 

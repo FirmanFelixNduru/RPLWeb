@@ -153,7 +153,7 @@ export default function ProductCard({ product }) {
 
           <button
             type="button"
-            onClick={() => openProductModal(product)}
+            onClick={(event) => openProductModal(product, event.currentTarget)}
             className="min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400"
           >
             <Eye className="w-3.5 h-3.5" />
