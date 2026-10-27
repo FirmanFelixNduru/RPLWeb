@@ -37,13 +37,13 @@ export default function TabReviews({ product }) {
                 Ulasan produk
               </h4>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
               {hasReviewCount
                 ? <><strong>{sentiment.total_reviews.toLocaleString('id-ID')}</strong> ulasan tercatat dalam data katalog.</>
                 : 'Data ulasan belum tersedia'}
             </p>
             {hasReviewCount && !hasRating && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Rating belum tersedia</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Rating belum tersedia</p>
             )}
           </div>
         </div>
