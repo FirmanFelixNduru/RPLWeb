@@ -90,7 +90,7 @@ export default function ProductCard({ product }) {
         <div className="space-y-2">
           {/* Title */}
           <h3
-            className="text-base sm:text-lg font-bold text-slate-900 dark:text-white line-clamp-1"
+            className="text-base sm:text-lg font-bold text-slate-900 dark:text-white"
           >
             {product.name}
           </h3>

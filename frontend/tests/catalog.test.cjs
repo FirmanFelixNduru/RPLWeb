@@ -391,6 +391,41 @@ test('mobile toggle, close control and filter chips have names and preserve exis
   assert.equal(findElements(closed, (node) => Object.hasOwn(node.props, 'aria-expanded'))[0].props['aria-expanded'], false);
 });
 
+for (const name of [
+  'Xiaomi 14 Ultra',
+  'Lenovo ThinkPad X1 Carbon Gen 11',
+  'ASUS ROG Zephyrus G14 (2024)',
+  'Fixture Laptop Professional Edition Generasi 2026 Model ABC 123 Konfigurasi RAM 32 GB Storage 2 TB untuk Pengujian Nama Sangat Panjang Tanpa Mengubah Dataset',
+]) {
+  test(`product heading preserves its complete name and natural wrapping: ${name}`, () => {
+    const item = { ...product('lp-005'), name };
+    const harness = comparisonHarness();
+    const { tree } = harness.card(item);
+    const heading = findElements(tree, (node) => node.type === 'h3')[0];
+    assert.equal(textContent(heading), name);
+    assert.equal(heading.props.onClick, undefined);
+    assert.equal(heading.props.tabIndex, undefined);
+    assert.equal(heading.props.title, undefined);
+    assert.doesNotMatch(heading.props.className, /line-clamp|truncate|whitespace-nowrap|(?:^|\s)(?:min-|max-)?h-/);
+    assert.equal(heading.props.style, undefined);
+    const compare = findElements(tree, (node) => node.type === 'button' &&
+      node.props['aria-label'] === `Tambah ke komparasi: ${name}`)[0];
+    assert.equal(compare.props.type, 'button');
+    compare.props.onClick();
+    assert.equal(harness.context().compareList[0].name, name);
+    const selected = harness.card(item).tree;
+    const remove = findElements(selected, (node) => node.props['aria-label'] === `Hapus dari komparasi: ${name}`)[0];
+    assert.equal(remove.props['aria-pressed'], true);
+    remove.props.onClick();
+    assert.equal(harness.context().compareList.length, 0);
+    const detail = findElements(tree, (node) => node.type === 'button' && textContent(node) === 'Lihat Detail')[0];
+    assert.equal(detail.props.type, 'button');
+    const trigger = { focus: () => {} };
+    detail.props.onClick({ currentTarget: trigger });
+    assert.equal(harness.context().activeProductModal.name, name);
+  });
+}
+
 test('product name is a noninteractive heading while detail remains a keyboard-native button', () => {
   const harness = comparisonHarness();
   const { tree } = harness.card(product('sm-001'));
