@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Layers, Filter, X } from 'lucide-react';
 import { getProducts } from '@/lib/api';
 import { getCatalogScore } from '@/lib/catalogScore';
@@ -20,6 +20,8 @@ export default function CatalogPage() {
   const [selectedPriceRange, setSelectedPriceRange] = useState({ min: 0, max: null });
   const [sortBy, setSortBy] = useState('score');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const searchContainerRef = useRef(null);
+  const hasBudgetFilter = selectedPriceRange.min > 0 || selectedPriceRange.max != null;
   const { dialogRef: filterDialogRef, titleRef: filterTitleRef } = useModalDialog(
     mobileFilterOpen, () => setMobileFilterOpen(false)
   );
@@ -148,7 +150,7 @@ export default function CatalogPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="w-full max-w-3xl">
+      <div ref={searchContainerRef} className="w-full max-w-3xl">
         <SearchBar
           value={searchQuery}
           onChange={setSearchQuery}
@@ -227,7 +229,7 @@ export default function CatalogPage() {
         {/* Product Grid Area */}
         <div className="lg:col-span-8 space-y-6">
           {/* Active filters badges */}
-          {(selectedCategory || selectedBrand || selectedPriceRange.max || searchQuery) && (
+          {(selectedCategory || selectedBrand || hasBudgetFilter || searchQuery) && (
             <div className="flex items-center gap-2 flex-wrap text-xs">
               <span className="text-slate-600 dark:text-slate-300 font-semibold">Filter Aktif:</span>
               {selectedCategory && (
@@ -245,6 +247,19 @@ export default function CatalogPage() {
                   Brand: {selectedBrand}
                   <button type="button" onClick={() => setSelectedBrand('')}
                     aria-label={`Hapus filter merek: ${selectedBrand}`}
+                    className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {hasBudgetFilter && (
+                <span className="px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold flex items-center gap-1">
+                  Anggaran: {selectedPriceRange.label}
+                  <button type="button" onClick={() => {
+                    setSelectedPriceRange({ min: 0, max: null });
+                    searchContainerRef.current?.querySelector('input')?.focus({ preventScroll: true });
+                  }}
+                    aria-label={`Hapus filter anggaran: ${selectedPriceRange.label}`}
                     className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400">
                     <X className="w-3 h-3" />
                   </button>

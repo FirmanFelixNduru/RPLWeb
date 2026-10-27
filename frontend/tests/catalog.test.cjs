@@ -234,6 +234,106 @@ function filterTree(overrides = {}) {
   });
 }
 
+function budgetPresets() {
+  const presets = [];
+  const tree = filterTree({ onSelectPriceRange: (range) => presets.push(range) });
+  const group = findElements(tree, (node) => node.props['aria-label'] === 'Rentang Anggaran (Budget)')[0];
+  for (const button of findElements(group, (node) => node.type === 'button')) button.props.onClick();
+  return presets;
+}
+
+function budgetRemoveButton(tree) {
+  return findElements(tree, (node) => node.type === 'button' &&
+    node.props['aria-label']?.startsWith('Hapus filter anggaran:'))[0];
+}
+
+test('default budget does not render a budget chip or an empty active-filter summary', () => {
+  for (const range of [{ min: 0, max: null }, budgetPresets()[0]]) {
+    const tree = catalogTree(Array.from(PRODUCTS), { 5: range });
+    assert.equal(budgetRemoveButton(tree), undefined);
+    assert.equal(textContent(tree).includes('Filter Aktif:'), false);
+  }
+});
+
+for (const label of ['< Rp 5 Juta', 'Rp 5 - 15 Juta', 'Rp 15 - 25 Juta', '> Rp 25 Juta']) {
+  test(`active budget summary uses the actual filter preset label: ${label}`, () => {
+    const range = budgetPresets().find((preset) => preset.label === label);
+    assert.ok(range);
+    const tree = catalogTree(Array.from(PRODUCTS), { 5: range });
+    assert.ok(textContent(tree).includes(`Anggaran: ${label}`));
+    const remove = budgetRemoveButton(tree);
+    assert.equal(remove.props['aria-label'], `Hapus filter anggaran: ${label}`);
+    assert.equal(remove.props.type, 'button');
+    assert.match(remove.props.className, /focus-visible:outline/);
+    assert.match(remove.props.className, /min-w-\[44px\]/);
+    assert.match(remove.props.className, /min-h-\[44px\]/);
+  });
+}
+
+test('removing budget changes only budget state and moves focus to the existing search input', () => {
+  const calls = [], focusCalls = [];
+  const states = { 2: 'Galaxy', 3: 'smartphone', 4: 'Samsung', 5: budgetPresets()[2], 6: 'price_asc' };
+  const tree = catalogTree(Array.from(PRODUCTS), states, (index, value) => calls.push([index, value]));
+  const searchContainer = findElements(tree, (node) => node.type === 'div' &&
+    node.props.className === 'w-full max-w-3xl')[0];
+  searchContainer.ref.current = {
+    querySelector: (selector) => {
+      assert.equal(selector, 'input');
+      return { focus: (options) => focusCalls.push(options.preventScroll) };
+    },
+  };
+  budgetRemoveButton(tree).props.onClick();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], 5);
+  assert.equal(calls[0][1].min, 0);
+  assert.equal(calls[0][1].max, null);
+  assert.deepEqual(focusCalls, [true]);
+  const cleared = catalogTree(Array.from(PRODUCTS), { ...states, 5: calls[0][1] });
+  assert.equal(budgetRemoveButton(cleared), undefined);
+  for (const label of ['Hapus filter kategori: smartphone', 'Hapus filter merek: Samsung', 'Hapus filter pencarian']) {
+    assert.ok(findElements(cleared, (node) => node.props['aria-label'] === label).length);
+  }
+  const panel = findElements(cleared, (node) => typeof node.type === 'function' && node.props.onSelectSort)[0];
+  assert.equal(panel.props.sortBy, 'price_asc');
+});
+
+test('upper-unbounded budget remains summarized after the existing mobile selection closes its dialog', () => {
+  const states = { 7: true };
+  const tree = catalogTree(Array.from(PRODUCTS), states, (index, value) => { states[index] = value; });
+  const panels = findElements(tree, (node) => typeof node.type === 'function' && node.props.onSelectPriceRange);
+  panels.at(-1).props.onSelectPriceRange(budgetPresets().at(-1));
+  assert.equal(states[7], false);
+  const closed = catalogTree(Array.from(PRODUCTS), states);
+  assert.equal(findElements(closed, (node) => node.type === 'dialog').length, 0);
+  assert.equal(budgetRemoveButton(closed).props['aria-label'], 'Hapus filter anggaran: > Rp 25 Juta');
+});
+
+test('budget removal preserves combined category, brand, search and price sorting results', () => {
+  const states = { 2: 'Galaxy', 3: 'smartphone', 4: 'Samsung', 5: budgetPresets()[2], 6: 'price_asc' };
+  const expected = (range) => Array.from(PRODUCTS).filter((p) => p.category === 'smartphone' &&
+    p.brand === 'Samsung' && p.name.includes('Galaxy') && p.price >= range.min &&
+    (range.max === null || p.price <= range.max)).sort((a, b) => a.price - b.price).map((p) => p.id);
+  assert.deepEqual(renderCatalog(Array.from(PRODUCTS), states).map((item) => item.product.id), expected(states[5]));
+  const tree = catalogTree(Array.from(PRODUCTS), states, (index, value) => { states[index] = value; });
+  budgetRemoveButton(tree).props.onClick();
+  assert.deepEqual(renderCatalog(Array.from(PRODUCTS), states).map((item) => item.product.id), expected({ min: 0, max: null }));
+  assert.ok(renderCatalog(Array.from(PRODUCTS), states).length > 0);
+});
+
+test('reset still clears all filters and restores score sorting after an active budget', () => {
+  const states = { 2: 'Galaxy', 3: 'smartphone', 4: 'Samsung', 5: budgetPresets().at(-1), 6: 'name' };
+  const tree = catalogTree(Array.from(PRODUCTS), states, (index, value) => { states[index] = value; });
+  findElements(tree, (node) => typeof node.type === 'function' && node.props.onResetFilters)[0].props.onResetFilters();
+  assert.equal(states[2], '');
+  assert.equal(states[3], '');
+  assert.equal(states[4], '');
+  assert.equal(states[5].min, 0);
+  assert.equal(states[5].max, null);
+  assert.equal(states[6], 'score');
+  assert.equal(budgetRemoveButton(catalogTree(Array.from(PRODUCTS), states)), undefined);
+  assert.equal(renderCatalog(Array.from(PRODUCTS), states).length, PRODUCTS.length);
+});
+
 test('each filter group exposes one selected option and preserves selection callbacks', () => {
   const calls = [];
   const tree = filterTree({
@@ -634,6 +734,7 @@ test('mobile filter closes on the desktop breakpoint and removes its media liste
         ...React,
         useState: (initial) => { const i = index++; return [i === 7 ? true : initial, (value) => calls.push([i, value])]; },
         useMemo: (compute) => compute(),
+        useRef: (current) => ({ current }),
         useEffect: (setup) => effects.push(setup),
       },
       '@/context/CompareContext': { useCompare: () => ({ compareList: [] }) },
