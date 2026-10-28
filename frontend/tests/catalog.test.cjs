@@ -297,15 +297,106 @@ test('removing budget changes only budget state and moves focus to the existing 
   assert.equal(panel.props.sortBy, 'price_asc');
 });
 
-test('upper-unbounded budget remains summarized after the existing mobile selection closes its dialog', () => {
+test('upper-unbounded budget stays open until explicit completion and remains summarized after closing', () => {
   const states = { 7: true };
   const tree = catalogTree(Array.from(PRODUCTS), states, (index, value) => { states[index] = value; });
   const panels = findElements(tree, (node) => typeof node.type === 'function' && node.props.onSelectPriceRange);
   panels.at(-1).props.onSelectPriceRange(budgetPresets().at(-1));
+  assert.equal(states[7], true);
+  const open = catalogTree(Array.from(PRODUCTS), states, (index, value) => { states[index] = value; });
+  findElements(open, (node) => node.type === 'button' && textContent(node).startsWith('Lihat hasil ('))[0].props.onClick();
   assert.equal(states[7], false);
   const closed = catalogTree(Array.from(PRODUCTS), states);
   assert.equal(findElements(closed, (node) => node.type === 'dialog').length, 0);
   assert.equal(budgetRemoveButton(closed).props['aria-label'], 'Hapus filter anggaran: > Rp 25 Juta');
+});
+
+function mobileFilterPanel(tree) {
+  const dialog = findElements(tree, (node) => node.type === 'dialog')[0];
+  return findElements(dialog, (node) => typeof node.type === 'function' && node.props.onSelectCategory)[0];
+}
+
+for (const [handler, value, index] of [
+  ['onSelectCategory', 'laptop', 3],
+  ['onSelectBrand', 'Lenovo', 4],
+  ['onSelectPriceRange', budgetPresets().at(-1), 5],
+]) {
+  test(`mobile ${handler} changes only its filter without closing the dialog`, () => {
+    const calls = [];
+    const tree = catalogTree(Array.from(PRODUCTS), { 7: true }, (i, next) => calls.push([i, next]));
+    mobileFilterPanel(tree).props[handler](value);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][0], index);
+    assert.equal(calls[0][1], value);
+  });
+}
+
+test('mobile filter session applies consecutive choices immediately, preserves search/sort and completes explicitly', () => {
+  const states = { 2: 'Galaxy', 7: true }, calls = [];
+  const render = () => catalogTree(Array.from(PRODUCTS), states, (i, value) => { states[i] = value; calls.push(i); });
+  for (const [handler, value] of [
+    ['onSelectCategory', 'smartphone'], ['onSelectBrand', 'Samsung'],
+    ['onSelectPriceRange', budgetPresets()[2]], ['onSelectSort', 'price_asc'],
+  ]) {
+    mobileFilterPanel(render()).props[handler](value);
+    assert.equal(states[7], true);
+    const tree = render();
+    const count = renderCatalog(Array.from(PRODUCTS), states).length;
+    assert.equal(mobileFilterPanel(tree).props.totalFound, count);
+    const done = findElements(tree, (node) => node.type === 'button' && textContent(node).startsWith('Lihat hasil ('))[0];
+    assert.equal(textContent(done), `Lihat hasil (${count} produk)`);
+    assert.equal(done.props.type, 'button');
+    assert.equal(done.props.disabled, undefined);
+  }
+  assert.equal(states[2], 'Galaxy');
+  const expected = Array.from(PRODUCTS).filter((p) => p.category === 'smartphone' && p.brand === 'Samsung' &&
+    p.name.includes('Galaxy') && p.price >= 5000000 && p.price <= 15000000).sort((a, b) => a.price - b.price);
+  assert.ok(expected.length > 0);
+  assert.deepEqual(renderCatalog(Array.from(PRODUCTS), states).map((item) => item.product.id), expected.map((p) => p.id));
+  const tree = render(), done = findElements(tree, (node) => node.type === 'button' && textContent(node).startsWith('Lihat hasil ('))[0];
+  calls.length = 0;
+  done.props.onClick();
+  assert.deepEqual(calls, [7]);
+  assert.equal(states[7], false);
+  assert.ok(budgetRemoveButton(render()));
+  const selectedRange = states[5];
+  states[7] = true;
+  const reopened = mobileFilterPanel(render());
+  assert.equal(reopened.props.selectedCategory, 'smartphone');
+  assert.equal(reopened.props.selectedBrand, 'Samsung');
+  assert.equal(reopened.props.selectedPriceRange, selectedRange);
+  assert.equal(reopened.props.sortBy, 'price_asc');
+  calls.length = 0;
+  findElements(render(), (node) => node.props['aria-label'] === 'Tutup filter dan pengurutan')[0].props.onClick();
+  assert.deepEqual(calls, [7]);
+  assert.equal(states[5], selectedRange);
+});
+
+test('zero-result completion stays enabled, reset stays open and the completion action is last in the dialog', () => {
+  const states = { 2: 'no-product-matches-this-query', 3: 'laptop', 4: 'Lenovo', 5: budgetPresets().at(-1), 6: 'name', 7: true };
+  const render = () => catalogTree(Array.from(PRODUCTS), states, (i, value) => { states[i] = value; });
+  const tree = render(), dialog = findElements(tree, (node) => node.type === 'dialog')[0];
+  const buttons = findElements(dialog, (node) => node.type === 'button');
+  const done = buttons.at(-1);
+  assert.equal(textContent(done), 'Lihat hasil (0 produk)');
+  assert.equal(done.props.disabled, undefined);
+  assert.match(done.props.className, /min-h-\[44px\]/);
+  assert.match(done.props.className, /focus-visible:outline/);
+  assert.ok(textContent(dialog).includes('Perubahan filter langsung diterapkan.'));
+  done.props.onClick();
+  assert.equal(states[7], false);
+  assert.equal(states[2], 'no-product-matches-this-query');
+  states[7] = true;
+  mobileFilterPanel(render()).props.onResetFilters();
+  assert.equal(states[7], true);
+  assert.equal(states[2], '');
+  assert.equal(states[3], '');
+  assert.equal(states[4], '');
+  assert.equal(states[5].min, 0);
+  assert.equal(states[5].max, null);
+  assert.equal(states[6], 'score');
+  assert.equal(mobileFilterPanel(render()).props.totalFound, PRODUCTS.length);
+  assert.equal(textContent(findElements(render(), (node) => node.type === 'button' && textContent(node).startsWith('Lihat hasil ('))[0]), `Lihat hasil (${PRODUCTS.length} produk)`);
 });
 
 test('budget removal preserves combined category, brand, search and price sorting results', () => {

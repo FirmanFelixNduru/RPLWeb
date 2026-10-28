@@ -200,28 +200,31 @@ export default function CatalogPage() {
                 </button>
               </div>
 
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Perubahan filter langsung diterapkan.
+              </p>
+
               <FilterPanel
                 selectedCategory={selectedCategory}
-                onSelectCategory={(cat) => {
-                  setSelectedCategory(cat);
-                  setMobileFilterOpen(false);
-                }}
+                onSelectCategory={setSelectedCategory}
                 selectedBrand={selectedBrand}
-                onSelectBrand={(b) => {
-                  setSelectedBrand(b);
-                  setMobileFilterOpen(false);
-                }}
+                onSelectBrand={setSelectedBrand}
                 selectedPriceRange={selectedPriceRange}
-                onSelectPriceRange={(r) => {
-                  setSelectedPriceRange(r);
-                  setMobileFilterOpen(false);
-                }}
+                onSelectPriceRange={setSelectedPriceRange}
                 sortBy={sortBy}
                 onSelectSort={setSortBy}
                 onResetFilters={handleResetFilters}
                 brands={brands}
                 totalFound={filteredProducts.length}
               />
+
+              <button
+                type="button"
+                onClick={() => setMobileFilterOpen(false)}
+                className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400"
+              >
+                Lihat hasil ({filteredProducts.length} produk)
+              </button>
             </div>
           </dialog>
         )}
