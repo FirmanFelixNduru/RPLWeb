@@ -50,6 +50,189 @@ function findElements(node, predicate) {
 const { PRODUCTS } = loadSource('data/products.js');
 const product = (id) => PRODUCTS.find((item) => item.id === id);
 
+// Exercise the actual page's status effects with deterministic hooks/time and a
+// minimal portal host. This checks DOM intent/state, not screen-reader speech.
+function resultStatusHarness(initial = {}) {
+  const states = { 0: Array.from(PRODUCTS), 1: false, ...initial };
+  const effects = [], refs = [], timers = new Map(), messages = [], hosts = [];
+  let stateIndex, effectIndex, refIndex, dirty, tree, time = 0, timerId = 0;
+  const home = container(), dialog = container(), dialogRef = { current: dialog };
+  function container() {
+    return { children: [], querySelector: () => null, appendChild(node) {
+      node.remove();
+      this.children.push(node);
+      node.parentNode = this;
+    } };
+  }
+  const Page = loadSource('app/catalog/page.js', {
+    react: {
+      ...React,
+      useState: (initialValue) => {
+        const i = stateIndex++;
+        if (!Object.hasOwn(states, i)) states[i] = initialValue;
+        return [states[i], (next) => {
+          if (!Object.is(states[i], next)) { states[i] = next; dirty = true; }
+        }];
+      },
+      useRef: (current) => refs[refIndex++] ||= { current },
+      useMemo: (compute) => compute(),
+      useEffect: (setup, deps) => {
+        const i = effectIndex++, previous = effects[i];
+        if (!previous || deps.some((value, index) => !Object.is(value, previous.deps[index]))) {
+          effects[i] = { setup, deps, pending: true, cleanup: previous?.cleanup };
+        }
+      },
+    },
+    'react-dom': { createPortal: (message, host) => {
+      if (host.textContent !== message) { host.textContent = message; messages.push(message); }
+      return null;
+    } },
+    '@/context/CompareContext': { useCompare: () => ({ compareList: [] }) },
+    '@/lib/useModalDialog': { useModalDialog: () => ({ dialogRef, titleRef: {} }) },
+    '@/lib/api': { getProducts: () => { throw new Error('Unexpected API request'); } },
+  }, {
+    document: { createElement: (tag) => {
+      const node = { tag, attributes: {}, textContent: '', parentNode: null,
+        setAttribute(name, value) { this.attributes[name] = value; },
+        remove() {
+          if (this.parentNode) this.parentNode.children.splice(this.parentNode.children.indexOf(this), 1);
+          this.parentNode = null;
+        },
+      };
+      hosts.push(node);
+      return node;
+    } },
+    setTimeout: (callback, delay) => { const id = ++timerId; timers.set(id, { callback, due: time + delay }); return id; },
+    clearTimeout: (id) => timers.delete(id),
+  }).default;
+  function render() {
+    do {
+      dirty = false;
+      stateIndex = effectIndex = refIndex = 0;
+      tree = Page();
+      refs[0].current = home;
+      // Status effects only. Existing breakpoint/API effects are tested elsewhere;
+      // running those here would turn this offline harness into an integration test.
+      effects.forEach((effect, index) => {
+        if (index < 2 || !effect.pending) return;
+        effect.cleanup?.();
+        effect.pending = false;
+        effect.cleanup = effect.setup();
+      });
+    } while (dirty);
+    return tree;
+  }
+  render();
+  return {
+    states, home, dialog, hosts, messages, timers,
+    tree: () => tree,
+    change(index, value) { states[index] = value; render(); },
+    render,
+    advance(ms) {
+      time += ms;
+      for (const [id, timer] of [...timers]) if (timer.due <= time) {
+        timers.delete(id); timer.callback();
+      }
+      render();
+    },
+    unmount() { effects.forEach((effect) => effect.cleanup?.()); },
+  };
+}
+
+test('result status is one polite semantic host, with actual positive and zero-result messages', () => {
+  const h = resultStatusHarness();
+  assert.equal(h.hosts.length, 1);
+  assert.equal(h.hosts[0].attributes.role, 'status');
+  assert.equal(h.hosts[0].attributes['aria-live'], undefined);
+  assert.equal(h.hosts[0].attributes['aria-atomic'], undefined);
+  assert.equal(h.hosts[0].className, 'sr-only');
+  assert.equal(h.hosts[0].parentNode, h.home);
+  assert.equal(h.hosts[0].textContent, '');
+  h.advance(350);
+  assert.equal(h.hosts[0].textContent, `${PRODUCTS.length} produk ditemukan.`);
+  h.change(2, 'no-matching-product-query');
+  assert.ok(textContent(h.tree()).includes('Tidak Menemukan Gadget yang Sesuai'));
+  h.advance(350);
+  assert.equal(h.hosts[0].textContent, 'Tidak ada produk yang sesuai.');
+  h.unmount();
+});
+
+test('rapid searches coalesce speech only; sorting and equal counts do not republish identical status', () => {
+  const h = resultStatusHarness();
+  h.advance(350);
+  h.change(2, 'Galaxy');
+  h.advance(200);
+  h.change(2, 'no-matching-product-query');
+  assert.ok(textContent(h.tree()).includes('Tidak Menemukan Gadget yang Sesuai'));
+  assert.equal(h.messages.length, 1);
+  assert.equal(h.timers.size, 1);
+  h.advance(349);
+  assert.equal(h.messages.length, 1);
+  h.advance(1);
+  assert.equal(h.messages.length, 2);
+  h.change(6, 'price_asc');
+  h.change(2, 'another-query-with-zero-matches');
+  h.render();
+  assert.equal(h.timers.size, 0);
+  assert.equal(h.messages.length, 2);
+  h.unmount();
+});
+
+test('category, brand, budget, chip removal and reset all feed the filtered result status', () => {
+  const h = resultStatusHarness();
+  h.advance(350);
+  const check = () => {
+    h.advance(350);
+    const cards = findElements(h.tree(), (node) => typeof node.type === 'function' && node.props.product);
+    assert.equal(h.hosts[0].textContent, cards.length ? `${cards.length} produk ditemukan.` : 'Tidak ada produk yang sesuai.');
+  };
+  h.change(3, 'smartphone'); check();
+  h.change(4, 'Samsung'); check();
+  h.change(5, budgetPresets()[2]); check();
+  budgetRemoveButton(h.tree()).props.onClick(); h.render(); check();
+  findElements(h.tree(), (node) => node.props['aria-label'] === 'Hapus filter merek: Samsung')[0].props.onClick(); h.render(); check();
+  findElements(h.tree(), (node) => typeof node.type === 'function' && node.props.onResetFilters)[0].props.onResetFilters(); h.render(); check();
+  assert.equal(h.hosts[0].textContent, `${PRODUCTS.length} produk ditemukan.`);
+  h.unmount();
+});
+
+test('dialog transitions move the same status host without publishing duplicates or dropping a pending result', () => {
+  const h = resultStatusHarness();
+  h.advance(350);
+  const host = h.hosts[0];
+  h.change(7, true);
+  assert.equal(host.parentNode, h.dialog);
+  assert.equal(h.home.children.length, 0);
+  assert.equal(h.messages.length, 1);
+  mobileFilterPanel(h.tree()).props.onSelectCategory('laptop'); h.render();
+  assert.equal(h.states[7], true);
+  findElements(h.tree(), (node) => node.type === 'button' && textContent(node).startsWith('Lihat hasil ('))[0].props.onClick(); h.render();
+  assert.equal(host.parentNode, h.home);
+  assert.equal(h.dialog.children.length, 0);
+  h.advance(350);
+  const count = PRODUCTS.filter((p) => p.category === 'laptop').length;
+  assert.equal(host.textContent, `${count} produk ditemukan.`);
+  assert.equal(h.messages.length, 2);
+  h.change(7, true); h.change(7, false); h.advance(1000);
+  assert.equal(h.hosts.length, 1);
+  assert.equal(h.messages.length, 2);
+  h.unmount();
+});
+
+test('loading never announces a temporary zero and unmount cancels timers and removes the status host', () => {
+  const h = resultStatusHarness({ 0: [], 1: true });
+  h.advance(1000);
+  assert.equal(h.hosts[0].textContent, '');
+  assert.equal(h.messages.length, 0);
+  assert.equal(h.timers.size, 0);
+  h.change(0, Array.from(PRODUCTS)); h.change(1, false);
+  assert.equal(h.timers.size, 1);
+  h.unmount();
+  assert.equal(h.timers.size, 0);
+  assert.equal(h.hosts[0].parentNode, null);
+  assert.equal(h.messages.length, 0);
+});
+
 function catalogTree(products, states = {}, onStateChange = () => {}) {
   let stateIndex = 0;
   const values = { 0: products, 1: false, ...states };

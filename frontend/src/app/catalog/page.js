@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Layers, Filter, X } from 'lucide-react';
 import { getProducts } from '@/lib/api';
 import { getCatalogScore } from '@/lib/catalogScore';
@@ -20,6 +21,8 @@ export default function CatalogPage() {
   const [selectedPriceRange, setSelectedPriceRange] = useState({ min: 0, max: null });
   const [sortBy, setSortBy] = useState('score');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [statusHost, setStatusHost] = useState(null);
+  const [resultAnnouncement, setResultAnnouncement] = useState('');
   const searchContainerRef = useRef(null);
   const hasBudgetFilter = selectedPriceRange.min > 0 || selectedPriceRange.max != null;
   const { dialogRef: filterDialogRef, titleRef: filterTitleRef } = useModalDialog(
@@ -107,6 +110,35 @@ export default function CatalogPage() {
 
     return list;
   }, [products, searchQuery, selectedCategory, selectedBrand, selectedPriceRange, sortBy]);
+
+  useEffect(() => {
+    // Keep one live region node: changing dialog context must not recreate its text.
+    const host = document.createElement('div');
+    host.setAttribute('role', 'status');
+    host.className = 'sr-only';
+    setStatusHost(host);
+    return () => host.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!statusHost) return;
+    const target = mobileFilterOpen ? filterDialogRef.current : searchContainerRef.current;
+    target?.appendChild(statusHost);
+  }, [statusHost, mobileFilterOpen, filterDialogRef]);
+
+  useEffect(() => {
+    if (loading) {
+      setResultAnnouncement('');
+      return;
+    }
+    // Coalesce rapid changes in speech only; the catalog itself stays immediate.
+    const timer = setTimeout(() => {
+      setResultAnnouncement(filteredProducts.length > 0
+        ? `${filteredProducts.length} produk ditemukan.`
+        : 'Tidak ada produk yang sesuai.');
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [loading, filteredProducts.length]);
 
   const handleResetFilters = () => {
     setSearchQuery('');
@@ -319,6 +351,7 @@ export default function CatalogPage() {
           )}
         </div>
       </div>
+      {statusHost && createPortal(resultAnnouncement, statusHost)}
     </div>
   );
 }
