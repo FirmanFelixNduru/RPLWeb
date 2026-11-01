@@ -45,7 +45,7 @@ export default function CatalogPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const res = await getProducts();
+        const res = await getProducts({ per_page: 100 });
         setProducts(res.products || []);
         setDataSource(res.source || 'fallback');
       } catch (err) {

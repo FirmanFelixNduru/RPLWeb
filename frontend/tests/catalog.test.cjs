@@ -1414,3 +1414,222 @@ test('katalog tetap menampilkan produk, filter, dan sorting saat fallback aktif'
   const sorted = renderCatalog(PRODUCTS, { 6: 'price_asc', 10: 'fallback' });
   assert.ok(sorted[0].product.price <= sorted[sorted.length - 1].product.price);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P2-A07: Implementasi Katalog hingga 100 Produk
+// ─────────────────────────────────────────────────────────────────────────────
+
+function generate100ProductsFixture() {
+  const categories = ['smartphone', 'laptop', 'tablet', 'tws', 'smartwatch'];
+  return Array.from({ length: 100 }, (_, index) => {
+    const num = index + 1;
+    const category = categories[index % categories.length];
+    let brand = 'BrandAlpha';
+    if (num <= 10) brand = 'BrandAlpha';
+    else if (num <= 20) brand = 'BrandBeta';
+    else if (num === 21) brand = 'BrandTwentyOne';
+    else if (num === 100) brand = 'BrandHundred';
+    else brand = `BrandGamma${(num % 3) + 1}`;
+
+    return {
+      id: `p-${String(num).padStart(3, '0')}`,
+      name: `Gadget Mod ${num}`,
+      brand,
+      category,
+      price: num * 1_000_000,
+      image: `/images/p-${num}.jpg`,
+      description: `Deskripsi gadget pengujian posisi nomor ${num}`,
+      specs: {},
+      review_sentiment: {
+        overall_score: 4.5,
+        total_reviews: 25,
+        pros: ['Kinerja oke'],
+        cons: ['Harga bersaing'],
+        summary: 'Ringkasan review',
+      },
+      warranty: {
+        duration_months: 12,
+        claim_ease: 8,
+        official_service_centers: 50,
+        score: 80,
+        warranty_type: 'Resmi Produsen',
+        verification_status: 'Ketentuan spesifik SKU terverifikasi',
+      },
+      tags: [`tag-${category}`, num === 21 ? 'special-twenty-one' : 'general'],
+      release_year: 2024,
+      score_performance: 80,
+      score_camera: 80,
+      score_battery: 80,
+      score_display: 80,
+      score_build_quality: 80,
+      score_value: 80,
+      score_audio: 80,
+      score_software: 80,
+    };
+  });
+}
+
+test('katalog meminta per_page: 100 saat mount', async () => {
+  let requestedParams = null;
+  const effects = [];
+  let stateIndex = 0;
+  const states = { 0: [], 1: true };
+  const Page = loadSource('app/catalog/page.js', {
+    react: {
+      ...React,
+      useState: (initial) => {
+        const i = stateIndex++;
+        return [Object.hasOwn(states, i) ? states[i] : initial, (val) => { states[i] = val; }];
+      },
+      useEffect: (setup) => { effects.push(setup); },
+      useMemo: (compute) => compute(),
+      useRef: (current) => ({ current }),
+    },
+    'next/navigation': { usePathname: () => '/catalog' },
+    '@/context/CompareContext': { useCompare: () => ({ compareList: [], isInCompare: () => false }) },
+    '@/lib/useModalDialog': { useModalDialog: () => ({ dialogRef: {}, titleRef: {} }) },
+    '@/lib/api': {
+      getProducts: async (params) => {
+        requestedParams = params;
+        return { products: [], total: 0, page: 1, per_page: 100, source: 'api' };
+      },
+    },
+  }).default;
+
+  Page();
+  assert.ok(effects.length >= 2, 'Sedikitnya dua effect didaftarkan');
+  await effects[1]();
+  assert.equal(requestedParams?.per_page, 100);
+});
+
+test('produk pada posisi ke-21 dan ke-100 dapat ditampilkan dan dicari', () => {
+  const dataset = generate100ProductsFixture();
+  const allCards = renderCatalog(dataset);
+  assert.equal(allCards.length, 100);
+
+  // Cari posisi 21
+  const search21Cards = renderCatalog(dataset, { 2: 'Gadget Mod 21' });
+  assert.equal(search21Cards.length, 1);
+  assert.equal(search21Cards[0].product.id, 'p-021');
+  assert.equal(search21Cards[0].product.name, 'Gadget Mod 21');
+
+  // Cari posisi 100
+  const search100Cards = renderCatalog(dataset, { 2: 'Gadget Mod 100' });
+  assert.equal(search100Cards.length, 1);
+  assert.equal(search100Cards[0].product.id, 'p-100');
+  assert.equal(search100Cards[0].product.name, 'Gadget Mod 100');
+});
+
+test('brand yang hanya muncul di luar 20 produk pertama tetap tersedia di filter brand', () => {
+  const dataset = generate100ProductsFixture();
+  const tree = catalogTree(dataset);
+  const filterPanels = findElements(tree, (element) => element.props && Object.hasOwn(element.props, 'brands'));
+  assert.ok(filterPanels.length > 0, 'FilterPanel harus ditemukan di tree');
+  const brands = filterPanels[0].props.brands;
+
+  assert.ok(brands.includes('BrandTwentyOne'), 'BrandTwentyOne harus ada di filter brands');
+  assert.ok(brands.includes('BrandHundred'), 'BrandHundred harus ada di filter brands');
+  assert.ok(!dataset.slice(0, 20).some((p) => p.brand === 'BrandTwentyOne'));
+});
+
+test('filtering kategori dan rentang harga bekerja pada keseluruhan 100 produk', () => {
+  const dataset = generate100ProductsFixture();
+
+  // Filter Kategori smartphone (100 produk / 5 kategori = 20 smartphone)
+  const smartphoneCards = renderCatalog(dataset, { 3: 'smartphone' });
+  assert.equal(smartphoneCards.length, 20);
+  assert.ok(smartphoneCards.every((c) => c.product.category === 'smartphone'));
+  assert.ok(smartphoneCards.some((c) => c.product.id === 'p-026'));
+  assert.ok(smartphoneCards.some((c) => c.product.id === 'p-096'));
+
+  // Filter Budget > Rp 50 Juta (min: 50.000.000) -> p-050 s/d p-100 (51 produk)
+  const budgetCards = renderCatalog(dataset, { 5: { min: 50_000_000, max: null } });
+  assert.equal(budgetCards.length, 51);
+  assert.ok(budgetCards.every((c) => c.product.price >= 50_000_000));
+  assert.ok(budgetCards.some((c) => c.product.id === 'p-100'));
+});
+
+test('sorting harga ascending dan descending bekerja terhadap keseluruhan 100 produk', () => {
+  const dataset = generate100ProductsFixture();
+
+  // price_asc: p-001 (1.000.000) di awal, p-100 (100.000.000) di akhir
+  const ascCards = renderCatalog(dataset, { 6: 'price_asc' });
+  assert.equal(ascCards[0].product.id, 'p-001');
+  assert.equal(ascCards[0].product.price, 1_000_000);
+  assert.equal(ascCards[ascCards.length - 1].product.id, 'p-100');
+  assert.equal(ascCards[ascCards.length - 1].product.price, 100_000_000);
+
+  // price_desc: p-100 (100.000.000) di awal, p-001 (1.000.000) di akhir
+  const descCards = renderCatalog(dataset, { 6: 'price_desc' });
+  assert.equal(descCards[0].product.id, 'p-100');
+  assert.equal(descCards[0].product.price, 100_000_000);
+  assert.equal(descCards[descCards.length - 1].product.id, 'p-001');
+  assert.equal(descCards[descCards.length - 1].product.price, 1_000_000);
+});
+
+test('result count dan pengumuman pembaca layar mencerminkan jumlah hasil 100 produk', () => {
+  const dataset = generate100ProductsFixture();
+  const h = resultStatusHarness({ 0: dataset });
+  h.advance(350);
+  assert.equal(h.hosts[0].textContent, '100 produk ditemukan.');
+
+  // Filter ke 20 smartphone
+  h.change(3, 'smartphone');
+  h.advance(350);
+  assert.equal(h.hosts[0].textContent, '20 produk ditemukan.');
+
+  // Cari produk ke-100
+  h.change(3, '');
+  h.change(2, 'Gadget Mod 100');
+  h.advance(350);
+  assert.equal(h.hosts[0].textContent, '1 produk ditemukan.');
+
+  h.unmount();
+});
+
+test('pemilihan produk posisi ke-21 dan ke-100 untuk comparison tetap berfungsi tanpa regresi', () => {
+  const dataset = generate100ProductsFixture();
+  const item21 = dataset.find((p) => p.id === 'p-021');
+  const item100 = dataset.find((p) => p.id === 'p-100');
+
+  const harness = comparisonHarness();
+  let card21 = harness.card(item21);
+  assert.equal(card21.button.props['aria-pressed'], false);
+  card21.button.props.onClick();
+  assert.equal(harness.context().compareList.length, 1);
+  assert.equal(harness.context().compareList[0].id, 'p-021');
+
+  let card100 = harness.card(item100);
+  card100.button.props.onClick();
+  assert.equal(harness.context().compareList.length, 2);
+  assert.equal(harness.context().compareList[1].id, 'p-100');
+  assert.deepEqual(JSON.parse(harness.storage.get('comparebuy_dock')).map((p) => p.id), ['p-021', 'p-100']);
+});
+
+test('API helper dan fallback lokal menangani per_page: 100 dengan mempertahankan metadata source P2-A06', async () => {
+  const fakeData = {
+    products: [{ id: 'p-api-1', name: 'API Gadget' }],
+    total: 1,
+    page: 1,
+    per_page: 100,
+  };
+  let capturedQuery = null;
+  const api = makeApiHarness(async (url) => {
+    capturedQuery = new URL(url).searchParams.get('per_page');
+    return {
+      ok: true,
+      json: async () => fakeData,
+    };
+  });
+  const resApi = await api.getProducts({ per_page: 100 });
+  assert.equal(capturedQuery, '100');
+  assert.equal(resApi.source, 'api');
+  assert.equal(resApi.per_page, 100);
+
+  const fallbackApi = makeApiHarness(async () => { throw new Error('Network error'); });
+  const resFallback = await fallbackApi.getProducts({ per_page: 100 });
+  assert.equal(resFallback.source, 'fallback');
+  assert.equal(resFallback.per_page, 100);
+  assert.equal(resFallback.products.length, PRODUCTS.length);
+  assert.equal(resFallback.total, PRODUCTS.length);
+});
