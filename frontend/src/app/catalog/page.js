@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Layers, Filter, X } from 'lucide-react';
+import { Layers, Filter, X, Info } from 'lucide-react';
 import { getProducts } from '@/lib/api';
 import { getCatalogScore } from '@/lib/catalogScore';
 import ProductCard from '@/components/catalog/ProductCard';
@@ -23,6 +23,7 @@ export default function CatalogPage() {
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [statusHost, setStatusHost] = useState(null);
   const [resultAnnouncement, setResultAnnouncement] = useState('');
+  const [dataSource, setDataSource] = useState('');
   const searchContainerRef = useRef(null);
   const hasBudgetFilter = selectedPriceRange.min > 0 || selectedPriceRange.max != null;
   const { dialogRef: filterDialogRef, titleRef: filterTitleRef } = useModalDialog(
@@ -46,8 +47,10 @@ export default function CatalogPage() {
       try {
         const res = await getProducts();
         setProducts(res.products || []);
+        setDataSource(res.source || 'fallback');
       } catch (err) {
         console.error('Failed to load catalog products:', err);
+        setDataSource('fallback');
       } finally {
         setLoading(false);
       }
@@ -161,8 +164,19 @@ export default function CatalogPage() {
             Katalog Gadget Terkurasi
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Telusuri spesifikasi lengkap, sentimen ulasan asli, garansi resmi, dan perbandingan harga live.
+            Jelajahi katalog produk dan bandingkan informasi penting sebelum memilih.
           </p>
+          {!loading && dataSource === 'fallback' && (
+            <div
+              role="status"
+              className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60"
+            >
+              <Info className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              <span>
+                Menampilkan data katalog cadangan lokal. Periksa kembali informasi harga dan detail produk sebelum mengambil keputusan.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Mobile Filter Toggle */}

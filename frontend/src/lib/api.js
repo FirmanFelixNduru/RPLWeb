@@ -29,7 +29,11 @@ export async function getProducts(params = {}) {
     });
 
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    return {
+      ...data,
+      source: 'api',
+    };
   } catch (err) {
     console.warn('API call failed, using client-side fallback:', err.message);
 
@@ -104,6 +108,7 @@ export async function getProducts(params = {}) {
       total: filtered.length,
       page,
       per_page: perPage,
+      source: 'fallback',
     };
   }
 }

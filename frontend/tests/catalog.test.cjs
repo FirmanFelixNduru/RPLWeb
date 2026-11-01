@@ -1312,3 +1312,105 @@ test('struktur dan kontrol kartu tetap terjaga setelah penanganan gambar', () =>
   assert.match(html, /Lihat Detail/);
   assert.equal(typeof cardImageModule.handleImageError, 'function');
 });
+
+// P2-A06: visibilitas konteks fallback katalog (API helper metadata dan UI transparansi sumber data).
+function makeApiHarness(fetchImpl) {
+  return loadSource('lib/api.js', {}, {
+    fetch: fetchImpl,
+    console: { warn: () => {} },
+    URLSearchParams,
+    process: { env: { NEXT_PUBLIC_API_URL: 'http://example.test' } },
+  });
+}
+
+test('API helper sukses mengembalikan source api dan mempertahankan properti respons', async () => {
+  const fakeData = {
+    products: [{ id: 'test-1', name: 'Test Gadget' }],
+    total: 1,
+    page: 1,
+    per_page: 20,
+  };
+  const api = makeApiHarness(async () => ({
+    ok: true,
+    json: async () => fakeData,
+  }));
+  const res = await api.getProducts();
+  assert.equal(res.source, 'api');
+  assert.equal(res.total, 1);
+  assert.equal(res.products[0].name, 'Test Gadget');
+  assert.equal(res.page, 1);
+  assert.equal(res.per_page, 20);
+});
+
+test('API helper beralih ke fallback saat network failure terjadi', async () => {
+  const api = makeApiHarness(async () => {
+    throw new Error('connect ECONNREFUSED 127.0.0.1:8000');
+  });
+  const res = await api.getProducts();
+  assert.equal(res.source, 'fallback');
+  assert.ok(res.total > 0);
+  assert.ok(Array.isArray(res.products));
+});
+
+test('API helper beralih ke fallback saat respons HTTP bukan 2xx', async () => {
+  for (const status of [404, 500, 502, 503]) {
+    const api = makeApiHarness(async () => ({
+      ok: false,
+      status,
+    }));
+    const res = await api.getProducts();
+    assert.equal(res.source, 'fallback');
+    assert.ok(res.total > 0);
+  }
+});
+
+test('API helper beralih ke fallback saat respons JSON malformed', async () => {
+  const api = makeApiHarness(async () => ({
+    ok: true,
+    json: async () => { throw new SyntaxError('Unexpected token < in JSON at position 0'); },
+  }));
+  const res = await api.getProducts();
+  assert.equal(res.source, 'fallback');
+  assert.ok(res.total > 0);
+});
+
+test('API helper fallback tetap memfilter kategori dan brand dari dataset lokal', async () => {
+  const api = makeApiHarness(async () => { throw new Error('offline'); });
+  const res = await api.getProducts({ category: 'smartphone', brand: 'Samsung' });
+  assert.equal(res.source, 'fallback');
+  assert.ok(res.products.length > 0);
+  assert.ok(res.products.every((p) => p.category === 'smartphone' && p.brand === 'Samsung'));
+});
+
+test('katalog subheader tidak lagi memuat klaim ulasan asli atau perbandingan harga live', () => {
+  const html = renderToStaticMarkup(catalogTree(PRODUCTS, { 10: 'api' }));
+  assert.match(html, /Jelajahi katalog produk dan bandingkan informasi penting sebelum memilih\./);
+  assert.doesNotMatch(html, /sentimen ulasan asli/);
+  assert.doesNotMatch(html, /garansi resmi/);
+  assert.doesNotMatch(html, /perbandingan harga live/);
+});
+
+test('indikator fallback tampil ketika sumber data adalah fallback lokal', () => {
+  const html = renderToStaticMarkup(catalogTree(PRODUCTS, { 10: 'fallback' }));
+  assert.match(html, /Menampilkan data katalog cadangan lokal/);
+  assert.match(html, /Periksa kembali informasi harga dan detail produk sebelum mengambil keputusan\./);
+  assert.match(html, /role="status"/);
+});
+
+test('indikator fallback tidak tampil ketika data bersumber dari API normal atau saat loading', () => {
+  const apiHtml = renderToStaticMarkup(catalogTree(PRODUCTS, { 10: 'api' }));
+  assert.doesNotMatch(apiHtml, /Menampilkan data katalog cadangan lokal/);
+
+  const loadingHtml = renderToStaticMarkup(catalogTree(PRODUCTS, { 1: true, 10: 'fallback' }));
+  assert.doesNotMatch(loadingHtml, /Menampilkan data katalog cadangan lokal/);
+
+  const emptySourceHtml = renderToStaticMarkup(catalogTree(PRODUCTS, { 10: '' }));
+  assert.doesNotMatch(emptySourceHtml, /Menampilkan data katalog cadangan lokal/);
+});
+
+test('katalog tetap menampilkan produk, filter, dan sorting saat fallback aktif', () => {
+  const cards = renderCatalog(PRODUCTS, { 10: 'fallback' });
+  assert.equal(cards.length, PRODUCTS.length);
+  const sorted = renderCatalog(PRODUCTS, { 6: 'price_asc', 10: 'fallback' });
+  assert.ok(sorted[0].product.price <= sorted[sorted.length - 1].product.price);
+});
