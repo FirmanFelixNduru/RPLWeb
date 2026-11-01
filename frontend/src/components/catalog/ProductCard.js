@@ -48,6 +48,16 @@ export function getWarrantyBadgeLabel(warranty) {
   return `Acuan ${months} Bln`;
 }
 
+const PLACEHOLDER_IMAGE = '/default-placeholder.svg';
+
+// Beralih ke placeholder lokal satu kali. Pemeriksaan atribut src saat ini mencegah
+// loop jika placeholder gagal dimuat, dan otomatis mengikuti URL baru saat kartu dipakai ulang.
+export function handleImageError(event) {
+  const image = event.currentTarget;
+  if (image.getAttribute('src') === PLACEHOLDER_IMAGE) return;
+  image.src = PLACEHOLDER_IMAGE;
+}
+
 export default function ProductCard({ product }) {
   const { addToCompare, isInCompare, openProductModal } = useCompare();
   const inCompare = isInCompare(product.id);
@@ -64,8 +74,9 @@ export default function ProductCard({ product }) {
       {/* Top Image & Floating Badges */}
       <div className="relative aspect-[4/3] bg-slate-50 dark:bg-slate-800/60 overflow-hidden">
         <img
-          src={product.image}
+          src={product.image || PLACEHOLDER_IMAGE}
           alt={product.name}
+          onError={handleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
 

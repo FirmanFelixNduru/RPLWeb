@@ -1203,3 +1203,112 @@ test('dialog Tab boundaries wrap between operable controls while preserving norm
   cleanup();
   assert.equal(modal.listeners.size, 0);
 });
+
+// P2-A05: ketahanan gambar kartu produk (simulasi error deterministik, tanpa jaringan).
+const cardImageModule = loadSource('components/catalog/ProductCard.js', {
+  '@/context/CompareContext': {
+    useCompare: () => ({ addToCompare() {}, isInCompare: () => false, openProductModal() {} }),
+  },
+});
+const PLACEHOLDER = '/default-placeholder.svg';
+const cardImage = (item) => findElements(cardImageModule.default({ product: item }),
+  (element) => element.type === 'img')[0];
+
+// Elemen img tiruan: event error dikirim lewat handler React yang sama seperti di browser.
+function fakeImage(element) {
+  const attributes = new Map([['src', element.props.src]]);
+  return {
+    getAttribute: (name) => attributes.get(name),
+    set src(value) { attributes.set('src', value); },
+    get src() { return attributes.get('src'); },
+  };
+}
+const failImage = (element, node) => element.props.onError({ currentTarget: node });
+
+test('gambar produk valid tetap memakai URL asli dan alt nama produk', () => {
+  const item = { ...product('sm-005'), image: 'https://example.test/valid.jpg' };
+  const img = cardImage(item);
+  assert.equal(img.props.src, 'https://example.test/valid.jpg');
+  assert.equal(img.props.alt, item.name);
+  assert.match(img.props.className, /w-full h-full object-cover/);
+  assert.match(renderToStaticMarkup(cardImageModule.default({ product: item })),
+    /aspect-\[4\/3\]/);
+});
+
+test('gambar gagal dimuat beralih ke placeholder lokal yang ada', () => {
+  assert.ok(fs.existsSync(path.resolve(__dirname, '../public/default-placeholder.svg')));
+  const img = cardImage({ ...product('sm-005'), image: 'https://example.test/broken.jpg' });
+  const node = fakeImage(img);
+  failImage(img, node);
+  assert.equal(node.src, PLACEHOLDER);
+});
+
+test('URL gambar kosong atau tidak tersedia memakai placeholder tanpa menunggu error', () => {
+  for (const image of [undefined, null, '']) {
+    const img = cardImage({ ...product('sm-005'), image });
+    assert.equal(img.props.src, PLACEHOLDER);
+    assert.equal(img.props.alt, product('sm-005').name);
+  }
+});
+
+test('kegagalan placeholder tidak membuat loop fallback', () => {
+  const img = cardImage({ ...product('sm-005'), image: 'https://example.test/broken.jpg' });
+  const node = fakeImage(img);
+  let writes = 0;
+  const counted = {
+    getAttribute: node.getAttribute,
+    set src(value) { writes++; node.src = value; },
+    get src() { return node.src; },
+  };
+  failImage(img, counted);
+  failImage(img, counted);
+  failImage(img, counted);
+  assert.equal(writes, 1);
+  assert.equal(node.src, PLACEHOLDER);
+  const empty = cardImage({ ...product('sm-005'), image: '' });
+  const emptyNode = fakeImage(empty);
+  let emptyWrites = 0;
+  failImage(empty, {
+    getAttribute: emptyNode.getAttribute,
+    set src(value) { emptyWrites++; },
+  });
+  assert.equal(emptyWrites, 0);
+});
+
+test('kegagalan satu kartu tidak memengaruhi kartu lain', () => {
+  const [a, b] = [
+    { ...product('sm-005'), image: 'https://example.test/a.jpg' },
+    { ...product('sm-006') || product('sm-005'), image: 'https://example.test/b.jpg' },
+  ];
+  const imgA = cardImage(a);
+  const imgB = cardImage(b);
+  const nodeA = fakeImage(imgA);
+  const nodeB = fakeImage(imgB);
+  failImage(imgA, nodeA);
+  assert.equal(nodeA.src, PLACEHOLDER);
+  assert.equal(nodeB.src, 'https://example.test/b.jpg');
+  assert.equal(cardImage(b).props.src, 'https://example.test/b.jpg');
+});
+
+test('penggunaan ulang komponen untuk URL berbeda tidak mewarisi status error sebelumnya', () => {
+  const item = product('sm-005');
+  const first = cardImage({ ...item, image: 'https://example.test/one.jpg' });
+  const node = fakeImage(first);
+  failImage(first, node);
+  assert.equal(node.src, PLACEHOLDER);
+  // Render ulang dengan URL baru: React menetapkan prop src baru ke elemen yang sama.
+  const second = cardImage({ ...item, image: 'https://example.test/two.jpg' });
+  node.src = second.props.src;
+  assert.equal(node.src, 'https://example.test/two.jpg');
+  failImage(second, node);
+  assert.equal(node.src, PLACEHOLDER, 'Kegagalan URL baru tetap dapat memakai placeholder');
+});
+
+test('struktur dan kontrol kartu tetap terjaga setelah penanganan gambar', () => {
+  const item = product('sm-005');
+  const html = renderToStaticMarkup(cardImageModule.default({ product: item }));
+  assert.match(html, new RegExp(`<h3[^>]*>${item.name.replace(/[()]/g, '\\$&')}</h3>`));
+  assert.match(html, /Tambah ke komparasi/);
+  assert.match(html, /Lihat Detail/);
+  assert.equal(typeof cardImageModule.handleImageError, 'function');
+});
