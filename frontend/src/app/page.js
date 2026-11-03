@@ -181,7 +181,7 @@ export default function HomePage() {
 
           {/* Category tabs */}
           <div className="flex flex-wrap gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-            {CATEGORIES.slice(0, 4).map((cat) => (
+            {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 type="button"

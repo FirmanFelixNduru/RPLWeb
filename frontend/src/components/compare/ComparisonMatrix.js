@@ -6,6 +6,14 @@ import { X, Trophy, Scale, Eye, Cpu, Camera, Battery, Monitor, Layers, DollarSig
 import PriceTag from '@/components/ui/PriceTag';
 import { useCompare } from '@/context/CompareContext';
 
+const PLACEHOLDER_IMAGE = '/default-placeholder.svg';
+
+export function handleImageError(event) {
+  const image = event.currentTarget;
+  if (image.getAttribute('src') === PLACEHOLDER_IMAGE) return;
+  image.src = PLACEHOLDER_IMAGE;
+}
+
 /**
  * Helper to determine if price comparison is eligible for "MSRP Termurah" highlight.
  * Rule Revisi 5 & Poin 3:
@@ -101,6 +109,78 @@ export default function ComparisonMatrix({
           >
             Buka Katalog Gadget
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // F07: Single-Product Comparison Guidance (tampilkan panduan memilih perangkat ke-2)
+  if (products.length === 1) {
+    const singleProduct = products[0];
+
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto py-4 sm:py-8">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-sm">
+            <Scale className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+              <span>1 Perangkat Terpilih</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              Pilih Minimal 1 Perangkat Pembanding
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+              Perbandingan side-by-side dan evaluasi keunggulan sektor spesifikasi membutuhkan minimal 2 perangkat. Silakan tambahkan 1 hingga 3 gadget lagi dari katalog untuk memulai perbandingan.
+            </p>
+          </div>
+
+          {/* Selected Single Product Preview Card */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-left flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-14 h-14 rounded-xl bg-white dark:bg-slate-700 p-1 border border-slate-200 dark:border-slate-600 flex-shrink-0 overflow-hidden">
+                <img
+                  src={singleProduct.image || PLACEHOLDER_IMAGE}
+                  alt={singleProduct.name}
+                  onError={handleImageError}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  {singleProduct.brand} • {singleProduct.category}
+                </span>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                  {singleProduct.name}
+                </h4>
+                <div className="mt-0.5">
+                  <PriceTag price={singleProduct.price} size="sm" />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => removeFromCompare(singleProduct.id)}
+              className="p-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex-shrink-0 focus:outline-none focus:ring-1 focus:ring-rose-400"
+              title="Hapus dari perbandingan"
+              aria-label={`Hapus ${singleProduct.name} dari perbandingan`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/catalog"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-600/20 transition-all active:scale-95"
+            >
+              <span>Pilih Perangkat Pembanding di Katalog</span>
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -410,8 +490,8 @@ export default function ComparisonMatrix({
         <table className="w-full text-left border-collapse">
           {/* Header Row with Product Cards */}
           <thead>
-            <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
-              <th className="p-4 sm:p-6 w-52 min-w-[200px] align-top text-xs font-bold uppercase tracking-wider text-slate-400">
+            <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+              <th className="sticky left-0 z-20 p-4 sm:p-6 w-52 min-w-[200px] align-top text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
                 Spesifikasi & Sektor Penilai
               </th>
               {products.map((p) => (
@@ -422,8 +502,9 @@ export default function ComparisonMatrix({
                   <div className="space-y-3">
                     <div className="relative aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden">
                       <img
-                        src={p.image}
+                        src={p.image || PLACEHOLDER_IMAGE}
                         alt={p.name}
+                        onError={handleImageError}
                         className="w-full h-full object-cover"
                       />
                       <button
@@ -464,12 +545,12 @@ export default function ComparisonMatrix({
 
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs sm:text-sm">
             {/* Section Header: 8 Dimensi Kinerja */}
-            <tr className="bg-slate-100/70 dark:bg-slate-800/60">
+            <tr className="bg-slate-100 dark:bg-slate-800">
               <td
                 colSpan={products.length + 1}
-                className="p-3.5 px-4 font-black uppercase tracking-wider text-[11px] text-indigo-700 dark:text-indigo-300"
+                className="sticky left-0 z-10 p-3.5 px-4 font-black uppercase tracking-wider text-[11px] text-indigo-700 dark:text-indigo-300 bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700"
               >
-                1. Penilaian 8 Sektor Kinerja (Skala 0–100)
+                <span className="sticky left-4 inline-block">1. Penilaian 8 Sektor Kinerja (Skala 0–100)</span>
               </td>
             </tr>
 
@@ -479,7 +560,7 @@ export default function ComparisonMatrix({
 
               return (
                 <tr key={dim.key} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="p-4 font-semibold text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-950/20">
+                  <td className="sticky left-0 z-10 p-4 font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                       <span>{dim.label}</span>
@@ -552,18 +633,18 @@ export default function ComparisonMatrix({
             })}
 
             {/* Section Header: Harga & Garansi */}
-            <tr className="bg-slate-100/70 dark:bg-slate-800/60">
+            <tr className="bg-slate-100 dark:bg-slate-800">
               <td
                 colSpan={products.length + 1}
-                className="p-3.5 px-4 font-black uppercase tracking-wider text-[11px] text-indigo-700 dark:text-indigo-300"
+                className="sticky left-0 z-10 p-3.5 px-4 font-black uppercase tracking-wider text-[11px] text-indigo-700 dark:text-indigo-300 bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700"
               >
-                2. Nilai & Perlindungan Garansi
+                <span className="sticky left-4 inline-block">2. Nilai & Perlindungan Garansi</span>
               </td>
             </tr>
 
             {/* Price Comparison Row (Revisi 5) */}
             <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-              <td className="p-4 font-bold text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-950/20">
+              <td className="sticky left-0 z-10 p-4 font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
                 <div>
                   <span>Harga Acuan Konfigurasi Dasar</span>
                   <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">
@@ -618,7 +699,7 @@ export default function ComparisonMatrix({
 
             {/* Warranty Row (Revisi 6) */}
             <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-              <td className="p-4 font-bold text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-950/20">
+              <td className="sticky left-0 z-10 p-4 font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
                 <div>
                   <span>Garansi Purna Jual</span>
                   <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">
@@ -693,12 +774,12 @@ export default function ComparisonMatrix({
             </tr>
 
             {/* Section Header: Spesifikasi Teknis */}
-            <tr className="bg-slate-100/70 dark:bg-slate-800/60">
+            <tr className="bg-slate-100 dark:bg-slate-800">
               <td
                 colSpan={products.length + 1}
-                className="p-3.5 px-4 font-black uppercase tracking-wider text-[11px] text-indigo-700 dark:text-indigo-300"
+                className="sticky left-0 z-10 p-3.5 px-4 font-black uppercase tracking-wider text-[11px] text-indigo-700 dark:text-indigo-300 bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700"
               >
-                3. Spesifikasi Teknis & Fitur
+                <span className="sticky left-4 inline-block">3. Spesifikasi Teknis & Fitur</span>
               </td>
             </tr>
 
@@ -710,7 +791,7 @@ export default function ComparisonMatrix({
 
               return (
                 <tr key={spec.key} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="p-4 font-semibold text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-950/20">
+                  <td className="sticky left-0 z-10 p-4 font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)]">
                     {spec.label}
                   </td>
                   {products.map((p) => {

@@ -10,6 +10,14 @@ import TabReviews from './TabReviews';
 import TabWarranty from './TabWarranty';
 import TabValue from './TabValue';
 
+const PLACEHOLDER_IMAGE = '/default-placeholder.svg';
+
+export function handleImageError(event) {
+  const image = event.currentTarget;
+  if (image.getAttribute('src') === PLACEHOLDER_IMAGE) return;
+  image.src = PLACEHOLDER_IMAGE;
+}
+
 export default function ProductModal() {
   const { activeProductModal, closeProductModal, addToCompare, isInCompare } = useCompare();
   const [activeTab, setActiveTab] = useState('specs');
@@ -44,8 +52,9 @@ export default function ProductModal() {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1 flex-shrink-0 overflow-hidden">
               <img
-                src={product.image}
+                src={product.image || PLACEHOLDER_IMAGE}
                 alt={product.name}
+                onError={handleImageError}
                 className="w-full h-full object-cover rounded-xl"
               />
             </div>
