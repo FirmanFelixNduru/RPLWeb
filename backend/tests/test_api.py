@@ -7,6 +7,10 @@ python -m tests.test_api
 import asyncio
 from unittest.mock import patch
 
+from tests._db_guard import enforce_safe_test_db_env, offline_price_endpoint_context
+
+enforce_safe_test_db_env()
+
 from fastapi.testclient import TestClient
 import httpx
 from sqlalchemy import text
@@ -99,7 +103,8 @@ if is_db_connected():
     assert db_product is not None
     original_msrp = db_product.price
 
-res = client.get('/api/prices/sm-001')
+with offline_price_endpoint_context(suppress_persistence=not is_db_connected()):
+    res = client.get('/api/prices/sm-001')
 assert res.status_code == 200, f'Prices failed: {res.status_code}'
 price_data = res.json()
 assert len(price_data['prices']) == 3, 'Marketplace prices count mismatch'

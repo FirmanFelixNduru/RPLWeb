@@ -3,8 +3,15 @@ CompareBuy — Test Suite: Revisi 7 Variant Configuration Integrity
 Verifies base_configuration, variants_note, target_configuration,
 consistency between backend and frontend, and API payload integrity.
 """
+import sys
 import unittest
 import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from tests._db_guard import enforce_safe_test_db_env, offline_price_endpoint_context
+
+enforce_safe_test_db_env()
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -112,7 +119,8 @@ class TestVariantsIntegrity(unittest.TestCase):
 
     def test_api_live_prices_payload_includes_target_configuration(self):
         """GET /api/prices/{product_id} must include target_configuration on fallback items."""
-        resp = self.client.get("/api/prices/lp-004")
+        with offline_price_endpoint_context(suppress_persistence=True):
+            resp = self.client.get("/api/prices/lp-004")
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         prices = data.get("prices", [])

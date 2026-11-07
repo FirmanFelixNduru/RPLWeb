@@ -30,6 +30,8 @@ HEADERS = {
 }
 
 TIMEOUT = httpx.Timeout(10.0, connect=5.0)
+# One HTTP exchange's phase budgets; all three marketplaces execute concurrently.
+TOTAL_SCRAPE_TIMEOUT_SECONDS = sum(TIMEOUT.as_dict().values())
 
 # Jakarta timezone
 WIB = timezone(timedelta(hours=7))
@@ -235,6 +237,43 @@ def parse_marketplace_price(
 # ──────────────────────────────────────────────
 # Scraping Helpers
 # ──────────────────────────────────────────────
+async def _drain_task(task):
+    """Finish cleanup even if the waiting request is cancelled again."""
+    cancelled = False
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            cancelled = True
+        except Exception:
+            pass
+    if not task.cancelled():
+        task.exception()
+    return cancelled
+
+
+async def _run_blocking(func, *args):
+    worker = asyncio.create_task(asyncio.to_thread(func, *args))
+    try:
+        return await asyncio.shield(worker)
+    except asyncio.CancelledError:
+        # Threads cannot be killed safely; finish the operation and close its session first.
+        await _drain_task(worker)
+        raise
+
+
+def _parse_listing(html, price_selector, title_selector, product_name):
+    soup = BeautifulSoup(html, "html.parser")
+    price_el = soup.select_one(price_selector)
+    title_el = soup.select_one(title_selector)
+    if price_el:
+        return parse_marketplace_price(
+            price_el.text, listing_title=title_el.text.strip() if title_el else "",
+            expected_product_name=product_name,
+        )
+    return None
+
+
 async def _scrape_tokopedia(product_name: str) -> Optional[MarketplacePrice]:
     """Attempt to scrape Tokopedia search results with validation."""
     try:
@@ -242,26 +281,20 @@ async def _scrape_tokopedia(product_name: str) -> Optional[MarketplacePrice]:
         async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(search_url)
             if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, "html.parser")
-                price_el = soup.select_one('[data-testid="spnSRPProdPrice"]')
-                title_el = soup.select_one('[data-testid="spnSRPProdName"]')
-                listing_title = title_el.text.strip() if title_el else ""
-                if price_el:
-                    price = parse_marketplace_price(
-                        price_el.text,
-                        listing_title=listing_title,
-                        expected_product_name=product_name
+                price = await _run_blocking(
+                    _parse_listing, resp.text, '[data-testid="spnSRPProdPrice"]',
+                    '[data-testid="spnSRPProdName"]', product_name,
+                )
+                if price:
+                    return MarketplacePrice(
+                        marketplace="Tokopedia",
+                        price=price,
+                        url=search_url,
+                        seller="Tokopedia Seller",
+                        available=True,
+                        source="scraped",
+                        captured_at=datetime.now(timezone.utc).isoformat()
                     )
-                    if price:
-                        return MarketplacePrice(
-                            marketplace="Tokopedia",
-                            price=price,
-                            url=search_url,
-                            seller="Tokopedia Seller",
-                            available=True,
-                            source="scraped",
-                            captured_at=datetime.now(timezone.utc).isoformat()
-                        )
     except Exception as e:
         logger.warning(f"Tokopedia scraping failed: {e}")
     return None
@@ -274,26 +307,20 @@ async def _scrape_shopee(product_name: str) -> Optional[MarketplacePrice]:
         async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(search_url)
             if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, "html.parser")
-                price_el = soup.select_one(".shopee-price")
-                title_el = soup.select_one(".shopee-search-item-result__item-name")
-                listing_title = title_el.text.strip() if title_el else ""
-                if price_el:
-                    price = parse_marketplace_price(
-                        price_el.text,
-                        listing_title=listing_title,
-                        expected_product_name=product_name
+                price = await _run_blocking(
+                    _parse_listing, resp.text, ".shopee-price",
+                    ".shopee-search-item-result__item-name", product_name,
+                )
+                if price:
+                    return MarketplacePrice(
+                        marketplace="Shopee",
+                        price=price,
+                        url=search_url,
+                        seller="Shopee Seller",
+                        available=True,
+                        source="scraped",
+                        captured_at=datetime.now(timezone.utc).isoformat()
                     )
-                    if price:
-                        return MarketplacePrice(
-                            marketplace="Shopee",
-                            price=price,
-                            url=search_url,
-                            seller="Shopee Seller",
-                            available=True,
-                            source="scraped",
-                            captured_at=datetime.now(timezone.utc).isoformat()
-                        )
     except Exception as e:
         logger.warning(f"Shopee scraping failed: {e}")
     return None
@@ -306,26 +333,19 @@ async def _scrape_lazada(product_name: str) -> Optional[MarketplacePrice]:
         async with httpx.AsyncClient(headers=HEADERS, timeout=TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(search_url)
             if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, "html.parser")
-                price_el = soup.select_one(".price--NVB62")
-                title_el = soup.select_one(".title--wFj93")
-                listing_title = title_el.text.strip() if title_el else ""
-                if price_el:
-                    price = parse_marketplace_price(
-                        price_el.text,
-                        listing_title=listing_title,
-                        expected_product_name=product_name
+                price = await _run_blocking(
+                    _parse_listing, resp.text, ".price--NVB62", ".title--wFj93", product_name,
+                )
+                if price:
+                    return MarketplacePrice(
+                        marketplace="Lazada",
+                        price=price,
+                        url=search_url,
+                        seller="Lazada Seller",
+                        available=True,
+                        source="scraped",
+                        captured_at=datetime.now(timezone.utc).isoformat()
                     )
-                    if price:
-                        return MarketplacePrice(
-                            marketplace="Lazada",
-                            price=price,
-                            url=search_url,
-                            seller="Lazada Seller",
-                            available=True,
-                            source="scraped",
-                            captured_at=datetime.now(timezone.utc).isoformat()
-                        )
     except Exception as e:
         logger.warning(f"Lazada scraping failed: {e}")
     return None
@@ -344,17 +364,39 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
     utc_now_iso = datetime.now(timezone.utc).isoformat()
 
     # Try scraping in parallel
-    results = await asyncio.gather(
-        _scrape_tokopedia(product_name),
-        _scrape_shopee(product_name),
-        _scrape_lazada(product_name),
-        return_exceptions=True
-    )
+    tasks = [asyncio.create_task(fetch(product_name)) for fetch in
+             (_scrape_tokopedia, _scrape_shopee, _scrape_lazada)]
+    try:
+        await asyncio.wait(tasks, timeout=TOTAL_SCRAPE_TIMEOUT_SECONDS)
+    finally:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        cleanup = asyncio.gather(*tasks, return_exceptions=True)
+        if await _drain_task(cleanup):
+            raise asyncio.CancelledError
+    results = [task.result() for task in tasks
+               if not task.cancelled() and task.exception() is None]
+    scraped_offers = [r for r in results if isinstance(r, MarketplacePrice)]
+    response = build_price_response(product_id, product_name, scraped_offers, now_label=now)
+    await _run_blocking(_save_snapshots, product_id, response.prices, utc_now_iso)
+    return response
+
+
+def build_price_response(
+    product_id: str,
+    product_name: str,
+    scraped_offers: list[MarketplacePrice],
+    *,
+    now_label: Optional[str] = None,
+) -> PriceResponse:
+    """Assemble sorted `PriceResponse`, merging deterministic fallback offers for missing marketplaces."""
+    now = now_label if now_label is not None else datetime.now(WIB).strftime("%Y-%m-%d %H:%M:%S WIB")
 
     prices: list[MarketplacePrice] = []
     scraped_marketplaces = set()
 
-    for result in results:
+    for result in scraped_offers:
         if isinstance(result, MarketplacePrice):
             prices.append(result)
             scraped_marketplaces.add(result.marketplace)
@@ -378,7 +420,19 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
     # Sort by price ascending (best deal first)
     prices.sort(key=lambda p: p.price)
 
-    # Persist snapshot to database if repository is available
+    # Transparent last_updated label
+    last_updated_label = now if len(scraped_marketplaces) > 0 else "Data acuan fallback (Belum diverifikasi live)"
+
+    return PriceResponse(
+        product_id=product_id,
+        product_name=product_name,
+        prices=prices,
+        last_updated=last_updated_label
+    )
+
+
+def _save_snapshots(product_id, prices, utc_now_iso):
+    """Keep existing per-offer transactions and fallback timestamps in a DB worker."""
     try:
         from app.repositories.price_repo import save_price_snapshot
         for p in prices:
@@ -394,13 +448,3 @@ async def get_live_prices(product_id: str, product_name: str) -> PriceResponse:
             )
     except Exception as e:
         logger.debug(f"Snapshot persistence skipped: {e}")
-
-    # Transparent last_updated label
-    last_updated_label = now if len(scraped_marketplaces) > 0 else "Data acuan fallback (Belum diverifikasi live)"
-
-    return PriceResponse(
-        product_id=product_id,
-        product_name=product_name,
-        prices=prices,
-        last_updated=last_updated_label
-    )

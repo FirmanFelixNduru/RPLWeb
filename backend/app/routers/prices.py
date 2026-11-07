@@ -9,24 +9,22 @@ from sqlalchemy.orm import Session
 from app.products import get_product_by_id as get_fallback_product
 from app.db import get_db
 from app.repositories import catalog_repo
-from app.scraper import get_live_prices
+from app.price_service import price_cache
+from app.scrape_worker import ScrapeOverloadError, ScrapeTimeoutError
 
 router = APIRouter(prefix="/api", tags=["prices"])
 
 
-@router.get("/prices/{product_id}")
-async def fetch_prices(product_id: str, db: Optional[Session] = Depends(get_db)):
-    """
-    Fetch live marketplace prices for a product.
-    Attempts real scraping from Tokopedia, Shopee, and Lazada.
-    Falls back to cached/realistic prices if scraping fails.
-    """
+def get_price_product_name(product_id: str, db: Optional[Session] = Depends(get_db)) -> str:
+    """Run DB lookup in FastAPI's worker pool and release it before external I/O."""
     product = None
     if db is not None:
         try:
             product = catalog_repo.get_product_by_id(db, product_id)
         except Exception:
             pass
+        finally:
+            db.close()
 
     if not product:
         product = get_fallback_product(product_id)
@@ -34,5 +32,15 @@ async def fetch_prices(product_id: str, db: Optional[Session] = Depends(get_db))
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    result = await get_live_prices(product_id, product.name)
-    return result
+    return product.name
+
+
+@router.get("/prices/{product_id}")
+async def fetch_prices(product_id: str, product_name: str = Depends(get_price_product_name)):
+    """Fetch marketplace prices, sharing valid cached results for 300 seconds."""
+    try:
+        return await price_cache.get(product_id, product_name)
+    except ScrapeOverloadError:
+        raise HTTPException(status_code=503, detail="Marketplace price lookup busy") from None
+    except ScrapeTimeoutError:
+        raise HTTPException(status_code=504, detail="Marketplace price lookup timed out") from None

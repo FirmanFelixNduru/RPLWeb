@@ -1,21 +1,28 @@
 """
 CompareBuy — FastAPI Backend Entry Point
 """
+import asyncio
 import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import scrape_worker
 from app.routers import catalog, scoring, compare, prices
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan — startup/shutdown events."""
+    prices.price_cache.open()
     print("🚀 CompareBuy API starting up...")
-    yield
-    print("👋 CompareBuy API shutting down...")
+    try:
+        yield
+    finally:
+        print("👋 CompareBuy API shutting down...")
+        await prices.price_cache.aclose()
+        await asyncio.to_thread(scrape_worker.shutdown_default_supervisor_executor)
 
 
 app = FastAPI(
