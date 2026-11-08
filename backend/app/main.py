@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import scrape_worker
 from app.routers import catalog, scoring, compare, prices
+from app.security import RenderSchemeMiddleware
 
 
 @asynccontextmanager
@@ -48,6 +49,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RenderSchemeMiddleware)
 
 # ──────────────────────────────────────────────
 # Register Routers
