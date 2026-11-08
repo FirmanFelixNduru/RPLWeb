@@ -11,6 +11,7 @@ from app.db import get_db
 from app.repositories import catalog_repo
 from app.price_service import price_cache
 from app.scrape_worker import ScrapeOverloadError, ScrapeTimeoutError
+from app.security import check_price_rate_limit
 
 router = APIRouter(prefix="/api", tags=["prices"])
 
@@ -35,7 +36,7 @@ def get_price_product_name(product_id: str, db: Optional[Session] = Depends(get_
     return product.name
 
 
-@router.get("/prices/{product_id}")
+@router.get("/prices/{product_id}", dependencies=[Depends(check_price_rate_limit)])
 async def fetch_prices(product_id: str, product_name: str = Depends(get_price_product_name)):
     """Fetch marketplace prices, sharing valid cached results for 300 seconds."""
     try:
