@@ -227,7 +227,7 @@ class TestTrustedClientIPResolution(unittest.TestCase):
         with TestClient(app) as client:
             resp = client.get("/health")
             self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.json(), {"status": "ok"})
+            self.assertIn(resp.json().get("status"), ("ok", "degraded"))
 
     def test_w2_t18_existing_https_scheme_behavior(self):
         """W2-T18: Existing HTTPS/scheme behavior verified intact."""
@@ -264,6 +264,17 @@ class TestTrustedClientIPResolution(unittest.TestCase):
 
 class TestRenderSchemeMiddleware(unittest.TestCase):
     """Test matrix covering W2-SCH-01 through W2-SCH-14."""
+
+    def setUp(self):
+        from app.db import get_db
+        from app.main import app
+        from unittest.mock import MagicMock
+        self._db_mock = MagicMock()
+        app.dependency_overrides[get_db] = lambda: self._db_mock
+
+    def tearDown(self):
+        from app.main import app
+        app.dependency_overrides.clear()
 
     @patch.dict(os.environ, {"RENDER": "true"})
     def test_w2_sch_01_render_xfp_https(self):
@@ -454,10 +465,11 @@ class TestRenderSchemeMiddleware(unittest.TestCase):
         from app.main import app
         from fastapi.testclient import TestClient
 
-        with TestClient(app) as client:
-            resp = client.get("/health", headers={"X-Forwarded-Proto": "https"})
-            self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.json(), {"status": "ok"})
+        with patch("app.main.is_db_connected", return_value=True):
+            with TestClient(app) as client:
+                resp = client.get("/health", headers={"X-Forwarded-Proto": "https"})
+                self.assertEqual(resp.status_code, 200)
+                self.assertEqual(resp.json().get("status"), "ok")
 
     def test_w2_sch_13_uvicorn_cli_options_disabled(self):
         """W2-SCH-13: Uvicorn Procfile specifies --no-proxy-headers to prevent generic proxy trust."""
@@ -471,10 +483,11 @@ class TestRenderSchemeMiddleware(unittest.TestCase):
         from app.main import app
         from fastapi.testclient import TestClient
 
-        with TestClient(app) as client:
-            resp = client.get("/api/products", headers={"X-Forwarded-Proto": "https"})
-            self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.request.headers.get("x-forwarded-proto"), "https")
+        with patch("app.routers.catalog.is_fallback_allowed", return_value=True):
+            with TestClient(app) as client:
+                resp = client.get("/api/products", headers={"X-Forwarded-Proto": "https"})
+                self.assertEqual(resp.status_code, 200)
+                self.assertEqual(resp.request.headers.get("x-forwarded-proto"), "https")
 
     @patch.dict(os.environ, {"RENDER": "true"})
     def test_w2_sch_internal_health_check_without_xfp_allowed(self):
@@ -482,10 +495,11 @@ class TestRenderSchemeMiddleware(unittest.TestCase):
         from app.main import app
         from fastapi.testclient import TestClient
 
-        with TestClient(app) as client:
-            resp = client.get("/health")
-            self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.json(), {"status": "ok"})
+        with patch("app.main.is_db_connected", return_value=True):
+            with TestClient(app) as client:
+                resp = client.get("/health")
+                self.assertEqual(resp.status_code, 200)
+                self.assertEqual(resp.json().get("status"), "ok")
 
 
 if __name__ == "__main__":

@@ -5,10 +5,11 @@ import asyncio
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import scrape_worker
+from app.db import is_db_connected, is_fallback_allowed
 from app.routers import catalog, scoring, compare, prices
 from app.security import RenderSchemeMiddleware
 
@@ -74,5 +75,14 @@ def root():
 
 
 @app.get("/health")
-def health_check():
-    return {"status": "ok"}
+def health_check(response: Response):
+    """Health readiness check verifying database connectivity."""
+    db_ok = is_db_connected()
+    if db_ok:
+        return {"status": "ok", "database": "connected"}
+
+    if not is_fallback_allowed():
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "unavailable", "database": "disconnected"}
+
+    return {"status": "degraded", "database": "disconnected", "fallback": "enabled"}

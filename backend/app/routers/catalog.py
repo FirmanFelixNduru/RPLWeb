@@ -1,18 +1,21 @@
 """
 CompareBuy — Catalog Router
-Product listing, search, filter, and detail endpoints with PostgreSQL and fallback support.
+Product listing, search, filter, and detail endpoints with fail-closed production policy.
 """
+import logging
 from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Literal, Optional
 from sqlalchemy.orm import Session
 
 from app.models import Product, CatalogResponse, ProductCategory
-from app.db import get_db
+from app.db import get_db, is_fallback_allowed
 from app.repositories import catalog_repo
 from app.products import (
     get_all_products, get_product_by_id as get_fallback_product,
     search_products, get_unique_brands, get_unique_tags
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["catalog"])
 
@@ -54,17 +57,27 @@ def list_products(
                 page=page,
                 per_page=per_page
             )
-            if total > 0 or (search or category or brand or min_price or max_price or tags):
-                return CatalogResponse(
-                    products=products,
-                    total=total,
-                    page=page,
-                    per_page=per_page
-                )
-        except Exception:
-            pass  # Fall back to in-memory dataset
+            return CatalogResponse(
+                products=products,
+                total=total,
+                page=page,
+                per_page=per_page
+            )
+        except Exception as e:
+            logger.error("Database query failed in list_products: %s", type(e).__name__)
+            if not is_fallback_allowed():
+                raise HTTPException(
+                    status_code=503,
+                    detail="Database service unavailable"
+                ) from None
 
-    # Fallback to in-memory products
+    if not is_fallback_allowed():
+        raise HTTPException(
+            status_code=503,
+            detail="Database service unavailable"
+        )
+
+    # Fallback to in-memory products (only in dev/test when explicitly permitted)
     if search:
         products = search_products(search)
     else:
@@ -129,10 +142,25 @@ def get_product(product_id: str, db: Optional[Session] = Depends(get_db)):
             product = catalog_repo.get_product_by_id(db, product_id)
             if product:
                 return product
-        except Exception:
-            pass
+            if not is_fallback_allowed():
+                raise HTTPException(status_code=404, detail="Product not found")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Database query failed in get_product for '%s': %s", product_id, type(e).__name__)
+            if not is_fallback_allowed():
+                raise HTTPException(
+                    status_code=503,
+                    detail="Database service unavailable"
+                ) from None
 
-    # Fallback to in-memory
+    if not is_fallback_allowed():
+        raise HTTPException(
+            status_code=503,
+            detail="Database service unavailable"
+        )
+
+    # Fallback to in-memory (only when fallback is explicitly permitted)
     product = get_fallback_product(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -145,10 +173,21 @@ def list_brands(db: Optional[Session] = Depends(get_db)):
     if db is not None:
         try:
             brands = catalog_repo.get_all_brands(db)
-            if brands:
-                return {"brands": brands}
-        except Exception:
-            pass
+            return {"brands": brands}
+        except Exception as e:
+            logger.error("Database query failed in list_brands: %s", type(e).__name__)
+            if not is_fallback_allowed():
+                raise HTTPException(
+                    status_code=503,
+                    detail="Database service unavailable"
+                ) from None
+
+    if not is_fallback_allowed():
+        raise HTTPException(
+            status_code=503,
+            detail="Database service unavailable"
+        )
+
     return {"brands": get_unique_brands()}
 
 
@@ -158,10 +197,21 @@ def list_tags(db: Optional[Session] = Depends(get_db)):
     if db is not None:
         try:
             tags = catalog_repo.get_all_tags(db)
-            if tags:
-                return {"tags": tags}
-        except Exception:
-            pass
+            return {"tags": tags}
+        except Exception as e:
+            logger.error("Database query failed in list_tags: %s", type(e).__name__)
+            if not is_fallback_allowed():
+                raise HTTPException(
+                    status_code=503,
+                    detail="Database service unavailable"
+                ) from None
+
+    if not is_fallback_allowed():
+        raise HTTPException(
+            status_code=503,
+            detail="Database service unavailable"
+        )
+
     return {"tags": get_unique_tags()}
 
 
