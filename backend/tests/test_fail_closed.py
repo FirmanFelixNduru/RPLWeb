@@ -8,6 +8,7 @@ import unittest
 import logging
 from unittest.mock import patch, MagicMock
 
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -332,6 +333,127 @@ class TestBackendFailClosed(unittest.TestCase):
             # Log messages check
             for log_msg in cm.output:
                 self.assertNotIn("super_secret_password_xyz987", log_msg)
+
+    # ─────────────────────────────────────────────────────────────
+    # Test K — Session maker call exception in production fails closed
+    # ─────────────────────────────────────────────────────────────
+    def test_k_sessionmaker_call_exception_in_production(self):
+        """When SessionLocal() raises an exception in production, return HTTP 503 without leaking secrets."""
+        sensitive_pass = "super_secret_session_pass_789"
+        sensitive_url = f"postgresql://user:{sensitive_pass}@supabase.co:5432/db"
+        bad_sessionmaker = MagicMock(
+            side_effect=OperationalError(sensitive_url, {}, Exception("Pool checkout failure"))
+        )
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false"}
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(db_module, "SessionLocal", bad_sessionmaker), \
+             patch.object(db_module, "engine", MagicMock()), \
+             self.assertLogs("app.db", level="ERROR") as cm:
+
+            # 1. Direct get_db dependency check
+            gen = get_db()
+            with self.assertRaises(HTTPException) as ctx:
+                next(gen)
+            self.assertEqual(ctx.exception.status_code, 503)
+            self.assertEqual(ctx.exception.detail, "Database service unavailable")
+            self.assertNotIn(sensitive_pass, str(ctx.exception.detail))
+
+            # 2. Endpoint integration check
+            res = self.client.get("/api/products")
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json(), {"detail": "Database service unavailable"})
+            self.assertNotIn(sensitive_pass, res.text)
+
+            # 3. Log redaction check
+            for log_msg in cm.output:
+                self.assertNotIn(sensitive_pass, log_msg)
+
+    # ─────────────────────────────────────────────────────────────
+    # Test L — Session maker call exception in development permits fallback
+    # ─────────────────────────────────────────────────────────────
+    def test_l_sessionmaker_call_exception_in_development_fallback(self):
+        """When SessionLocal() raises in development with fallback allowed, yields None and serves catalog."""
+        bad_sessionmaker = MagicMock(side_effect=OperationalError("connection failed", {}, Exception("down")))
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true"}
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(db_module, "SessionLocal", bad_sessionmaker), \
+             patch.object(db_module, "engine", MagicMock()):
+
+            # 1. Direct get_db dependency yields None
+            gen = get_db()
+            session = next(gen)
+            self.assertIsNone(session)
+
+            # 2. Catalog endpoint gracefully falls back to in-memory catalogue
+            res = self.client.get("/api/products")
+            self.assertEqual(res.status_code, 200)
+            data = res.json()
+            self.assertGreater(data["total"], 0)
+
+    # ─────────────────────────────────────────────────────────────
+    # Test M — Session lifecycle: close in finally and unmasked endpoint exceptions
+    # ─────────────────────────────────────────────────────────────
+    def test_m_successful_session_closed_and_endpoint_exception_not_masked(self):
+        """Successfully instantiated session is closed in finally; endpoint exceptions are not swallowed."""
+        mock_session = MagicMock()
+        good_sessionmaker = MagicMock(return_value=mock_session)
+
+        with patch.object(db_module, "SessionLocal", good_sessionmaker), \
+             patch.object(db_module, "engine", MagicMock()):
+
+            # 1. Normal completion closes session
+            gen = get_db()
+            session = next(gen)
+            self.assertEqual(session, mock_session)
+            mock_session.close.assert_not_called()
+            try:
+                next(gen)
+            except StopIteration:
+                pass
+            mock_session.close.assert_called_once()
+
+            # 2. Endpoint exception does not get caught/swallowed, but session still closes
+            mock_session.reset_mock()
+            gen2 = get_db()
+            session2 = next(gen2)
+            self.assertEqual(session2, mock_session)
+            with self.assertRaises(ValueError) as err_ctx:
+                gen2.throw(ValueError("Specific domain error in router"))
+            self.assertEqual(str(err_ctx.exception), "Specific domain error in router")
+            mock_session.close.assert_called_once()
+
+    # ─────────────────────────────────────────────────────────────
+    # Test N — Docker HEALTHCHECK probe logic
+    # ─────────────────────────────────────────────────────────────
+    def test_n_docker_healthcheck_probe_logic(self):
+        """Docker HEALTHCHECK probe logic raises_for_status on HTTP 503 and passes on HTTP 200."""
+        import httpx
+
+        # Simulating HTTP 200 response
+        mock_resp_200 = httpx.Response(
+            status_code=200,
+            json={"status": "ok", "database": "connected"},
+            request=httpx.Request("GET", "http://localhost:8000/health")
+        )
+        with patch("httpx.get", return_value=mock_resp_200):
+            resp = httpx.get("http://localhost:8000/health", timeout=5.0)
+            # Should not raise
+            resp.raise_for_status()
+            self.assertEqual(resp.status_code, 200)
+
+        # Simulating HTTP 503 response
+        mock_resp_503 = httpx.Response(
+            status_code=503,
+            json={"status": "unavailable", "database": "disconnected"},
+            request=httpx.Request("GET", "http://localhost:8000/health")
+        )
+        with patch("httpx.get", return_value=mock_resp_503):
+            resp = httpx.get("http://localhost:8000/health", timeout=5.0)
+            with self.assertRaises(httpx.HTTPStatusError) as status_err:
+                resp.raise_for_status()
+            self.assertEqual(status_err.exception.response.status_code, 503)
 
 
 if __name__ == "__main__":

@@ -190,8 +190,8 @@ def get_database_status() -> DatabaseStatus:
 def get_db() -> Generator:
     """Dependency that yields a database session if available.
     
-    Fail-closed in production: if SessionLocal is not available, fails-closed
-    immediately with HTTP 503 Service Unavailable.
+    Fail-closed in production: if SessionLocal is not available or if SessionLocal()
+    raises an exception, fails-closed immediately with HTTP 503 Service Unavailable.
     In development/test: if fallback is explicitly permitted, yields None.
     """
     if SessionLocal is None:
@@ -203,11 +203,34 @@ def get_db() -> Generator:
         yield None
         return
 
-    db = SessionLocal()
+    try:
+        db = SessionLocal()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(
+            "Failed to instantiate database session (%s). Fallback allowed: %s",
+            scrub_db_secrets(type(exc).__name__),
+            is_fallback_allowed(),
+        )
+        if not is_fallback_allowed():
+            raise HTTPException(
+                status_code=503,
+                detail="Database service unavailable"
+            )
+        yield None
+        return
+
     try:
         yield db
     finally:
-        db.close()
+        try:
+            db.close()
+        except Exception as close_exc:
+            logger.warning(
+                "Error closing database session: %s",
+                scrub_db_secrets(type(close_exc).__name__),
+            )
 
 
 def is_db_connected() -> bool:
