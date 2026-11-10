@@ -21,7 +21,9 @@ export function ThemeProvider({ children }) {
   };
 
   useEffect(() => {
+    let isActive = true;
     queueMicrotask(() => {
+      if (!isActive) return;
       // 1. Check localStorage first
       const savedTheme = localStorage.getItem('comparebuy_theme');
       if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -36,6 +38,10 @@ export function ThemeProvider({ children }) {
       }
       setMounted(true);
     });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const toggleTheme = () => {

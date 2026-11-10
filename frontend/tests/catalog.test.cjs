@@ -54,7 +54,7 @@ const product = (id) => PRODUCTS.find((item) => item.id === id);
 // minimal portal host. This checks DOM intent/state, not screen-reader speech.
 function resultStatusHarness(initial = {}) {
   const states = { 0: Array.from(PRODUCTS), 1: false, ...initial };
-  const effects = [], refs = [], timers = new Map(), messages = [], hosts = [];
+  const effects = [], refs = [], timers = new Map(), messages = [], hosts = [], microtasks = [];
   let stateIndex, effectIndex, refIndex, dirty, tree, time = 0, timerId = 0;
   const home = container(), dialog = container(), dialogRef = { current: dialog };
   function container() {
@@ -63,6 +63,15 @@ function resultStatusHarness(initial = {}) {
       this.children.push(node);
       node.parentNode = this;
     } };
+  }
+  function flushMicrotasks() {
+    let count = 0;
+    while (microtasks.length > 0) {
+      const cb = microtasks.shift();
+      cb();
+      count++;
+    }
+    return count;
   }
   const Page = loadSource('app/catalog/page.js', {
     react: {
@@ -104,9 +113,9 @@ function resultStatusHarness(initial = {}) {
     } },
     setTimeout: (callback, delay) => { const id = ++timerId; timers.set(id, { callback, due: time + delay }); return id; },
     clearTimeout: (id) => timers.delete(id),
-    queueMicrotask: (cb) => cb(),
+    queueMicrotask: (cb) => { microtasks.push(cb); },
   }).default;
-  function render() {
+  function render(autoFlush = true) {
     do {
       dirty = false;
       stateIndex = effectIndex = refIndex = 0;
@@ -120,15 +129,19 @@ function resultStatusHarness(initial = {}) {
         effect.pending = false;
         effect.cleanup = effect.setup();
       });
+      if (autoFlush) {
+        flushMicrotasks();
+      }
     } while (dirty);
     return tree;
   }
   render();
   return {
-    states, home, dialog, hosts, messages, timers,
+    states, home, dialog, hosts, messages, timers, microtasks,
     tree: () => tree,
-    change(index, value) { states[index] = value; render(); },
+    change(index, value, autoFlush = true) { states[index] = value; render(autoFlush); },
     render,
+    flushMicrotasks,
     advance(ms) {
       time += ms;
       for (const [id, timer] of [...timers]) if (timer.due <= time) {

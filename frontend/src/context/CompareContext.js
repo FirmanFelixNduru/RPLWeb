@@ -21,7 +21,9 @@ export function CompareProvider({ children }) {
 
   // Load saved comparison from session/local storage
   useEffect(() => {
+    let isActive = true;
     queueMicrotask(() => {
+      if (!isActive) return;
       try {
         const saved = localStorage.getItem('comparebuy_dock');
         if (saved) {
@@ -31,6 +33,10 @@ export function CompareProvider({ children }) {
         console.warn('Failed to parse saved compare dock items:', e);
       }
     });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const saveToStorage = (items) => {

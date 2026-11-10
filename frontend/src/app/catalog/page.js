@@ -116,13 +116,18 @@ export default function CatalogPage() {
 
   useEffect(() => {
     // Keep one live region node: changing dialog context must not recreate its text.
+    let isActive = true;
     const host = document.createElement('div');
     host.setAttribute('role', 'status');
     host.className = 'sr-only';
     queueMicrotask(() => {
+      if (!isActive) return;
       setStatusHost(host);
     });
-    return () => host.remove();
+    return () => {
+      isActive = false;
+      host.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -132,19 +137,27 @@ export default function CatalogPage() {
   }, [statusHost, mobileFilterOpen, filterDialogRef]);
 
   useEffect(() => {
+    let isActive = true;
     if (loading) {
       queueMicrotask(() => {
+        if (!isActive) return;
         setResultAnnouncement('');
       });
-      return;
+      return () => {
+        isActive = false;
+      };
     }
     // Coalesce rapid changes in speech only; the catalog itself stays immediate.
     const timer = setTimeout(() => {
+      if (!isActive) return;
       setResultAnnouncement(filteredProducts.length > 0
         ? `${filteredProducts.length} produk ditemukan.`
         : 'Tidak ada produk yang sesuai.');
     }, 350);
-    return () => clearTimeout(timer);
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
   }, [loading, filteredProducts.length]);
 
   const handleResetFilters = () => {

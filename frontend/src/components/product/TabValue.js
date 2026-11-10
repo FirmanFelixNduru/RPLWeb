@@ -40,14 +40,22 @@ const PRICE_STATUS_MAP = {
 };
 
 export default function TabValue({ product }) {
+  const productId = product?.id;
   const [pricingData, setPricingData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [prevProductId, setPrevProductId] = useState(productId);
+
+  if (prevProductId !== productId) {
+    setPrevProductId(productId);
+    setLoading(true);
+    setPricingData(null);
+  }
 
   const fetchPrices = async () => {
-    if (!product) return;
+    if (!productId) return;
     try {
-      const data = await getLiveMarketplacePrices(product.id);
+      const data = await getLiveMarketplacePrices(productId);
       setPricingData(data);
     } catch (e) {
       console.error('Failed to load prices:', e);
@@ -60,9 +68,12 @@ export default function TabValue({ product }) {
   useEffect(() => {
     let isMounted = true;
     async function loadInitialPrices() {
-      if (!product) return;
+      if (!productId) {
+        if (isMounted) setLoading(false);
+        return;
+      }
       try {
-        const data = await getLiveMarketplacePrices(product.id);
+        const data = await getLiveMarketplacePrices(productId);
         if (isMounted) setPricingData(data);
       } catch (e) {
         console.error('Failed to load prices:', e);
@@ -77,7 +88,7 @@ export default function TabValue({ product }) {
     return () => {
       isMounted = false;
     };
-  }, [product]);
+  }, [productId]);
 
   const handleRefresh = () => {
     setRefreshing(true);
