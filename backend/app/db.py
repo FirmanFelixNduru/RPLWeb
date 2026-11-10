@@ -6,8 +6,8 @@ import os
 import logging
 from typing import Generator, Optional
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.engine import make_url
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import make_url, Engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 logger = logging.getLogger(__name__)
@@ -46,13 +46,40 @@ def get_engine_kwargs(url_str: str) -> dict:
         kwargs["pool_timeout"] = DB_POOL_TIMEOUT
         kwargs["connect_args"] = {
             "connect_timeout": PG_CONNECT_TIMEOUT,
-            "options": (
-                f"-c statement_timeout={PG_STATEMENT_TIMEOUT_MS} "
-                f"-c idle_in_transaction_session_timeout={PG_IDLE_TRANSACTION_TIMEOUT_MS}"
-            ),
         }
 
     return kwargs
+
+
+def init_postgres_session(dbapi_connection, connection_record=None) -> None:
+    """Apply W6 PostgreSQL session timeouts via PoolEvents.connect under autocommit."""
+    prev_autocommit = getattr(dbapi_connection, "autocommit", False)
+    try:
+        dbapi_connection.autocommit = True
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute(f"SET statement_timeout = {PG_STATEMENT_TIMEOUT_MS}")
+            cursor.execute(f"SET idle_in_transaction_session_timeout = {PG_IDLE_TRANSACTION_TIMEOUT_MS}")
+        finally:
+            cursor.close()
+    finally:
+        dbapi_connection.autocommit = prev_autocommit
+
+
+def create_db_engine(url_str: str, **extra_kwargs) -> Engine:
+    """Factory creating SQLAlchemy engine with driver kwargs and PostgreSQL session timeout listener."""
+    url = make_url(url_str)
+    backend = url.get_backend_name()
+    kwargs = get_engine_kwargs(url_str)
+    if extra_kwargs:
+        kwargs.update(extra_kwargs)
+
+    eng = create_engine(url_str, **kwargs)
+
+    if backend in ("postgresql", "postgres"):
+        event.listen(eng, "connect", init_postgres_session)
+
+    return eng
 
 
 load_dotenv()
@@ -65,10 +92,7 @@ SessionLocal = None
 
 if DATABASE_URL:
     try:
-        engine = create_engine(
-            DATABASE_URL,
-            **get_engine_kwargs(DATABASE_URL)
-        )
+        engine = create_db_engine(DATABASE_URL)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         logger.info("Database engine initialized successfully.")
     except Exception as e:
