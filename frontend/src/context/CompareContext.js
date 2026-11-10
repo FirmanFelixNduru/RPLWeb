@@ -21,14 +21,16 @@ export function CompareProvider({ children }) {
 
   // Load saved comparison from session/local storage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('comparebuy_dock');
-      if (saved) {
-        setCompareList(JSON.parse(saved));
+    queueMicrotask(() => {
+      try {
+        const saved = localStorage.getItem('comparebuy_dock');
+        if (saved) {
+          setCompareList(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.warn('Failed to parse saved compare dock items:', e);
       }
-    } catch (e) {
-      console.warn('Failed to parse saved compare dock items:', e);
-    }
+    });
   }, []);
 
   const saveToStorage = (items) => {

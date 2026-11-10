@@ -58,8 +58,26 @@ export default function TabValue({ product }) {
   };
 
   useEffect(() => {
-    fetchPrices();
-  }, [product?.id]);
+    let isMounted = true;
+    async function loadInitialPrices() {
+      if (!product) return;
+      try {
+        const data = await getLiveMarketplacePrices(product.id);
+        if (isMounted) setPricingData(data);
+      } catch (e) {
+        console.error('Failed to load prices:', e);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    }
+    loadInitialPrices();
+    return () => {
+      isMounted = false;
+    };
+  }, [product]);
 
   const handleRefresh = () => {
     setRefreshing(true);

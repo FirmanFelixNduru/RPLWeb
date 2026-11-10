@@ -15,8 +15,8 @@ function loadSource(entry, overrides = {}, globals = {}) {
   const cache = new Map();
   function load(filename) {
     if (cache.has(filename)) return cache.get(filename).exports;
-    const module = { exports: {} };
-    cache.set(filename, module);
+    const mod = { exports: {} };
+    cache.set(filename, mod);
     const { code } = transformSync(fs.readFileSync(filename, 'utf8'), {
       filename,
       jsc: {
@@ -32,8 +32,8 @@ function loadSource(entry, overrides = {}, globals = {}) {
       return require(name);
     };
     const evaluate = vm.runInNewContext(`(function(require, module, exports) {${code}\n})`, globals);
-    evaluate(requireSource, module, module.exports);
-    return module.exports;
+    evaluate(requireSource, mod, mod.exports);
+    return mod.exports;
   }
   return load(path.join(sourceRoot, entry));
 }
@@ -104,6 +104,7 @@ function resultStatusHarness(initial = {}) {
     } },
     setTimeout: (callback, delay) => { const id = ++timerId; timers.set(id, { callback, due: time + delay }); return id; },
     clearTimeout: (id) => timers.delete(id),
+    queueMicrotask: (cb) => cb(),
   }).default;
   function render() {
     do {

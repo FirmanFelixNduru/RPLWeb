@@ -119,7 +119,9 @@ export default function CatalogPage() {
     const host = document.createElement('div');
     host.setAttribute('role', 'status');
     host.className = 'sr-only';
-    setStatusHost(host);
+    queueMicrotask(() => {
+      setStatusHost(host);
+    });
     return () => host.remove();
   }, []);
 
@@ -131,7 +133,9 @@ export default function CatalogPage() {
 
   useEffect(() => {
     if (loading) {
-      setResultAnnouncement('');
+      queueMicrotask(() => {
+        setResultAnnouncement('');
+      });
       return;
     }
     // Coalesce rapid changes in speech only; the catalog itself stays immediate.
