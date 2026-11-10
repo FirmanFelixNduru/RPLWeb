@@ -58,9 +58,11 @@ function createHarness(ComponentPath, initialProps = {}, overrides = {}, globals
   const states = [];
   const stateSetters = [];
   const effects = [];
+  const callbacks = [];
   const refs = [];
   let stateCursor = 0;
   let effectCursor = 0;
+  let callbackCursor = 0;
   let refCursor = 0;
   let currentProps = { ...initialProps };
   let dirty = false;
@@ -96,8 +98,15 @@ function createHarness(ComponentPath, initialProps = {}, overrides = {}, globals
     useMemo(fn) {
       return fn();
     },
-    useCallback(fn) {
-      return fn;
+    useCallback(fn, deps) {
+      const idx = callbackCursor++;
+      const prev = callbacks[idx];
+      const hasChanged = !prev || !deps || deps.some((d, i) => !Object.is(d, prev.deps[i]));
+      if (hasChanged) {
+        callbacks[idx] = { fn, deps };
+        return fn;
+      }
+      return prev.fn;
     },
     useEffect(setup, deps) {
       const idx = effectCursor++;
@@ -130,6 +139,7 @@ function createHarness(ComponentPath, initialProps = {}, overrides = {}, globals
       dirty = false;
       stateCursor = 0;
       effectCursor = 0;
+      callbackCursor = 0;
       refCursor = 0;
       tree = Component(currentProps);
       iterations++;
@@ -514,12 +524,383 @@ describe('Catalog Page Status Host & Announcement Lifecycle', () => {
   });
 });
 
+function createDeferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+async function flushMicrotasks() {
+  for (let i = 0; i < 6; i++) {
+    await Promise.resolve();
+  }
+}
+
+function findRefreshButton(tree) {
+  if (!tree || typeof tree !== 'object') return null;
+  if (tree.type === 'button') {
+    const props = tree.props || {};
+    const text = JSON.stringify(props.children);
+    if (text && (text.includes('Perbarui') || text.includes('Memperbarui') || text.includes('RefreshCw'))) {
+      return tree;
+    }
+  }
+  const children = Array.isArray(tree.props?.children)
+    ? tree.props.children
+    : [tree.props?.children];
+  for (const child of children) {
+    const found = findRefreshButton(child);
+    if (found) return found;
+  }
+  return null;
+}
+
 describe('TabValue Product Identity & Lifecycle', () => {
-  test('Scenario 1 — Render product with ID sm-001 triggers exactly one request', async () => {
+  test('Test 1 — Normal manual refresh: click refresh sets refreshing=true, resolves, updates data, sets refreshing=false', async () => {
+    const initialDef = createDeferred();
+    const refreshDef = createDeferred();
+    let callCount = 0;
     const requests = [];
+
     const mockGetPrices = async (id) => {
       requests.push(id);
-      return { current_prices: [] };
+      callCount++;
+      return callCount === 1 ? initialDef.promise : refreshDef.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1', price: 5000000 },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {}, log: () => {} },
+    });
+
+    assert.equal(requests.length, 1);
+    assert.equal(h.getState(1), true, 'loading should be true initially');
+    assert.equal(h.getState(2), false, 'refreshing should be false initially');
+
+    // 2. Resolve initial request
+    initialDef.resolve({
+      prices: [{ marketplace: 'Shopee', price: 4900000, source: 'scraped' }],
+      last_updated: 'Just now',
+    });
+    await flushMicrotasks();
+    h.rerender();
+
+    assert.equal(h.getState(1), false, 'loading should be false after initial resolution');
+    assert.equal(h.getState(2), false, 'refreshing should still be false');
+    assert.equal(h.getState(0)?.prices[0]?.price, 4900000, 'initial pricing data should be set');
+
+    // 3. Trigger manual refresh
+    const btn = findRefreshButton(h.tree);
+    assert.ok(btn, 'Refresh button must be rendered');
+    btn.props.onClick();
+    h.rerender();
+
+    // 4. Verify refreshing=true
+    assert.equal(requests.length, 2, 'manual refresh should trigger second request');
+    assert.equal(h.getState(2), true, 'refreshing should be true while refresh is pending');
+    assert.equal(h.getState(1), false, 'loading should remain false during manual refresh');
+
+    // 5. Resolve refresh request
+    refreshDef.resolve({
+      prices: [{ marketplace: 'Shopee', price: 4750000, source: 'scraped' }],
+      last_updated: 'Updated recently',
+    });
+    await flushMicrotasks();
+    h.rerender();
+
+    // 6. Verify updated price and 7. refreshing=false
+    assert.equal(h.getState(0)?.prices[0]?.price, 4750000, 'pricing data must reflect refreshed price');
+    assert.equal(h.getState(2), false, 'refreshing should be false after refresh completes');
+    assert.equal(h.getState(1), false, 'loading should remain false');
+  });
+
+  test('Test 2 — Old refresh cannot overwrite new product: delayed sm-001 refresh cannot overwrite sm-002', async () => {
+    const initialDef1 = createDeferred();
+    const refreshDef1 = createDeferred();
+    const initialDef2 = createDeferred();
+    const requests = [];
+
+    const mockGetPrices = async (id) => {
+      requests.push(id);
+      if (id === 'sm-001') {
+        return requests.filter((r) => r === 'sm-001').length === 1
+          ? initialDef1.promise
+          : refreshDef1.promise;
+      }
+      return initialDef2.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1', price: 5000000 },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {}, log: () => {} },
+    });
+
+    // Resolve initial request for sm-001
+    initialDef1.resolve({
+      prices: [{ marketplace: 'Shopee', price: 5000000, source: 'scraped' }],
+    });
+    await flushMicrotasks();
+    h.rerender();
+    assert.equal(h.getState(0)?.prices[0]?.price, 5000000);
+
+    // Start manual refresh on sm-001
+    const btn = findRefreshButton(h.tree);
+    btn.props.onClick();
+    h.rerender();
+    assert.equal(h.getState(2), true, 'refreshing should be true');
+
+    // Switch product to sm-002 before sm-001 refresh resolves
+    h.updateProps({ product: { id: 'sm-002', name: 'Phone 2', price: 7000000 } });
+    assert.equal(h.getState(1), true, 'loading should be true for sm-002');
+    assert.equal(h.getState(2), false, 'refreshing should be reset to false for sm-002');
+    assert.equal(h.getState(0), null, 'pricingData should be reset to null for sm-002');
+
+    // Resolve initial request for sm-002
+    initialDef2.resolve({
+      prices: [{ marketplace: 'Tokopedia', price: 6800000, source: 'scraped' }],
+    });
+    await flushMicrotasks();
+    h.rerender();
+    assert.equal(h.getState(0)?.prices[0]?.price, 6800000, 'sm-002 prices loaded');
+    assert.equal(h.getState(1), false, 'loading false for sm-002');
+
+    // Now resolve old sm-001 refresh late
+    refreshDef1.resolve({
+      prices: [{ marketplace: 'Shopee', price: 4200000, source: 'scraped' }],
+    });
+    await flushMicrotasks();
+    h.rerender();
+
+    // Verify sm-002 data is untouched by sm-001 refresh
+    assert.equal(h.getState(0)?.prices[0]?.price, 6800000, 'stale refresh must not overwrite new product data');
+    assert.equal(h.getState(1), false, 'loading must stay false');
+    assert.equal(h.getState(2), false, 'refreshing must stay false');
+  });
+
+  test('Test 3 — Old refresh finally cannot clear new loading state: old refresh resolution leaves new product loading=true', async () => {
+    const initialDef1 = createDeferred();
+    const refreshDef1 = createDeferred();
+    const initialDef2 = createDeferred();
+    const requests = [];
+
+    const mockGetPrices = async (id) => {
+      requests.push(id);
+      if (id === 'sm-001') {
+        return requests.filter((r) => r === 'sm-001').length === 1
+          ? initialDef1.promise
+          : refreshDef1.promise;
+      }
+      return initialDef2.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1', price: 5000000 },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {}, log: () => {} },
+    });
+
+    initialDef1.resolve({ prices: [{ marketplace: 'Shopee', price: 5000000, source: 'scraped' }] });
+    await flushMicrotasks();
+    h.rerender();
+
+    // Start manual refresh on sm-001
+    const btn = findRefreshButton(h.tree);
+    btn.props.onClick();
+    h.rerender();
+    assert.equal(h.getState(2), true);
+
+    // Switch to sm-002 while sm-002 initial is still pending
+    h.updateProps({ product: { id: 'sm-002', name: 'Phone 2', price: 8000000 } });
+    assert.equal(h.getState(1), true, 'sm-002 is loading');
+    assert.equal(h.getState(2), false, 'refreshing is false');
+
+    // Resolve old sm-001 refresh while sm-002 is still waiting
+    refreshDef1.resolve({ prices: [{ marketplace: 'Shopee', price: 4000000, source: 'scraped' }] });
+    await flushMicrotasks();
+    h.rerender();
+
+    // Must NOT clear sm-002 loading state or set sm-001 data
+    assert.equal(h.getState(1), true, 'loading state of new product must NOT be cleared by old refresh');
+    assert.equal(h.getState(2), false, 'refreshing state must stay false');
+    assert.equal(h.getState(0), null, 'pricingData must remain null while sm-002 is pending');
+
+    // Finally resolve sm-002 initial request
+    initialDef2.resolve({ prices: [{ marketplace: 'Tokopedia', price: 7900000, source: 'scraped' }] });
+    await flushMicrotasks();
+    h.rerender();
+
+    assert.equal(h.getState(0)?.prices[0]?.price, 7900000, 'sm-002 final price should be correct');
+    assert.equal(h.getState(1), false, 'loading should now be false');
+    assert.equal(h.getState(2), false, 'refreshing should be false');
+  });
+
+  test('Test 4 — Refresh supersedes initial request: delayed initial request cannot overwrite newer refresh result', async () => {
+    const initialDef = createDeferred();
+    const refreshDef = createDeferred();
+    let count = 0;
+
+    const mockGetPrices = async () => {
+      count++;
+      return count === 1 ? initialDef.promise : refreshDef.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1', price: 5000000 },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {}, log: () => {} },
+    });
+
+    assert.equal(h.getState(1), true, 'initial request is loading');
+
+    // User triggers manual refresh before initial request resolves
+    const btn = findRefreshButton(h.tree);
+    btn.props.onClick();
+    h.rerender();
+    assert.equal(h.getState(2), true, 'refreshing is true');
+
+    // Resolve refresh request FIRST with newer data (price 4500000)
+    refreshDef.resolve({
+      prices: [{ marketplace: 'Shopee', price: 4500000, source: 'scraped' }],
+    });
+    await flushMicrotasks();
+    h.rerender();
+
+    assert.equal(h.getState(0)?.prices[0]?.price, 4500000, 'pricingData updated with refreshed price');
+    assert.equal(h.getState(2), false, 'refreshing should be false');
+    assert.equal(h.getState(1), false, 'loading should be false');
+
+    // Resolve initial request LATER with older data (price 5000000)
+    initialDef.resolve({
+      prices: [{ marketplace: 'Shopee', price: 5000000, source: 'scraped' }],
+    });
+    await flushMicrotasks();
+    h.rerender();
+
+    // Verify older initial request was discarded and did not overwrite the newer refresh
+    assert.equal(h.getState(0)?.prices[0]?.price, 4500000, 'superseded initial request must not overwrite newer refresh');
+  });
+
+  test('Test 5 — Old refresh rejection: rejection of stale refresh does not affect new product state', async () => {
+    const initialDef1 = createDeferred();
+    const refreshDef1 = createDeferred();
+    const initialDef2 = createDeferred();
+    const requests = [];
+
+    const mockGetPrices = async (id) => {
+      requests.push(id);
+      if (id === 'sm-001') {
+        return requests.filter((r) => r === 'sm-001').length === 1
+          ? initialDef1.promise
+          : refreshDef1.promise;
+      }
+      return initialDef2.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1', price: 5000000 },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {}, log: () => {} },
+    });
+
+    initialDef1.resolve({ prices: [{ marketplace: 'Shopee', price: 5000000, source: 'scraped' }] });
+    await flushMicrotasks();
+    h.rerender();
+
+    // Start manual refresh on sm-001
+    const btn = findRefreshButton(h.tree);
+    btn.props.onClick();
+    h.rerender();
+
+    // Switch to sm-002
+    h.updateProps({ product: { id: 'sm-002', name: 'Phone 2', price: 9000000 } });
+    assert.equal(h.getState(1), true, 'sm-002 is loading');
+
+    // Reject old sm-001 refresh
+    refreshDef1.reject(new Error('Network failure on sm-001 refresh'));
+    await flushMicrotasks();
+    h.rerender();
+
+    // Verify sm-002 state unaffected
+    assert.equal(h.getState(1), true, 'sm-002 loading must stay true despite old refresh rejection');
+    assert.equal(h.getState(2), false, 'sm-002 refreshing must stay false');
+    assert.equal(h.getState(0), null, 'sm-002 pricingData must stay null');
+
+    // Resolve sm-002 initial normally
+    initialDef2.resolve({ prices: [{ marketplace: 'Lazada', price: 8800000, source: 'scraped' }] });
+    await flushMicrotasks();
+    h.rerender();
+
+    assert.equal(h.getState(0)?.prices[0]?.price, 8800000, 'sm-002 should resolve normally');
+    assert.equal(h.getState(1), false);
+    assert.equal(h.getState(2), false);
+  });
+
+  test('Test 6 — Unmount during manual refresh: resolution after unmount does not mutate state', async () => {
+    const initialDef = createDeferred();
+    const refreshDef = createDeferred();
+    let count = 0;
+
+    const mockGetPrices = async () => {
+      count++;
+      return count === 1 ? initialDef.promise : refreshDef.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1', price: 5000000 },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {}, log: () => {} },
+    });
+
+    initialDef.resolve({
+      prices: [{ marketplace: 'Shopee', price: 5000000, source: 'scraped' }],
+    });
+    await flushMicrotasks();
+    h.rerender();
+    assert.equal(h.getState(0)?.prices[0]?.price, 5000000);
+
+    // Start manual refresh
+    const btn = findRefreshButton(h.tree);
+    btn.props.onClick();
+    h.rerender();
+    assert.equal(h.getState(2), true, 'refreshing is true');
+
+    // Unmount component while refresh is pending
+    h.unmount();
+
+    // Resolve refresh after unmount
+    refreshDef.resolve({
+      prices: [{ marketplace: 'Shopee', price: 4200000, source: 'scraped' }],
+    });
+    await flushMicrotasks();
+
+    // Verify state was not mutated by the completed promise after unmount
+    assert.equal(h.getState(0)?.prices[0]?.price, 5000000, 'pricingData must not be mutated after unmount');
+  });
+
+  test('Test 7 — Same ID, new object reference: re-rendering with new object reference triggers no additional request', async () => {
+    const requests = [];
+    const def = createDeferred();
+    const mockGetPrices = async (id) => {
+      requests.push(id);
+      return def.promise;
     };
 
     const h = createHarness('components/product/TabValue', {
@@ -530,20 +911,86 @@ describe('TabValue Product Identity & Lifecycle', () => {
       console: { error: () => {} },
     });
 
-    // Wait for microtask tick
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    def.resolve({ current_prices: [] });
+    await flushMicrotasks();
+    h.rerender();
+    assert.equal(requests.length, 1);
+
+    // New object reference with SAME id
+    h.updateProps({ product: { id: 'sm-001', name: 'Phone 1 Renamed' } });
+    await flushMicrotasks();
+    h.rerender();
+
+    assert.equal(requests.length, 1, 'Object reference change with same id must NOT trigger new request');
+  });
+
+  test('Test 8 — New product ID: changing ID triggers new request and old response cannot overwrite', async () => {
+    const requests = [];
+    const def1 = createDeferred();
+    const def2 = createDeferred();
+
+    const mockGetPrices = async (id) => {
+      requests.push(id);
+      return id === 'sm-001' ? def1.promise : def2.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1' },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {} },
+    });
+
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0], 'sm-001');
+
+    // Change ID to sm-002 before sm-001 resolves
+    h.updateProps({ product: { id: 'sm-002', name: 'Phone 2' } });
+    assert.equal(requests.length, 2, 'Changing ID must trigger new request');
+    assert.equal(requests[1], 'sm-002');
+
+    // Resolve sm-002 first
+    def2.resolve({ current_prices: [{ marketplace: 'Store B', price: 2000 }] });
+    await flushMicrotasks();
+    h.rerender();
+    assert.equal(h.getState(0)?.current_prices[0]?.price, 2000);
+
+    // Resolve sm-001 late
+    def1.resolve({ current_prices: [{ marketplace: 'Store A', price: 1000 }] });
+    await flushMicrotasks();
+    h.rerender();
+
+    assert.equal(h.getState(0)?.current_prices[0]?.price, 2000, 'Late old response must not overwrite current product');
+  });
+
+  test('Scenario 1 (Baseline) — Render product with ID sm-001 triggers exactly one request', async () => {
+    const requests = [];
+    const def = createDeferred();
+    const mockGetPrices = async (id) => {
+      requests.push(id);
+      return def.promise;
+    };
+
+    const h = createHarness('components/product/TabValue', {
+      product: { id: 'sm-001', name: 'Phone 1' },
+    }, {
+      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
+    }, {
+      console: { error: () => {} },
+    });
+
+    def.resolve({ current_prices: [] });
+    await flushMicrotasks();
     h.rerender();
 
     assert.equal(requests.length, 1);
     assert.equal(requests[0], 'sm-001');
   });
 
-  test('Scenario 2 — Re-rendering new object with same ID triggers no additional request', async () => {
-    const requests = [];
-    const mockGetPrices = async (id) => {
-      requests.push(id);
-      return { current_prices: [] };
-    };
+  test('Scenario 5 (Baseline) — Component unmount before initial request finishes prevents state update', async () => {
+    const def = createDeferred();
+    const mockGetPrices = () => def.promise;
 
     const h = createHarness('components/product/TabValue', {
       product: { id: 'sm-001', name: 'Phone 1' },
@@ -553,105 +1000,10 @@ describe('TabValue Product Identity & Lifecycle', () => {
       console: { error: () => {} },
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    h.rerender();
-    assert.equal(requests.length, 1);
-
-    // New object reference with SAME id
-    h.updateProps({ product: { id: 'sm-001', name: 'Phone 1 Renamed' } });
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    h.rerender();
-
-    assert.equal(requests.length, 1, 'Object reference change with same id must NOT trigger new request');
-  });
-
-  test('Scenario 3 — Changing ID to sm-002 triggers new request', async () => {
-    const requests = [];
-    const mockGetPrices = async (id) => {
-      requests.push(id);
-      return { current_prices: [] };
-    };
-
-    const h = createHarness('components/product/TabValue', {
-      product: { id: 'sm-001', name: 'Phone 1' },
-    }, {
-      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
-    }, {
-      console: { error: () => {} },
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    h.rerender();
-    assert.equal(requests.length, 1);
-
-    // Change ID to sm-002
-    h.updateProps({ product: { id: 'sm-002', name: 'Phone 2' } });
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    h.rerender();
-
-    assert.equal(requests.length, 2, 'Changing ID must trigger new request');
-    assert.equal(requests[1], 'sm-002');
-  });
-
-  test('Scenario 4 — Slow request from old product does not overwrite state of new product', async () => {
-    let resolveFirst;
-    const firstPromise = new Promise((resolve) => { resolveFirst = resolve; });
-
-    let resolveSecond;
-    const secondPromise = new Promise((resolve) => { resolveSecond = resolve; });
-
-    const mockGetPrices = (id) => {
-      if (id === 'sm-001') return firstPromise;
-      if (id === 'sm-002') return secondPromise;
-      return Promise.resolve({ current_prices: [] });
-    };
-
-    const h = createHarness('components/product/TabValue', {
-      product: { id: 'sm-001', name: 'Phone 1' },
-    }, {
-      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
-    }, {
-      console: { error: () => {} },
-    });
-
-    // Change to sm-002 BEFORE sm-001 resolves
-    h.updateProps({ product: { id: 'sm-002', name: 'Phone 2' } });
-
-    // Now resolve sm-002 first
-    resolveSecond({ current_prices: [{ marketplace: 'Store B', price: 2000 }] });
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    h.rerender();
-
-    assert.equal(h.getState(0)?.current_prices[0]?.price, 2000);
-
-    // Now resolve sm-001 late
-    resolveFirst({ current_prices: [{ marketplace: 'Store A', price: 1000 }] });
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    h.rerender();
-
-    // Verify sm-001 response did not overwrite sm-002
-    assert.equal(h.getState(0)?.current_prices[0]?.price, 2000, 'Late old response must not overwrite current product');
-  });
-
-  test('Scenario 5 — Component unmount before request finishes prevents state update', async () => {
-    let resolveRequest;
-    const promise = new Promise((resolve) => { resolveRequest = resolve; });
-    const mockGetPrices = () => promise;
-
-    const h = createHarness('components/product/TabValue', {
-      product: { id: 'sm-001', name: 'Phone 1' },
-    }, {
-      '@/lib/api': { getLiveMarketplacePrices: mockGetPrices },
-    }, {
-      console: { error: () => {} },
-    });
-
-    // Unmount before resolving
     h.unmount();
 
-    // Resolving after unmount
-    resolveRequest({ current_prices: [{ price: 999 }] });
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    def.resolve({ current_prices: [{ price: 999 }] });
+    await flushMicrotasks();
 
     assert.equal(h.getState(0), null, 'Unmounted component must not update pricingData');
   });
