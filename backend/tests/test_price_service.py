@@ -25,6 +25,8 @@ from app.db import get_db
 from app.main import app
 from app.models import MarketplacePrice, PriceResponse
 from app.routers import prices
+from app.security import check_price_rate_limit
+from app.security.rate_limiter import price_rate_limiter
 
 
 def load_scrape_worker(testcase: unittest.TestCase):
@@ -74,8 +76,10 @@ class TestPriceCache(unittest.IsolatedAsyncioTestCase):
         self.service = importlib.import_module("app.price_service")
         self.sw = load_scrape_worker(self)
         self.cache = self.service.PriceCache()
+        price_rate_limiter.reset()
 
     async def asyncTearDown(self):
+        price_rate_limiter.reset()
         await self.cache.aclose(timeout=1.0)
 
     async def test_cache_miss_hit_ttl_and_deep_copy(self):
@@ -268,6 +272,7 @@ class TestPriceCache(unittest.IsolatedAsyncioTestCase):
             yield None
 
         app.dependency_overrides[get_db] = no_db
+        app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
         try:
             with patch.object(prices, "price_cache", self.cache), patch.object(
                 self.sw, "run_isolated_scrape_flight", AsyncMock(side_effect=fetch)
@@ -282,6 +287,7 @@ class TestPriceCache(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(results[-1].json()["product_id"], "sm-002")
             self.assertFalse(self.cache._inflight)
         finally:
+            app.dependency_overrides.pop(check_price_rate_limit, None)
             app.dependency_overrides.pop(get_db, None)
 
     # ── Additional AC-08 Single-Flight / Generation / Race Matrix Tests ──
@@ -528,6 +534,10 @@ class TestPriceEndpoint(unittest.TestCase):
 
         app.dependency_overrides[get_db] = session_dependency
         self.addCleanup(app.dependency_overrides.pop, get_db, None)
+        app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
+        self.addCleanup(app.dependency_overrides.pop, check_price_rate_limit, None)
+        price_rate_limiter.reset()
+        self.addCleanup(price_rate_limiter.reset)
         self.client = TestClient(app)
 
     def test_session_closed_before_scrape_and_api_cache_contract(self):
@@ -952,6 +962,10 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.service = importlib.import_module("app.price_service")
         self.sw = load_scrape_worker(self)
+        price_rate_limiter.reset()
+
+    async def asyncTearDown(self):
+        price_rate_limiter.reset()
 
     async def _close_if_supported(self, cache) -> None:
         if hasattr(cache, "aclose"):
@@ -1007,6 +1021,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
             yield None
 
         app.dependency_overrides[get_db] = no_db
+        app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
         try:
             with patch.object(prices, "price_cache", cache), patch(
                 "app.repositories.price_repo.save_price_snapshot", return_value=False
@@ -1053,6 +1068,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                     r200 = TestClient(app).get("/api/prices/sm-001")
                     self.assertEqual(r200.status_code, 200)
         finally:
+            app.dependency_overrides.pop(check_price_rate_limit, None)
             app.dependency_overrides.pop(get_db, None)
             if hasattr(cache, "aclose"):
                 asyncio.run(cache.aclose(timeout=1.0))
@@ -1240,6 +1256,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                     yield None
 
                 app.dependency_overrides[get_db] = no_db
+                app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
                 try:
                     with patch.object(prices, "price_cache", cache):
                         async with httpx.AsyncClient(
@@ -1249,6 +1266,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(resp.status_code, 504)
                         self.assertEqual(resp.json(), {"detail": "Marketplace price lookup timed out"})
                 finally:
+                    app.dependency_overrides.pop(check_price_rate_limit, None)
                     app.dependency_overrides.pop(get_db, None)
 
                 release_stopping.set()
@@ -1260,6 +1278,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                 yield s
 
             app.dependency_overrides[get_db] = db_with_timeout
+            app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
             try:
                 with patch.object(prices, "price_cache", cache), patch.object(
                     prices.catalog_repo, "get_product_by_id", side_effect=TimeoutError("DB query timeout")
@@ -1272,6 +1291,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                         resp_db = await aclient_db.get("/api/prices/sm-001")
                     self.assertEqual(resp_db.status_code, 200)
             finally:
+                app.dependency_overrides.pop(check_price_rate_limit, None)
                 app.dependency_overrides.pop(get_db, None)
         finally:
             await self._close_if_supported(cache)
