@@ -28,13 +28,27 @@ def offline_price_endpoint_context(suppress_persistence: bool = True):
     from contextlib import ExitStack
     import inspect
     import sys
-    from unittest.mock import AsyncMock, patch
+    from unittest.mock import AsyncMock, patch, MagicMock
     from app import price_service, scraper
     from app.routers import prices
 
     stack = ExitStack()
     if suppress_persistence:
         stack.enter_context(patch("app.repositories.price_repo.save_price_snapshot", return_value=False))
+
+    from app.db import get_db
+    from app.main import app
+
+    mock_db = MagicMock()
+    mock_product = MagicMock()
+    mock_product.name = "Samsung Galaxy S24 Ultra"
+
+    def _offline_get_db():
+        yield mock_db
+
+    stack.enter_context(patch.dict(app.dependency_overrides, {get_db: _offline_get_db}))
+    stack.enter_context(patch("app.repositories.catalog_repo.get_product_by_id", return_value=mock_product))
+
     main_file = getattr(sys.modules.get("__main__"), "__file__", "") or ""
     if main_file.replace("\\", "/").endswith("/tests/test_api.py"):
         # `tests/test_api.py` executes at module top-level without `if __name__ == "__main__":`,
@@ -130,3 +144,7 @@ def enforce_safe_test_db_env(
     raw_test_url = target_env.get("TEST_DATABASE_URL")
     if raw_test_url and raw_test_url.strip():
         _parse_and_validate_test_url(raw_test_url.strip(), "TEST_DATABASE_URL", dev_identity)
+
+    # In test runs where safe test DB is enforced without an explicit TEST_DATABASE_URL:
+    target_env.setdefault("APP_ENV", "test")
+    target_env.setdefault("ALLOW_CATALOG_FALLBACK", "true")

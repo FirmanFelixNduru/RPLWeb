@@ -5,16 +5,15 @@ Idempotent: safe to run multiple times without creating duplicates.
 """
 import os
 import sys
-from datetime import datetime, timezone
 
 # Ensure backend directory is in path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.db import engine, SessionLocal, Base
+from app.db import engine, SessionLocal
 from app.entities import (
     Brand, Product, ProductSpecs, ReviewSentiment,
     WarrantyInfo, Tag, ProductTag, Marketplace,
-    MarketplaceLink, MarketplacePrice
+    MarketplaceLink
 )
 from app.products import PRODUCTS
 
@@ -25,9 +24,6 @@ def seed_database():
         print("[ERROR] DATABASE_URL is not set or database engine is not initialized.")
         print("Please check your .env configuration.")
         return False
-
-    print("[INFO] Initializing database schema...")
-    Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
     try:
@@ -139,7 +135,15 @@ def seed_database():
                     coverage=p.warranty.coverage,
                     claim_ease=p.warranty.claim_ease,
                     official_service_centers=p.warranty.official_service_centers,
-                    score=p.warranty.score
+                    score=p.warranty.score,
+                    parts_warranty_months=p.warranty.parts_warranty_months,
+                    labor_warranty_months=p.warranty.labor_warranty_months,
+                    warranty_type=p.warranty.warranty_type,
+                    battery_warranty_months=p.warranty.battery_warranty_months,
+                    charger_warranty_months=p.warranty.charger_warranty_months,
+                    service_type=p.warranty.service_type,
+                    warranty_source_url=p.warranty.warranty_source_url,
+                    verification_status=p.warranty.verification_status,
                 )
                 db.add(warranty_entity)
             else:
@@ -148,6 +152,14 @@ def seed_database():
                 warranty_entity.claim_ease = p.warranty.claim_ease
                 warranty_entity.official_service_centers = p.warranty.official_service_centers
                 warranty_entity.score = p.warranty.score
+                warranty_entity.parts_warranty_months = p.warranty.parts_warranty_months
+                warranty_entity.labor_warranty_months = p.warranty.labor_warranty_months
+                warranty_entity.warranty_type = p.warranty.warranty_type
+                warranty_entity.battery_warranty_months = p.warranty.battery_warranty_months
+                warranty_entity.charger_warranty_months = p.warranty.charger_warranty_months
+                warranty_entity.service_type = p.warranty.service_type
+                warranty_entity.warranty_source_url = p.warranty.warranty_source_url
+                warranty_entity.verification_status = p.warranty.verification_status
 
             # 7. Tags & ProductTag (idempotent)
             for tag_name in p.tags:
@@ -166,7 +178,7 @@ def seed_database():
                     pt_link = ProductTag(product_id=p.id, tag_id=tag_entity.id)
                     db.add(pt_link)
 
-            # 8. Marketplace Links & initial Prices (idempotent)
+            # 8. Marketplace Links (idempotent)
             for mkt_code, mkt_url in p.marketplace_links.items():
                 mkt_obj = marketplace_map.get(mkt_code.lower())
                 if mkt_obj:
@@ -181,24 +193,6 @@ def seed_database():
                             url=mkt_url
                         )
                         db.add(link_entity)
-
-                    # Initial baseline fallback snapshot if no price exists
-                    existing_price = db.query(MarketplacePrice).filter(
-                        MarketplacePrice.product_id == p.id,
-                        MarketplacePrice.marketplace_id == mkt_obj.id
-                    ).first()
-                    if not existing_price:
-                        price_snapshot = MarketplacePrice(
-                            product_id=p.id,
-                            marketplace_id=mkt_obj.id,
-                            price=p.price,
-                            seller=f"{p.brand} Official Store",
-                            url=mkt_url,
-                            available=True,
-                            source="fallback",
-                            captured_at=datetime.now(timezone.utc)
-                        )
-                        db.add(price_snapshot)
 
         db.commit()
         print("[SUCCESS] Database seeding completed successfully without duplicates!")

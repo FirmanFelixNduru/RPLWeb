@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ShoppingBag, ExternalLink, RefreshCw, Sparkles, Info } from 'lucide-react';
 import { getLiveMarketplacePrices } from '@/lib/api';
 import PriceTag from '@/components/ui/PriceTag';
@@ -40,30 +40,74 @@ const PRICE_STATUS_MAP = {
 };
 
 export default function TabValue({ product }) {
+  const productId = product?.id;
   const [pricingData, setPricingData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(productId));
   const [refreshing, setRefreshing] = useState(false);
+  const [prevProductId, setPrevProductId] = useState(productId);
 
-  const fetchPrices = async () => {
-    if (!product) return;
-    try {
-      const data = await getLiveMarketplacePrices(product.id);
-      setPricingData(data);
-    } catch (e) {
-      console.error('Failed to load prices:', e);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  const activeTokenRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  if (prevProductId !== productId) {
+    setPrevProductId(productId);
+    setLoading(Boolean(productId));
+    setRefreshing(false);
+    setPricingData(null);
+  }
+
+  const applyResponse = useCallback((token, data, error) => {
+    if (!isMountedRef.current || activeTokenRef.current !== token) {
+      return;
     }
-  };
+    if (error) {
+      console.error('Failed to load prices:', error);
+    } else {
+      setPricingData(data);
+    }
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
+
+  const requestPrices = useCallback(async (targetId, token) => {
+    try {
+      const data = await getLiveMarketplacePrices(targetId);
+      applyResponse(token, data, null);
+    } catch (e) {
+      applyResponse(token, null, e);
+    }
+  }, [applyResponse]);
 
   useEffect(() => {
-    fetchPrices();
-  }, [product?.id]);
+    isMountedRef.current = true;
+    if (!productId) return;
+
+    const token = {};
+    activeTokenRef.current = token;
+
+    async function loadInitial() {
+      await requestPrices(productId, token);
+    }
+    loadInitial();
+
+    return () => {
+      activeTokenRef.current = null;
+    };
+  }, [productId, requestPrices]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      activeTokenRef.current = null;
+    };
+  }, []);
 
   const handleRefresh = () => {
+    if (!productId) return;
     setRefreshing(true);
-    fetchPrices();
+    const refreshToken = {};
+    activeTokenRef.current = refreshToken;
+    requestPrices(productId, refreshToken);
   };
 
   if (!product) return null;

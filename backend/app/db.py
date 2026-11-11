@@ -1,13 +1,16 @@
 """
 CompareBuy — Database Connection & Session Management
-SQLAlchemy 2.x session factory with graceful fallback handling and W6 timeouts.
+SQLAlchemy 2.x session factory with explicit fail-closed policy, W6 timeouts, and secure logging.
 """
 import os
+import re
 import logging
+from enum import Enum
 from typing import Generator, Optional
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.engine import make_url
+from fastapi import HTTPException
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import make_url, Engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 logger = logging.getLogger(__name__)
@@ -18,6 +21,68 @@ PG_STATEMENT_TIMEOUT_MS = 5000  # ms
 PG_IDLE_TRANSACTION_TIMEOUT_MS = 10000  # ms
 DB_POOL_TIMEOUT = 10  # seconds
 DB_POOL_RECYCLE = 300  # seconds
+
+
+class DatabaseStatus(str, Enum):
+    CONNECTED = "connected"
+    UNCONFIGURED = "unconfigured"
+    INIT_FAILED = "init_failed"
+    DISCONNECTED = "disconnected"
+
+
+def scrub_db_secrets(text: str) -> str:
+    """Scrub database URLs, passwords, and credentials from log and error strings."""
+    if not text:
+        return ""
+    scrubbed = re.sub(
+        r'(postgres(?:ql)?(?:\+[a-zA-Z0-9_-]+)?:\/\/)([^:@\s]+):([^@\s]+)@',
+        r'\1\2:***@',
+        str(text)
+    )
+    scrubbed = re.sub(r'password=[^\s;]+', 'password=***', scrubbed, flags=re.IGNORECASE)
+    return scrubbed
+
+
+def get_app_env() -> str:
+    """Return canonical application environment: 'production', 'development', or 'test'.
+    
+    Defaults to 'production' if not explicitly set, ensuring fail-closed safety.
+    If RENDER=true, environment is strictly 'production'.
+    """
+    if os.getenv("RENDER", "").strip().lower() == "true":
+        return "production"
+    raw = os.getenv("APP_ENV", "").strip().lower()
+    if raw in ("development", "dev"):
+        return "development"
+    if raw in ("test", "testing"):
+        return "test"
+    if raw == "production":
+        return "production"
+    raw_env = os.getenv("ENVIRONMENT", "").strip().lower()
+    if raw_env in ("development", "dev"):
+        return "development"
+    if raw_env in ("test", "testing"):
+        return "test"
+    return "production"
+
+
+def is_production_mode() -> bool:
+    """Return True if running in production mode."""
+    return get_app_env() == "production"
+
+
+def is_fallback_allowed() -> bool:
+    """Return True if in-memory catalogue fallback is explicitly permitted.
+    
+    STRICT POLICY:
+    - In production mode (or on Render), fallback is ALWAYS FORBIDDEN (returns False).
+    - In development or test mode, fallback is allowed ONLY IF explicitly enabled
+      via ALLOW_CATALOG_FALLBACK=true.
+    """
+    if is_production_mode():
+        return False
+    raw_fallback = os.getenv("ALLOW_CATALOG_FALLBACK", "").strip().lower()
+    return raw_fallback in ("true", "1", "yes")
 
 
 def normalize_database_url(url: Optional[str]) -> Optional[str]:
@@ -46,13 +111,40 @@ def get_engine_kwargs(url_str: str) -> dict:
         kwargs["pool_timeout"] = DB_POOL_TIMEOUT
         kwargs["connect_args"] = {
             "connect_timeout": PG_CONNECT_TIMEOUT,
-            "options": (
-                f"-c statement_timeout={PG_STATEMENT_TIMEOUT_MS} "
-                f"-c idle_in_transaction_session_timeout={PG_IDLE_TRANSACTION_TIMEOUT_MS}"
-            ),
         }
 
     return kwargs
+
+
+def init_postgres_session(dbapi_connection, connection_record=None) -> None:
+    """Apply W6 PostgreSQL session timeouts via PoolEvents.connect under autocommit."""
+    prev_autocommit = getattr(dbapi_connection, "autocommit", False)
+    try:
+        dbapi_connection.autocommit = True
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute(f"SET statement_timeout = {PG_STATEMENT_TIMEOUT_MS}")
+            cursor.execute(f"SET idle_in_transaction_session_timeout = {PG_IDLE_TRANSACTION_TIMEOUT_MS}")
+        finally:
+            cursor.close()
+    finally:
+        dbapi_connection.autocommit = prev_autocommit
+
+
+def create_db_engine(url_str: str, **extra_kwargs) -> Engine:
+    """Factory creating SQLAlchemy engine with driver kwargs and PostgreSQL session timeout listener."""
+    url = make_url(url_str)
+    backend = url.get_backend_name()
+    kwargs = get_engine_kwargs(url_str)
+    if extra_kwargs:
+        kwargs.update(extra_kwargs)
+
+    eng = create_engine(url_str, **kwargs)
+
+    if backend in ("postgresql", "postgres"):
+        event.listen(eng, "connect", init_postgres_session)
+
+    return eng
 
 
 load_dotenv()
@@ -62,42 +154,85 @@ Base = declarative_base()
 
 engine = None
 SessionLocal = None
+_engine_init_error: Optional[str] = None
 
 if DATABASE_URL:
     try:
-        engine = create_engine(
-            DATABASE_URL,
-            **get_engine_kwargs(DATABASE_URL)
-        )
+        engine = create_db_engine(DATABASE_URL)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         logger.info("Database engine initialized successfully.")
     except Exception as e:
-        logger.warning(f"Could not initialize database engine: {e}. Falling back to in-memory mode.")
+        _engine_init_error = type(e).__name__
+        logger.warning(
+            "Could not initialize database engine (%s). Fallback allowed: %s",
+            _engine_init_error,
+            is_fallback_allowed(),
+        )
         engine = None
         SessionLocal = None
 
 
-def get_db() -> Generator:
-    """Dependency that yields a database session if available, else None."""
-    if SessionLocal is None:
-        yield None
-        return
-
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def is_db_connected() -> bool:
-    """Check if the database connection is live and reachable."""
+def get_database_status() -> DatabaseStatus:
+    """Return current detailed database connectivity status."""
+    if not DATABASE_URL:
+        return DatabaseStatus.UNCONFIGURED
     if engine is None or SessionLocal is None:
-        return False
+        return DatabaseStatus.INIT_FAILED
     try:
         from sqlalchemy import text
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        return True
+        return DatabaseStatus.CONNECTED
     except Exception:
-        return False
+        return DatabaseStatus.DISCONNECTED
+
+
+def get_db() -> Generator:
+    """Dependency that yields a database session if available.
+    
+    Fail-closed in production: if SessionLocal is not available or if SessionLocal()
+    raises an exception, fails-closed immediately with HTTP 503 Service Unavailable.
+    In development/test: if fallback is explicitly permitted, yields None.
+    """
+    if SessionLocal is None:
+        if not is_fallback_allowed():
+            raise HTTPException(
+                status_code=503,
+                detail="Database service unavailable"
+            )
+        yield None
+        return
+
+    try:
+        db = SessionLocal()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(
+            "Failed to instantiate database session (%s). Fallback allowed: %s",
+            scrub_db_secrets(type(exc).__name__),
+            is_fallback_allowed(),
+        )
+        if not is_fallback_allowed():
+            raise HTTPException(
+                status_code=503,
+                detail="Database service unavailable"
+            )
+        yield None
+        return
+
+    try:
+        yield db
+    finally:
+        try:
+            db.close()
+        except Exception as close_exc:
+            logger.warning(
+                "Error closing database session: %s",
+                scrub_db_secrets(type(close_exc).__name__),
+            )
+
+
+def is_db_connected() -> bool:
+    """Check if the database connection is live and reachable."""
+    return get_database_status() == DatabaseStatus.CONNECTED

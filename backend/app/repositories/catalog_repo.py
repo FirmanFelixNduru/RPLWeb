@@ -176,6 +176,24 @@ def get_product_by_id(db: Session, product_id: str) -> Optional[ProductModel]:
     return _entity_to_pydantic(entity)
 
 
+def get_products_by_category(db: Session, category: str) -> list[ProductModel]:
+    """Retrieve all active products in a category from PostgreSQL."""
+    cat_str = category.value if hasattr(category, "value") else str(category)
+    entities = db.query(ProductEntity).filter(
+        ProductEntity.category == cat_str,
+        ProductEntity.is_active.is_(True)
+    ).options(
+        joinedload(ProductEntity.brand),
+        joinedload(ProductEntity.specs),
+        joinedload(ProductEntity.review_sentiment),
+        joinedload(ProductEntity.warranty),
+        joinedload(ProductEntity.tags),
+        joinedload(ProductEntity.marketplace_links).joinedload(MarketplaceLink.marketplace)
+    ).order_by(ProductEntity.id.asc()).all()
+
+    return [_entity_to_pydantic(e) for e in entities]
+
+
 def get_all_brands(db: Session) -> list[str]:
     """Return all unique brand names in PostgreSQL."""
     brands = db.query(Brand.name).distinct().order_by(Brand.name).all()

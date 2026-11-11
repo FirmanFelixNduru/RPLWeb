@@ -2,6 +2,7 @@
 CompareBuy — Weighted Dynamic Scoring Engine
 Multi-Criteria Decision Analysis (MCDA) with user-weighted preferences.
 """
+from typing import Optional
 from app.models import (
     WizardInput, ScoredProduct, ScoringResponse,
     ScoreBreakdown, Product
@@ -178,18 +179,22 @@ def _generate_why_narrative(
     return "\n".join(parts)
 
 
-def calculate_scores(wizard: WizardInput) -> ScoringResponse:
+def calculate_scores(
+    wizard: WizardInput,
+    products: Optional[list[Product]] = None
+) -> ScoringResponse:
     """
     Main scoring engine entry point.
-    1. Filter products by category
+    1. Filter products by category (or use explicitly supplied candidate list)
     2. Build weight vector from user preferences
     3. Score each product
     4. Apply budget modifier
     5. Generate narratives
     6. Return ranked results
     """
-    # 1. Get products in the selected category
-    products = get_products_by_category(wizard.category.value)
+    # 1. Resolve candidate products
+    if products is None:
+        products = get_products_by_category(wizard.category.value)
 
     if not products:
         return ScoringResponse(

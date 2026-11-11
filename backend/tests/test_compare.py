@@ -9,6 +9,7 @@ Menggunakan standar library unittest Python.
 import sys
 import os
 import unittest
+from unittest.mock import patch, MagicMock
 
 # Pastikan modul app dapat diimpor dari direktori backend
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -16,7 +17,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from tests import _pretty  # noqa: F401  (format output [OK] ...)
 
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import OperationalError
 from app.main import app
+import app.db as db_module
+from app.products import get_product_by_id as get_fallback_product
+from app.repositories import catalog_repo as catalog_repo_module
 from app.routers.compare import (
     _extract_numeric,
     _higher_is_better,
@@ -743,6 +748,228 @@ class TestCompareRevision10Features(unittest.TestCase):
         self.assertGreater(len(response.results), 0)
         self.assertGreater(response.results[0].total_score, 0)
         self.assertIn("skor tinggi karena:", response.results[0].why_this_product)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Test Suite 6 — PR #4 Phase A: Compare Production Source Consistency (A-01 to A-10)
+# ═══════════════════════════════════════════════════════════════════
+class TestCompareProductionSourceConsistency(unittest.TestCase):
+    """Regression test suite for PR #4 Phase A: Compare Production Source Consistency."""
+
+    def setUp(self):
+        app.dependency_overrides.clear()
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
+
+    def test_a01_database_success_returns_all_products(self):
+        """A-01: When DB returns all requested products, compare returns 200 with DB data."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        def _mock_get_product(db, pid):
+            return get_fallback_product(pid)
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=_mock_get_product), \
+             patch("app.routers.compare.get_fallback_product") as mock_fallback:
+            self.assertTrue(db_module.is_production_mode())
+            self.assertFalse(db_module.is_fallback_allowed())
+
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 200)
+            mock_fallback.assert_not_called()
+            data = res.json()
+            self.assertEqual(len(data["products"]), 2)
+            self.assertEqual(data["products"][0]["id"], "sm-001")
+            self.assertEqual(data["products"][1]["id"], "sm-002")
+            self.assertTrue(len(data["highlights"]) > 0)
+
+    def test_a02_missing_in_db_returns_404_no_fallback_resurrection(self):
+        """A-02: Product present in fallback memory but missing from DB returns 404 in production."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", return_value=None):
+            self.assertTrue(db_module.is_production_mode())
+            self.assertFalse(db_module.is_fallback_allowed())
+
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 404)
+            self.assertIn("not found", res.json()["detail"].lower())
+
+    def test_a03_inactive_product_returns_404(self):
+        """A-03: Product marked inactive in DB (repo returns None) returns 404 in production."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        def _mock_get_product(db, pid):
+            if pid == "sm-001":
+                return get_fallback_product("sm-001")
+            return None  # Inactive in DB
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=_mock_get_product):
+            self.assertTrue(db_module.is_production_mode())
+            self.assertFalse(db_module.is_fallback_allowed())
+
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(res.json()["detail"], "Product 'sm-002' not found")
+
+    def test_a04_repository_exception_returns_503_in_production(self):
+        """A-04: SQLAlchemy/database exception during repo lookup returns 503 without fallback in production."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=OperationalError("Connection timeout", {}, None)):
+            self.assertTrue(db_module.is_production_mode())
+            self.assertFalse(db_module.is_fallback_allowed())
+
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json()["detail"], "Database service unavailable")
+
+    def test_a05_multiproduct_mixed_source_prevented(self):
+        """A-05: Multi-product comparison with 1 DB product and 1 missing product returns 404, never mixed 200."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        def _mock_get_product(db, pid):
+            if pid == "sm-001":
+                return get_fallback_product("sm-001")
+            return None
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=_mock_get_product):
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 404)
+            self.assertNotEqual(res.status_code, 200)
+
+    def test_a06_database_unavailable_in_permitted_dev_mode(self):
+        """A-06: When db is unavailable in dev mode with fallback permitted, in-memory fallback is used."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+
+        with patch.dict(os.environ, dev_env, clear=False):
+            self.assertFalse(db_module.is_production_mode())
+            self.assertTrue(db_module.is_fallback_allowed())
+
+            app.dependency_overrides[db_module.get_db] = lambda: None
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 200)
+            data = res.json()
+            self.assertEqual(len(data["products"]), 2)
+
+    def test_a07_database_query_fails_in_permitted_dev_mode(self):
+        """A-07: When DB query fails in permitted dev mode, the entire request consistently falls back to in-memory."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+        mock_db = MagicMock()
+
+        def _mock_get_product(db, pid):
+            if pid == "sm-001":
+                return get_fallback_product("sm-001")
+            raise OperationalError("Connection reset", {}, None)
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=_mock_get_product):
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 200)
+            data = res.json()
+            self.assertEqual(len(data["products"]), 2)
+            self.assertEqual(data["products"][0]["id"], "sm-001")
+            self.assertEqual(data["products"][1]["id"], "sm-002")
+
+    def test_a08_fallback_disabled_in_development(self):
+        """A-08: When fallback is disabled in development (ALLOW_CATALOG_FALLBACK=false), returns 503."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+
+        with patch.dict(os.environ, dev_env, clear=False):
+            self.assertFalse(db_module.is_fallback_allowed())
+
+            app.dependency_overrides[db_module.get_db] = lambda: None
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json()["detail"], "Database service unavailable")
+
+    def test_a09_production_response_does_not_leak_secrets(self):
+        """A-09: Production 503 response does not leak credentials, SQL, or internal exception details."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+        leak_msg = "FATAL: password authentication failed for user 'super_secret_user'"
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=OperationalError(leak_msg, {}, None)):
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json(), {"detail": "Database service unavailable"})
+            self.assertNotIn("super_secret_user", res.text)
+            self.assertNotIn("password", res.text)
+            self.assertNotIn("FATAL", res.text)
+
+    def test_a10_existing_contract_and_calculations_preserved(self):
+        """A-10: Existing comparison response contract and calculation behavior is preserved."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=lambda db, pid: get_fallback_product(pid)), \
+             patch("app.routers.compare.get_fallback_product") as mock_fallback:
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            res = client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 200)
+            mock_fallback.assert_not_called()
+            data = res.json()
+            self.assertIn("products", data)
+            self.assertIn("highlights", data)
+            self.assertIn("is_same_category", data)
+            self.assertIn("category", data)
+            self.assertIn("win_summary", data)
+            self.assertIn("tied_sectors_summary", data)
+            self.assertTrue(data["is_same_category"])
+            self.assertEqual(data["category"], "smartphone")
+            for h in data["highlights"]:
+                self.assertIn("spec_name", h)
+                self.assertIn("values", h)
+                self.assertIn("best_product_id", h)
+                self.assertIn("sm-001", h["values"])
+                self.assertIn("sm-002", h["values"])
+
+    def test_a11_unexpected_exception_in_production_returns_500(self):
+        """A-11: Unexpected application error (e.g. ValueError) in production returns 500, not 503 or fallback."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=ValueError("mapping failure")), \
+             patch("app.routers.compare.get_fallback_product") as mock_fallback:
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            client_no_raise = TestClient(app, raise_server_exceptions=False)
+            res = client_no_raise.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 500)
+            mock_fallback.assert_not_called()
+
+    def test_a12_unexpected_exception_in_development_returns_500(self):
+        """A-12: Unexpected application error in development returns 500 without hiding behind fallback."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(catalog_repo_module, "get_product_by_id", side_effect=ValueError("mapping failure")), \
+             patch("app.routers.compare.get_fallback_product") as mock_fallback:
+            app.dependency_overrides[db_module.get_db] = lambda: mock_db
+            client_no_raise = TestClient(app, raise_server_exceptions=False)
+            res = client_no_raise.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res.status_code, 500)
+            mock_fallback.assert_not_called()
 
 
 if __name__ == "__main__":

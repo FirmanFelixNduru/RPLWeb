@@ -15,6 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import OperationalError
 
 from tests._db_guard import enforce_safe_test_db_env
 
@@ -25,6 +26,8 @@ from app.db import get_db
 from app.main import app
 from app.models import MarketplacePrice, PriceResponse
 from app.routers import prices
+from app.security import check_price_rate_limit
+from app.security.rate_limiter import price_rate_limiter
 
 
 def load_scrape_worker(testcase: unittest.TestCase):
@@ -74,8 +77,10 @@ class TestPriceCache(unittest.IsolatedAsyncioTestCase):
         self.service = importlib.import_module("app.price_service")
         self.sw = load_scrape_worker(self)
         self.cache = self.service.PriceCache()
+        price_rate_limiter.reset()
 
     async def asyncTearDown(self):
+        price_rate_limiter.reset()
         await self.cache.aclose(timeout=1.0)
 
     async def test_cache_miss_hit_ttl_and_deep_copy(self):
@@ -268,6 +273,7 @@ class TestPriceCache(unittest.IsolatedAsyncioTestCase):
             yield None
 
         app.dependency_overrides[get_db] = no_db
+        app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
         try:
             with patch.object(prices, "price_cache", self.cache), patch.object(
                 self.sw, "run_isolated_scrape_flight", AsyncMock(side_effect=fetch)
@@ -282,6 +288,7 @@ class TestPriceCache(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(results[-1].json()["product_id"], "sm-002")
             self.assertFalse(self.cache._inflight)
         finally:
+            app.dependency_overrides.pop(check_price_rate_limit, None)
             app.dependency_overrides.pop(get_db, None)
 
     # ── Additional AC-08 Single-Flight / Generation / Race Matrix Tests ──
@@ -517,7 +524,15 @@ class TestPriceEndpoint(unittest.TestCase):
         self.addCleanup(lambda: asyncio.run(test_cache.aclose(timeout=1.0)))
         self.stack.enter_context(patch.object(prices, "price_cache", test_cache))
         self.session = MagicMock()
-        self.stack.enter_context(patch.object(prices.catalog_repo, "get_product_by_id", return_value=None))
+        mock_product = MagicMock()
+        mock_product.name = "Samsung Galaxy S24 Ultra"
+
+        def _get_product(db, pid):
+            if pid == "sm-001":
+                return mock_product
+            return None
+
+        self.stack.enter_context(patch.object(prices.catalog_repo, "get_product_by_id", side_effect=_get_product))
         self.stack.enter_context(patch("app.repositories.price_repo.save_price_snapshot", return_value=False))
 
         def session_dependency():
@@ -528,6 +543,10 @@ class TestPriceEndpoint(unittest.TestCase):
 
         app.dependency_overrides[get_db] = session_dependency
         self.addCleanup(app.dependency_overrides.pop, get_db, None)
+        app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
+        self.addCleanup(app.dependency_overrides.pop, check_price_rate_limit, None)
+        price_rate_limiter.reset()
+        self.addCleanup(price_rate_limiter.reset)
         self.client = TestClient(app)
 
     def test_session_closed_before_scrape_and_api_cache_contract(self):
@@ -555,7 +574,7 @@ class TestPriceEndpoint(unittest.TestCase):
 
         def lookup(*args):
             lookup_threads.append(threading.get_ident())
-            raise RuntimeError("DB unavailable")
+            raise OperationalError("DB unavailable", {}, None)
 
         with patch.object(prices.catalog_repo, "get_product_by_id", side_effect=lookup), patch.object(
             self.sw, "run_isolated_scrape_flight", AsyncMock(side_effect=fetch)
@@ -617,7 +636,9 @@ class TestPriceEndpoint(unittest.TestCase):
 
         def slow_lookup(*args):
             time.sleep(0.03)
-            return None
+            p = MagicMock()
+            p.name = "Samsung Galaxy S24 Ultra"
+            return p
 
         async def fast_partial_worker(product_id, name, **kwargs):
             t_s = time.monotonic()
@@ -952,6 +973,10 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.service = importlib.import_module("app.price_service")
         self.sw = load_scrape_worker(self)
+        price_rate_limiter.reset()
+
+    async def asyncTearDown(self):
+        price_rate_limiter.reset()
 
     async def _close_if_supported(self, cache) -> None:
         if hasattr(cache, "aclose"):
@@ -1007,6 +1032,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
             yield None
 
         app.dependency_overrides[get_db] = no_db
+        app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
         try:
             with patch.object(prices, "price_cache", cache), patch(
                 "app.repositories.price_repo.save_price_snapshot", return_value=False
@@ -1053,6 +1079,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                     r200 = TestClient(app).get("/api/prices/sm-001")
                     self.assertEqual(r200.status_code, 200)
         finally:
+            app.dependency_overrides.pop(check_price_rate_limit, None)
             app.dependency_overrides.pop(get_db, None)
             if hasattr(cache, "aclose"):
                 asyncio.run(cache.aclose(timeout=1.0))
@@ -1240,6 +1267,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                     yield None
 
                 app.dependency_overrides[get_db] = no_db
+                app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
                 try:
                     with patch.object(prices, "price_cache", cache):
                         async with httpx.AsyncClient(
@@ -1249,6 +1277,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(resp.status_code, 504)
                         self.assertEqual(resp.json(), {"detail": "Marketplace price lookup timed out"})
                 finally:
+                    app.dependency_overrides.pop(check_price_rate_limit, None)
                     app.dependency_overrides.pop(get_db, None)
 
                 release_stopping.set()
@@ -1260,9 +1289,10 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                 yield s
 
             app.dependency_overrides[get_db] = db_with_timeout
+            app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
             try:
                 with patch.object(prices, "price_cache", cache), patch.object(
-                    prices.catalog_repo, "get_product_by_id", side_effect=TimeoutError("DB query timeout")
+                    prices.catalog_repo, "get_product_by_id", side_effect=OperationalError("DB query timeout", {}, None)
                 ), patch.object(
                     self.sw, "run_isolated_scrape_flight", AsyncMock(return_value=worker_outcome(self.sw))
                 ), patch("app.repositories.price_repo.save_price_snapshot", return_value=False):
@@ -1272,6 +1302,7 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
                         resp_db = await aclient_db.get("/api/prices/sm-001")
                     self.assertEqual(resp_db.status_code, 200)
             finally:
+                app.dependency_overrides.pop(check_price_rate_limit, None)
                 app.dependency_overrides.pop(get_db, None)
         finally:
             await self._close_if_supported(cache)
@@ -1336,6 +1367,342 @@ class TestPreProductionHardening(unittest.IsolatedAsyncioTestCase):
         cache = self.service.PriceCache()
         self.assertFalse(hasattr(cache, "_next_generation"))
         await self._close_if_supported(cache)
+
+
+
+class TestPriceProductIdentityConsistency(unittest.TestCase):
+    """Phase B: Verify price product identity consistency and fail-closed lookup."""
+
+    def setUp(self):
+        self.stack = ExitStack()
+        self.addCleanup(self.stack.close)
+        app.dependency_overrides.clear()
+        self.addCleanup(app.dependency_overrides.clear)
+        price_rate_limiter.reset()
+        self.addCleanup(price_rate_limiter.reset)
+        app.dependency_overrides[check_price_rate_limit] = lambda: "testclient"
+        self.client = TestClient(app)
+
+    def _dummy_price_response(self, product_id: str, product_name: str) -> PriceResponse:
+        return PriceResponse(
+            product_id=product_id,
+            product_name=product_name,
+            prices=[
+                MarketplacePrice(
+                    marketplace="Tokopedia",
+                    price=15000000,
+                    url="https://tokopedia.com",
+                    seller="Official Store",
+                    available=True,
+                    source="scraped",
+                    captured_at="2026-11-11T00:00:00Z",
+                )
+            ],
+            last_updated="2026-11-11T00:00:00Z",
+        )
+
+    def test_b01_postgres_active_product_uses_db_identity(self):
+        """B-01: In production, active PostgreSQL product identity is used and fallback is not called."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+        db_product = MagicMock()
+        db_product.id = "sm-001"
+        db_product.name = "PostgreSQL DB Samsung S24 Ultra"
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=db_product) as mock_repo, \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock(return_value=self._dummy_price_response("sm-001", db_product.name))) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 200)
+            mock_repo.assert_called_once_with(mock_db, "sm-001")
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_awaited_once_with("sm-001", "PostgreSQL DB Samsung S24 Ultra")
+            mock_db.close.assert_called_once()
+
+    def test_b02_missing_postgres_product_returns_404_no_fallback(self):
+        """B-02: Product missing in PostgreSQL returns 404 in production without falling back to memory."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=None) as mock_repo, \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/missing-sku")
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(res.json(), {"detail": "Product not found"})
+            mock_repo.assert_called_once_with(mock_db, "missing-sku")
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+            mock_db.close.assert_called_once()
+
+    def test_b03_inactive_postgres_product_returns_404_no_fallback(self):
+        """B-03: Inactive product in PostgreSQL returns 404 in production without resurrection from memory fallback."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=None) as mock_repo, \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(res.json(), {"detail": "Product not found"})
+            mock_repo.assert_called_once_with(mock_db, "sm-001")
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+            mock_db.close.assert_called_once()
+
+    def test_b04_database_query_exception_returns_503_in_production(self):
+        """B-04: SQLAlchemy exception during repo lookup returns 503 without fallback in production."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", side_effect=OperationalError("Connection reset", {}, None)), \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json(), {"detail": "Database service unavailable"})
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+            mock_db.close.assert_called_once()
+
+    def test_b05_database_unavailable_returns_503_in_production(self):
+        """B-05: When db is None in production, returns 503 without fallback."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: None
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json(), {"detail": "Database service unavailable"})
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+
+    def test_b06_database_exception_in_development_permits_fallback(self):
+        """B-06: SQLAlchemy exception in development with fallback allowed falls back to memory catalog."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", side_effect=OperationalError("DB down", {}, None)), \
+             patch.object(prices.price_cache, "get", AsyncMock(return_value=self._dummy_price_response("sm-001", "Samsung Galaxy S24 Ultra"))) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 200)
+            mock_cache_get.assert_awaited_once_with("sm-001", "Samsung Galaxy S24 Ultra")
+            mock_db.close.assert_called_once()
+
+    def test_b07_database_none_in_development_permits_fallback(self):
+        """B-07: DB session None in development with fallback allowed falls back to memory catalog."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(prices.price_cache, "get", AsyncMock(return_value=self._dummy_price_response("sm-001", "Samsung Galaxy S24 Ultra"))) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: None
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 200)
+            mock_cache_get.assert_awaited_once_with("sm-001", "Samsung Galaxy S24 Ultra")
+
+    def test_b08_development_with_fallback_disabled_returns_503(self):
+        """B-08: In development mode with ALLOW_CATALOG_FALLBACK=false, DB failure returns 503."""
+        dev_no_fb = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, dev_no_fb, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", side_effect=OperationalError("DB down", {}, None)), \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json(), {"detail": "Database service unavailable"})
+            mock_fallback.assert_not_called()
+            mock_db.close.assert_called_once()
+
+    def test_b09_unexpected_exception_in_production_propagates_500(self):
+        """B-09: Unexpected non-DB exception in production propagates as HTTP 500 without being masked as 503."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", side_effect=ValueError("Corrupted spec data")), \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            raw_client = TestClient(app, raise_server_exceptions=False)
+            res = raw_client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 500)
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+            mock_db.close.assert_called_once()
+
+    def test_b10_unexpected_exception_in_development_propagates_500(self):
+        """B-10: Unexpected application exception in development propagates as HTTP 500, not hidden by fallback."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", side_effect=ValueError("Corrupted spec data")), \
+             patch("app.routers.prices.get_fallback_product") as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            raw_client = TestClient(app, raise_server_exceptions=False)
+            res = raw_client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 500)
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+            mock_db.close.assert_called_once()
+
+    def test_b11_missing_or_inactive_db_product_never_invokes_scraper(self):
+        """B-11: When product is missing or inactive in DB in production, scraper is never called."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=None), \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 404)
+            mock_cache_get.assert_not_called()
+
+    def test_b12_missing_or_inactive_db_product_never_persists_snapshot(self):
+        """B-12: When product is missing or inactive in DB in production, save_price_snapshot is never called."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=None), \
+             patch("app.repositories.price_repo.save_price_snapshot") as mock_save_snapshot:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 404)
+            mock_save_snapshot.assert_not_called()
+
+    def test_b13_db_product_name_passed_to_scraper_not_fallback_name(self):
+        """B-13: Scraper receives the exact PostgreSQL product name when it differs from in-memory catalog."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+        db_product = MagicMock()
+        db_product.id = "sm-001"
+        db_product.name = "Exclusive Postgres S24 Name"
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=db_product), \
+             patch.object(prices.price_cache, "get", AsyncMock(return_value=self._dummy_price_response("sm-001", db_product.name))) as mock_cache_get:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 200)
+            mock_cache_get.assert_awaited_once_with("sm-001", "Exclusive Postgres S24 Name")
+
+    def test_b14_db_session_closed_before_scraper_execution(self):
+        """B-14: Database session is closed before async price scraping begins."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+        db_product = MagicMock()
+        db_product.id = "sm-001"
+        db_product.name = "Samsung Galaxy S24 Ultra"
+
+        call_order = []
+        mock_db.close.side_effect = lambda: call_order.append("db_closed")
+
+        async def track_cache_get(pid, name):
+            call_order.append("cache_get")
+            return self._dummy_price_response(pid, name)
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=db_product), \
+             patch.object(prices.price_cache, "get", side_effect=track_cache_get):
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(call_order, ["db_closed", "cache_get"])
+            mock_db.close.assert_called_once()
+
+    def test_b15_production_database_error_does_not_leak_secrets(self):
+        """B-15: Database error detail in production contains only generic message without connection secrets."""
+        prod_env = {"APP_ENV": "production", "ALLOW_CATALOG_FALLBACK": "false", "RENDER": ""}
+        mock_db = MagicMock()
+        sensitive_msg = "FATAL: password authentication failed for user 'super_secret_user'"
+
+        with patch.dict(os.environ, prod_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", side_effect=OperationalError(sensitive_msg, {}, None)):
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 503)
+            self.assertEqual(res.json(), {"detail": "Database service unavailable"})
+            self.assertNotIn("super_secret_user", res.text)
+            self.assertNotIn("password", res.text)
+
+    def test_b16_missing_postgres_product_in_development_returns_404(self):
+        """B-16: Missing PostgreSQL product in development must return 404 without memory resurrection."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+        mock_db = MagicMock()
+        fallback_product = MagicMock()
+        fallback_product.name = "Fallback Samsung S24"
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=None) as mock_repo, \
+             patch("app.routers.prices.get_fallback_product", return_value=fallback_product) as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get, \
+             patch("app.repositories.price_repo.save_price_snapshot") as mock_save_snapshot:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/missing-sku")
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(res.json(), {"detail": "Product not found"})
+            mock_repo.assert_called_once_with(mock_db, "missing-sku")
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+            mock_save_snapshot.assert_not_called()
+            mock_db.close.assert_called_once()
+
+    def test_b17_inactive_postgres_product_in_development_returns_404(self):
+        """B-17: Inactive PostgreSQL product in development must return 404 without memory resurrection."""
+        dev_env = {"APP_ENV": "development", "ALLOW_CATALOG_FALLBACK": "true", "RENDER": ""}
+        mock_db = MagicMock()
+        fallback_product = MagicMock()
+        fallback_product.name = "Samsung Galaxy S24 Ultra"
+
+        with patch.dict(os.environ, dev_env, clear=False), \
+             patch.object(prices.catalog_repo, "get_product_by_id", return_value=None) as mock_repo, \
+             patch("app.routers.prices.get_fallback_product", return_value=fallback_product) as mock_fallback, \
+             patch.object(prices.price_cache, "get", AsyncMock()) as mock_cache_get, \
+             patch("app.repositories.price_repo.save_price_snapshot") as mock_save_snapshot:
+
+            app.dependency_overrides[get_db] = lambda: mock_db
+            res = self.client.get("/api/prices/sm-001")
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(res.json(), {"detail": "Product not found"})
+            mock_repo.assert_called_once_with(mock_db, "sm-001")
+            mock_fallback.assert_not_called()
+            mock_cache_get.assert_not_called()
+            mock_save_snapshot.assert_not_called()
+            mock_db.close.assert_called_once()
 
 
 if __name__ == "__main__":
