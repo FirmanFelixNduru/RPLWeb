@@ -2,17 +2,21 @@
 CompareBuy — Comparison Router
 Side-by-side product comparison with auto-highlighting.
 """
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.models import (
     CompareRequest, CompareResponse, SpecHighlight, Product,
     SectorWinSummary
 )
 from app.products import get_product_by_id as get_fallback_product
-from app.db import get_db
+from app.db import get_db, is_fallback_allowed
 from app.repositories import catalog_repo
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["compare"])
 
@@ -161,21 +165,45 @@ def compare_products(req: CompareRequest, db: Optional[Session] = Depends(get_db
     """
 
     products: list[Product] = []
-    for pid in req.product_ids:
-        product = None
-        if db is not None:
-            try:
+
+    # Attempt PostgreSQL repository lookup if DB session is active
+    if db is not None:
+        try:
+            for pid in req.product_ids:
                 product = catalog_repo.get_product_by_id(db, pid)
-            except Exception:
-                pass
-        if not product:
-            product = get_fallback_product(pid)
-        if not product:
+                if not product:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Product '{pid}' not found"
+                    )
+                products.append(product)
+        except HTTPException:
+            raise
+        except SQLAlchemyError as e:
+            logger.error("Database query failed in compare_products: %s", type(e).__name__)
+            if not is_fallback_allowed():
+                raise HTTPException(
+                    status_code=503,
+                    detail="Database service unavailable"
+                ) from None
+            products = []
+
+    if not products:
+        if not is_fallback_allowed():
             raise HTTPException(
-                status_code=404,
-                detail=f"Product '{pid}' not found"
+                status_code=503,
+                detail="Database service unavailable"
             )
-        products.append(product)
+
+        # Fallback to in-memory products (only when explicitly permitted in dev/test)
+        for pid in req.product_ids:
+            product = get_fallback_product(pid)
+            if not product:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Product '{pid}' not found"
+                )
+            products.append(product)
 
     # Determine category consistency
     categories = set(p.category.value if hasattr(p.category, "value") else str(p.category) for p in products)

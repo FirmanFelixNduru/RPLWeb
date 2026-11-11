@@ -112,6 +112,10 @@ class TestBackendFailClosed(unittest.TestCase):
             res_tags = self.client.get("/api/tags")
             self.assertEqual(res_tags.status_code, 503)
 
+            res_compare = self.client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res_compare.status_code, 503)
+            self.assertEqual(res_compare.json()["detail"], "Database service unavailable")
+
     # ─────────────────────────────────────────────────────────────
     # Test C — Engine initialization failure
     # ─────────────────────────────────────────────────────────────
@@ -133,6 +137,9 @@ class TestBackendFailClosed(unittest.TestCase):
 
             res_catalog = self.client.get("/api/products")
             self.assertEqual(res_catalog.status_code, 503)
+
+            res_compare = self.client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res_compare.status_code, 503)
 
     # ─────────────────────────────────────────────────────────────
     # Test D — Runtime connection failure (SELECT 1 fails)
@@ -192,6 +199,11 @@ class TestBackendFailClosed(unittest.TestCase):
             # 4. tags
             res4 = self.client.get("/api/tags")
             self.assertEqual(res4.status_code, 503)
+
+            # 5. compare
+            res5 = self.client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res5.status_code, 503)
+            self.assertEqual(res5.json()["detail"], "Database service unavailable")
 
     # ─────────────────────────────────────────────────────────────
     # Test F — Empty database (zero products)
@@ -276,6 +288,10 @@ class TestBackendFailClosed(unittest.TestCase):
             res_tags = self.client.get("/api/tags")
             self.assertEqual(res_tags.status_code, 200)
             self.assertIn("tags", res_tags.json())
+
+            res_compare = self.client.post("/api/compare", json={"product_ids": ["sm-001", "sm-002"]})
+            self.assertEqual(res_compare.status_code, 200)
+            self.assertEqual(len(res_compare.json()["products"]), 2)
 
     # ─────────────────────────────────────────────────────────────
     # Test I — Testing compatibility and dependency injection

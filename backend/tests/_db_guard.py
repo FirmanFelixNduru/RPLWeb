@@ -28,7 +28,7 @@ def offline_price_endpoint_context(suppress_persistence: bool = True):
     from contextlib import ExitStack
     import inspect
     import sys
-    from unittest.mock import AsyncMock, patch
+    from unittest.mock import AsyncMock, patch, MagicMock
     from app import price_service, scraper
     from app.routers import prices
 
@@ -39,10 +39,15 @@ def offline_price_endpoint_context(suppress_persistence: bool = True):
     from app.db import get_db
     from app.main import app
 
+    mock_db = MagicMock()
+    mock_product = MagicMock()
+    mock_product.name = "Samsung Galaxy S24 Ultra"
+
     def _offline_get_db():
-        yield None
+        yield mock_db
 
     stack.enter_context(patch.dict(app.dependency_overrides, {get_db: _offline_get_db}))
+    stack.enter_context(patch("app.repositories.catalog_repo.get_product_by_id", return_value=mock_product))
 
     main_file = getattr(sys.modules.get("__main__"), "__file__", "") or ""
     if main_file.replace("\\", "/").endswith("/tests/test_api.py"):
