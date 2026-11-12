@@ -391,7 +391,7 @@ Rekayasa Perangkat Lunak/
 For the planned PostgreSQL integration and Render deployment, configure the backend environment variables as follows:
 
 ```env
-ALLOWED_ORIGINS=http://localhost:3000,https://your-app.vercel.app
+ALLOWED_ORIGINS=http://localhost:3000,https://comparebuy-livid.vercel.app
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/comparebuy
 ```
 
@@ -445,12 +445,17 @@ Available frontend scripts:
 
 The backend includes a multi-stage Dockerfile based on Python 3.12 slim. It installs dependencies in a build stage, copies the installed packages into the runtime image, exposes port `8000`, and provides a `/health` container health check. This image can be used by Render for backend deployment.
 
-Target deployment:
+Production deployment URLs:
+
+* **Frontend (Vercel):** [https://comparebuy-livid.vercel.app](https://comparebuy-livid.vercel.app)
+* **Backend (Render):** [https://comparebuy-api.onrender.com](https://comparebuy-api.onrender.com) ([Swagger UI](https://comparebuy-api.onrender.com/docs), [Health Check](https://comparebuy-api.onrender.com/health))
+
+Deployment architecture:
 
 * **Database: PostgreSQL** hosted by a managed PostgreSQL provider or Render PostgreSQL.
-* **Backend: Render**, using the `backend` directory, Dockerfile or Python build configuration, and Uvicorn as the start command.
-* **Frontend: Vercel**, using the `frontend` directory and `NEXT_PUBLIC_API_URL` pointing to the deployed Render backend.
-* **CORS:** Set the backend `ALLOWED_ORIGINS` value to include the local frontend URL and the production Vercel URL.
+* **Backend: Render** ([https://comparebuy-api.onrender.com](https://comparebuy-api.onrender.com)), using the `backend` directory, Dockerfile or Python build configuration, and Uvicorn as the start command.
+* **Frontend: Vercel** ([https://comparebuy-livid.vercel.app](https://comparebuy-livid.vercel.app)), using the `frontend` directory and `NEXT_PUBLIC_API_URL` pointing to [`https://comparebuy-api.onrender.com`](https://comparebuy-api.onrender.com).
+* **CORS:** Set the backend `ALLOWED_ORIGINS` value to include `http://localhost:3000` and [`https://comparebuy-livid.vercel.app`](https://comparebuy-livid.vercel.app).
 
 Recommended Render backend settings:
 

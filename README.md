@@ -27,6 +27,14 @@
 
 Aplikasi ini dirancang *production-ready* dengan dukungan *zero-config deployment* ke **Vercel** untuk Frontend dan *containerized deployment* (**Docker / Procfile / railway.json**) ke **Render** atau **Railway** untuk Backend.
 
+### 🚀 Live Application
+
+- **Frontend (Vercel):** [https://comparebuy-livid.vercel.app](https://comparebuy-livid.vercel.app)
+- **Backend API (Render):** [https://comparebuy-api.onrender.com](https://comparebuy-api.onrender.com)
+- **API Docs (Swagger UI):** [https://comparebuy-api.onrender.com/docs](https://comparebuy-api.onrender.com/docs)
+- **API Docs (ReDoc):** [https://comparebuy-api.onrender.com/redoc](https://comparebuy-api.onrender.com/redoc)
+- **Health Check:** [https://comparebuy-api.onrender.com/health](https://comparebuy-api.onrender.com/health)
+
 ---
 
 ## 🎯 Latar Belakang & Masalah
@@ -310,13 +318,15 @@ Modul `backend/app/scraper.py` menggunakan **Httpx Asynchronous Client** dan **B
 
 ## 🌐 Panduan Deployment ke Cloud
 
+Lingkungan produksi aktif saat ini dapat diakses melalui [Frontend Vercel](https://comparebuy-livid.vercel.app) dan [Backend Render](https://comparebuy-api.onrender.com).
+
 ### 1. Deploy Frontend ke Vercel (Zero-Config Ready)
 1. *Push* kode ke repositori GitHub Anda.
 2. Buka [Vercel Dashboard](https://vercel.com) → Pilih **Add New Project** → Impor repositori GitHub.
 3. Atur **Root Directory** ke folder `frontend`.
 4. Tambahkan Environment Variable:
    - Key: `NEXT_PUBLIC_API_URL`
-   - Value: URL backend Render/Railway Anda (contoh: `https://comparebuy-api.onrender.com`)
+   - Value: [https://comparebuy-api.onrender.com](https://comparebuy-api.onrender.com) (URL backend Render aktif)
 5. Klik **Deploy**. Vercel akan otomatis mendeteksi konfigurasi Next.js App Router dan mem-build aplikasi secara instan.
 
 ### 2. Deploy Backend ke Render
@@ -328,7 +338,7 @@ Modul `backend/app/scraper.py` menggunakan **Httpx Asynchronous Client** dan **B
    - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 5. Tambahkan Environment Variable:
    - Key: `ALLOWED_ORIGINS`
-   - Value: `https://your-frontend.vercel.app`
+   - Value: [https://comparebuy-livid.vercel.app](https://comparebuy-livid.vercel.app) (URL frontend Vercel aktif)
    - Key: `DATABASE_URL`
    - Value: URL PostgreSQL yang disediakan Render atau provider database Anda.
 6. Jalankan `alembic upgrade head` sebagai deploy/pre-deploy command dan `python seed.py` satu kali untuk mengisi katalog awal.
