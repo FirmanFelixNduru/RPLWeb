@@ -21,6 +21,7 @@ Setiap baris di bawah merupakan bug yang berhasil direproduksi, bukan daftar dug
 
 - [before.json](before.json): sepuluh kasus gagal pada deployment awal.
 - [local-after.json](local-after.json): sepuluh kasus lulus pada build produksi lokal setelah perbaikan.
+- [production-after.json](production-after.json): sepuluh kasus lulus pada deployment produksi setelah perbaikan.
 - [issues.json](issues.json): pemetaan kasus, nomor issue, dan file sumber.
 - `npm test --prefix frontend`: 105 pengujian lulus, termasuk enam regresi baru untuk penyimpanan, fallback, dan respons asinkron.
 - `npm run build --prefix frontend`: berhasil.
@@ -30,6 +31,19 @@ Laporan browser mencatat waktu UTC. Pemeriksaan gangguan API dan respons terlamb
 menggunakan intersepsi `fetch` pada tab uji saja. Pengujian tersebut tidak menyatakan
 bahwa backend mengalami gangguan saat pengujian berlangsung. Pemeriksaan label
 aksesibilitas memeriksa DOM/semantik; bukan pengujian ucapan dengan pembaca layar.
+
+## Verifikasi produksi
+
+Perbaikan digabung melalui [PR #15](https://github.com/FirmanFelixNduru/RPLWeb/pull/15),
+commit deployment `2d55824c37e377f4c6c3f0ac8bb773045f81943c`.
+Status deployment Vercel berhasil sebelum pengujian ulang dilakukan.
+Pengujian ulang selesai pada **18 November 2026, 22:24 WIB**
+(`2026-11-18T15:24:07Z`): **10 dari 10 kasus lulus** pada URL produksi.
+Health check backend juga mengembalikan HTTP 200 dengan database terhubung.
+
+Issue masing-masing memuat langkah reproduksi awal serta komentar penyelesaian
+dengan hasil verifikasi kasus terkait. Reviewer dapat menelusuri issue #5–#14,
+PR perbaikan, dan artefak JSON tanpa screenshot.
 
 ## Mengulangi pengujian deployment
 
