@@ -177,6 +177,7 @@ Rekayasa Perangkat Lunak/
 
 Indeks dokumen:
 
+- [Laporan 10 bug setelah deployment dan hasil verifikasi](docs/qa/README.md), dengan tautan GitHub Issues #5–#14 dan bukti pengujian sebelum/sesudah perbaikan.
 - [Panduan menjalankan aplikasi](docs/HowToRun.md), [checklist MVP](docs/checklist_mvp.md), dan [video demo](docs/demo.mp4). Keberadaan artefak bukan bukti pengujian ulang atau deployment saat ini.
 
 ---
