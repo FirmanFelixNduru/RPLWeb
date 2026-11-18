@@ -3,6 +3,9 @@
 import React from 'react';
 import PriceTag from '@/components/ui/PriceTag';
 
+const BUDGET_STEP = 100000;
+const formatBudget = (value) => `Rp ${value.toLocaleString('id-ID')}`;
+
 export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin, onChangeMax }) {
   // Category-specific presets for realistic guidance
   const presetsByCategory = {
@@ -73,7 +76,7 @@ export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin
               >
                 <div className="font-bold">{preset.label}</div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Rp {(preset.min / 1000000).toFixed(preset.min >= 1000000 ? 1 : 0)} - {(preset.max / 1000000).toFixed(0)} Jt
+                  {formatBudget(preset.min)} – {formatBudget(preset.max)}
                 </div>
               </button>
             );
@@ -111,7 +114,7 @@ export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin
             }}
           >
             <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-bold shadow-md whitespace-nowrap">
-              Min: Rp {(budgetMin / 1000000).toFixed(budgetMin >= 1000000 ? 1 : 0)} Jt
+              Min: {formatBudget(budgetMin)}
             </span>
             <div className="w-1.5 h-1.5 bg-indigo-600 rotate-45 -mt-0.5" />
           </div>
@@ -124,7 +127,7 @@ export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin
             }}
           >
             <span className="px-2.5 py-1 rounded-lg bg-purple-600 text-white text-[11px] font-bold shadow-md whitespace-nowrap">
-              Max: Rp {(budgetMax / 1000000).toFixed(0)} Jt
+              Max: {formatBudget(budgetMax)}
             </span>
             <div className="w-1.5 h-1.5 bg-purple-600 rotate-45 -mt-0.5" />
           </div>
@@ -145,11 +148,11 @@ export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin
               type="range"
               min={0}
               max={35000000}
-              step={500000}
+              step={BUDGET_STEP}
               value={budgetMin}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                if (val <= budgetMax - 500000) {
+                if (val <= budgetMax - BUDGET_STEP) {
                   onChangeMin(val);
                 }
               }}
@@ -164,11 +167,11 @@ export default function StepBudget({ category, budgetMin, budgetMax, onChangeMin
               type="range"
               min={0}
               max={35000000}
-              step={500000}
+              step={BUDGET_STEP}
               value={budgetMax}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                if (val >= budgetMin + 500000) {
+                if (val >= budgetMin + BUDGET_STEP) {
                   onChangeMax(val);
                 }
               }}

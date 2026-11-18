@@ -1,0 +1,171 @@
+{
+  "tested_at": "2026-11-18T15:15:46.328180+00:00",
+  "base_url": "https://comparebuy-livid.vercel.app",
+  "browser": "Orca embedded Chromium",
+  "page": "70669aca-e547-4407-862a-6e2eef0e3b21",
+  "note": "Outage/latency checks simulate fetch failures in this tab only.",
+  "results": [
+    {
+      "key": "category-keyboard",
+      "passed": false,
+      "evidence": [
+        {
+          "name": "Smartphone",
+          "tag": "DIV",
+          "tabIndex": -1,
+          "pressed": null
+        },
+        {
+          "name": "Laptop",
+          "tag": "DIV",
+          "tabIndex": -1,
+          "pressed": null
+        },
+        {
+          "name": "Tablet",
+          "tag": "DIV",
+          "tabIndex": -1,
+          "pressed": null
+        },
+        {
+          "name": "TWS / Audio",
+          "tag": "DIV",
+          "tabIndex": -1,
+          "pressed": null
+        },
+        {
+          "name": "Smartwatch",
+          "tag": "DIV",
+          "tabIndex": -1,
+          "pressed": null
+        }
+      ]
+    },
+    {
+      "key": "menu-expanded",
+      "passed": false,
+      "evidence": {
+        "before": null,
+        "after": null,
+        "controls": null,
+        "exists": false
+      }
+    },
+    {
+      "key": "budget-labels",
+      "passed": false,
+      "evidence": [
+        "Entry ANC\nRp 0 - 1 Jt",
+        "Mid-Range Harian\nRp 1.0 - 3 Jt"
+      ]
+    },
+    {
+      "key": "budget-slider-step",
+      "passed": false,
+      "evidence": [
+        {
+          "name": "Batas Minimum Anggaran",
+          "value": "500000",
+          "step": "500000"
+        },
+        {
+          "name": "Batas Maksimum Anggaran",
+          "value": "1000000",
+          "step": "500000"
+        }
+      ]
+    },
+    {
+      "key": "scenario-required",
+      "passed": false,
+      "evidence": {
+        "selected": [],
+        "blocked": false,
+        "message": null
+      }
+    },
+    {
+      "key": "priority-labels",
+      "passed": false,
+      "evidence": [
+        {
+          "name": null,
+          "labels": []
+        },
+        {
+          "name": null,
+          "labels": []
+        },
+        {
+          "name": null,
+          "labels": []
+        },
+        {
+          "name": null,
+          "labels": []
+        },
+        {
+          "name": null,
+          "labels": []
+        },
+        {
+          "name": null,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "key": "search-trim",
+      "passed": false,
+      "evidence": {
+        "plain": [
+          "Samsung Galaxy S24 Ultra",
+          "Samsung Galaxy A55 5G",
+          "Samsung Galaxy Watch 7",
+          "Samsung Galaxy Tab S9 FE",
+          "Samsung Galaxy Buds3 Pro"
+        ],
+        "padded": [
+          "Samsung Galaxy S24 Ultra",
+          "Samsung Galaxy A55 5G",
+          "Samsung Galaxy Tab S9 FE",
+          "Samsung Galaxy Buds3 Pro"
+        ]
+      }
+    },
+    {
+      "key": "comparison-fallback-order",
+      "passed": false,
+      "evidence": {
+        "expected": [
+          "iPhone 15 Pro Max",
+          "Samsung Galaxy S24 Ultra"
+        ],
+        "actual": [
+          "Samsung Galaxy S24 Ultra",
+          "iPhone 15 Pro Max"
+        ]
+      }
+    },
+    {
+      "key": "comparison-stale-response",
+      "passed": false,
+      "evidence": {
+        "saved": [],
+        "columns": [
+          "iPhone 15 Pro Max",
+          "Samsung Galaxy S24 Ultra"
+        ],
+        "empty": false
+      }
+    },
+    {
+      "key": "dock-storage-validation",
+      "passed": false,
+      "evidence": {
+        "hasMain": false,
+        "text": "This page couldn’t load\n\nReload to try again, or go back.\n\nReload\nBack"
+      }
+    }
+  ]
+}

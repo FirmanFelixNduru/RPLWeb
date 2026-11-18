@@ -26,9 +26,11 @@ export default function WizardPage() {
 
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [scenarioError, setScenarioError] = useState('');
 
   // Toggle scenario selection
   const handleToggleScenario = (id) => {
+    setScenarioError('');
     if (scenarios.includes(id)) {
       setScenarios(scenarios.filter((s) => s !== id));
     } else {
@@ -43,6 +45,10 @@ export default function WizardPage() {
 
   // Next / Prev Navigation
   const handleNext = () => {
+    if (currentStep === 3 && scenarios.length === 0) {
+      setScenarioError('Pilih minimal satu skenario penggunaan sebelum melanjutkan.');
+      return;
+    }
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -176,6 +182,7 @@ export default function WizardPage() {
                   if (cat !== category) {
                     setCategory(cat);
                     setScenarios([]); // Auto-reset scenarios to avoid cross-category conflicts
+                    setScenarioError('');
                   }
                 }}
               />
@@ -192,11 +199,18 @@ export default function WizardPage() {
             )}
 
             {currentStep === 3 && (
-              <StepScenario
-                category={category}
-                selectedScenarios={scenarios}
-                onToggleScenario={handleToggleScenario}
-              />
+              <div className="space-y-4">
+                <StepScenario
+                  category={category}
+                  selectedScenarios={scenarios}
+                  onToggleScenario={handleToggleScenario}
+                />
+                {scenarioError && (
+                  <p role="alert" className="text-center text-sm font-semibold text-rose-700 dark:text-rose-300">
+                    {scenarioError}
+                  </p>
+                )}
+              </div>
             )}
 
             {currentStep === 4 && (

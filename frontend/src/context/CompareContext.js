@@ -4,6 +4,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const MAX_COMPARE = 4;
 
+export function sanitizeCompareList(items) {
+  if (!Array.isArray(items)) return [];
+  const seen = new Set();
+  return items.filter((item) => {
+    if (!item || typeof item.id !== 'string' || !item.id.trim() ||
+        typeof item.name !== 'string' || !item.name.trim() ||
+        !Number.isFinite(item.price) || item.price < 0 || seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  }).slice(0, MAX_COMPARE);
+}
+
 const CompareContext = createContext({
   compareList: [],
   addToCompare: () => {},
@@ -27,7 +39,9 @@ export function CompareProvider({ children }) {
       try {
         const saved = localStorage.getItem('comparebuy_dock');
         if (saved) {
-          setCompareList(JSON.parse(saved));
+          const items = sanitizeCompareList(JSON.parse(saved));
+          setCompareList(items);
+          localStorage.setItem('comparebuy_dock', JSON.stringify(items));
         }
       } catch (e) {
         console.warn('Failed to parse saved compare dock items:', e);

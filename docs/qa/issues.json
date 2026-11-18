@@ -1,0 +1,72 @@
+[
+  {
+    "key": "category-keyboard",
+    "title": "Pilihan kategori wizard tidak dapat dioperasikan dengan keyboard",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/5",
+    "number": 5,
+    "source": "frontend/src/components/wizard/StepCategory.js"
+  },
+  {
+    "key": "menu-expanded",
+    "title": "Tombol menu mobile tidak mengumumkan status buka dan tutup",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/6",
+    "number": 6,
+    "source": "frontend/src/components/layout/Navbar.js"
+  },
+  {
+    "key": "budget-labels",
+    "title": "Label anggaran TWS membulatkan Rp300 ribu menjadi Rp0",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/7",
+    "number": 7,
+    "source": "frontend/src/components/wizard/StepBudget.js"
+  },
+  {
+    "key": "budget-slider-step",
+    "title": "Slider anggaran tidak dapat merepresentasikan preset TWS Rp300 ribu",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/8",
+    "number": 8,
+    "source": "frontend/src/components/wizard/StepBudget.js"
+  },
+  {
+    "key": "scenario-required",
+    "title": "Wizard melewati pemilihan skenario meskipun tidak ada skenario dipilih",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/9",
+    "number": 9,
+    "source": "frontend/src/app/wizard/page.js"
+  },
+  {
+    "key": "priority-labels",
+    "title": "Enam slider prioritas wizard tidak memiliki nama aksesibel",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/10",
+    "number": 10,
+    "source": "frontend/src/components/wizard/StepPriority.js"
+  },
+  {
+    "key": "search-trim",
+    "title": "Spasi di awal dan akhir pencarian menghilangkan hasil katalog yang valid",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/11",
+    "number": 11,
+    "source": "frontend/src/app/catalog/page.js"
+  },
+  {
+    "key": "comparison-fallback-order",
+    "title": "Urutan kolom perbandingan berubah ketika API gagal",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/12",
+    "number": 12,
+    "source": "frontend/src/lib/api.js"
+  },
+  {
+    "key": "comparison-stale-response",
+    "title": "Respons API lama mengisi kembali matriks setelah dikosongkan",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/13",
+    "number": 13,
+    "source": "frontend/src/app/compare/page.js"
+  },
+  {
+    "key": "dock-storage-validation",
+    "title": "Data dock tersimpan dengan bentuk tidak valid membuat aplikasi gagal dimuat",
+    "url": "https://github.com/FirmanFelixNduru/RPLWeb/issues/14",
+    "number": 14,
+    "source": "frontend/src/context/CompareContext.js"
+  }
+]
