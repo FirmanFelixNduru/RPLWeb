@@ -69,7 +69,7 @@ export default function CatalogPage() {
 
     // Search query
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.trim().toLowerCase();
       list = list.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||

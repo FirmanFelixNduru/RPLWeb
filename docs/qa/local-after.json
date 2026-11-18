@@ -1,0 +1,181 @@
+{
+  "tested_at": "2026-11-18T15:20:22.815978+00:00",
+  "base_url": "http://127.0.0.1:3000",
+  "browser": "Orca embedded Chromium",
+  "page": "85b5f937-a2e4-48b1-90c0-7e44038cb1ee",
+  "note": "Outage/latency checks simulate fetch failures in this tab only.",
+  "results": [
+    {
+      "key": "category-keyboard",
+      "passed": true,
+      "evidence": [
+        {
+          "name": "Smartphone",
+          "tag": "BUTTON",
+          "tabIndex": 0,
+          "pressed": "true"
+        },
+        {
+          "name": "Laptop",
+          "tag": "BUTTON",
+          "tabIndex": 0,
+          "pressed": "false"
+        },
+        {
+          "name": "Tablet",
+          "tag": "BUTTON",
+          "tabIndex": 0,
+          "pressed": "false"
+        },
+        {
+          "name": "TWS / Audio",
+          "tag": "BUTTON",
+          "tabIndex": 0,
+          "pressed": "false"
+        },
+        {
+          "name": "Smartwatch",
+          "tag": "BUTTON",
+          "tabIndex": 0,
+          "pressed": "false"
+        }
+      ]
+    },
+    {
+      "key": "menu-expanded",
+      "passed": true,
+      "evidence": {
+        "before": "false",
+        "after": "true",
+        "controls": "mobile-navigation",
+        "exists": true
+      }
+    },
+    {
+      "key": "budget-labels",
+      "passed": true,
+      "evidence": [
+        "Entry ANC\nRp 300.000 – Rp 1.000.000",
+        "Mid-Range Harian\nRp 1.000.000 – Rp 2.500.000"
+      ]
+    },
+    {
+      "key": "budget-slider-step",
+      "passed": true,
+      "evidence": [
+        {
+          "name": "Batas Minimum Anggaran",
+          "value": "300000",
+          "step": "100000"
+        },
+        {
+          "name": "Batas Maksimum Anggaran",
+          "value": "1000000",
+          "step": "100000"
+        }
+      ]
+    },
+    {
+      "key": "scenario-required",
+      "passed": true,
+      "evidence": {
+        "selected": [],
+        "blocked": true,
+        "message": "Pilih minimal satu skenario penggunaan sebelum melanjutkan."
+      }
+    },
+    {
+      "key": "priority-labels",
+      "passed": true,
+      "evidence": [
+        {
+          "name": null,
+          "labels": [
+            "Performa & Kecepatan"
+          ]
+        },
+        {
+          "name": null,
+          "labels": [
+            "Kualitas Kamera / Sensor"
+          ]
+        },
+        {
+          "name": null,
+          "labels": [
+            "Ketahanan Baterai"
+          ]
+        },
+        {
+          "name": null,
+          "labels": [
+            "Kejernihan Layar"
+          ]
+        },
+        {
+          "name": null,
+          "labels": [
+            "Durabilitas & Material"
+          ]
+        },
+        {
+          "name": null,
+          "labels": [
+            "Nilai Tukar Uang (Value)"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "search-trim",
+      "passed": true,
+      "evidence": {
+        "plain": [
+          "Samsung Galaxy S24 Ultra",
+          "Samsung Galaxy A55 5G",
+          "Samsung Galaxy Watch 7",
+          "Samsung Galaxy Tab S9 FE",
+          "Samsung Galaxy Buds3 Pro"
+        ],
+        "padded": [
+          "Samsung Galaxy S24 Ultra",
+          "Samsung Galaxy A55 5G",
+          "Samsung Galaxy Watch 7",
+          "Samsung Galaxy Tab S9 FE",
+          "Samsung Galaxy Buds3 Pro"
+        ]
+      }
+    },
+    {
+      "key": "comparison-fallback-order",
+      "passed": true,
+      "evidence": {
+        "expected": [
+          "iPhone 15 Pro Max",
+          "Samsung Galaxy S24 Ultra"
+        ],
+        "actual": [
+          "iPhone 15 Pro Max",
+          "Samsung Galaxy S24 Ultra"
+        ]
+      }
+    },
+    {
+      "key": "comparison-stale-response",
+      "passed": true,
+      "evidence": {
+        "saved": [],
+        "columns": [],
+        "empty": true
+      }
+    },
+    {
+      "key": "dock-storage-validation",
+      "passed": true,
+      "evidence": {
+        "hasMain": true,
+        "text": "CompareBuy\nSMART TECH ADVISORY\nBeranda\nSmart Wizard\nAI-Scored\nKatalog Gadget\nMatriks Perbandingan\nMulai Cari\nKOLEKSI DATABASE GADGET\nKatalog Gadget Terkurasi\n\nJelajahi katalog produk dan bandingkan informasi penting sebelum memilih.\n\nMenampilkan data katalog cadangan lokal. Periksa kembali informasi harga dan detail produk sebelum mengambil keputusan.\nFILTER & PENGURUTAN\n(20 Produk)\nReset\nKategori"
+      }
+    }
+  ]
+}

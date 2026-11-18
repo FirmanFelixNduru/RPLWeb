@@ -54,6 +54,91 @@ function createScheduler() {
   };
 }
 
+describe('Post-deploy regression: stored comparison and asynchronous results', () => {
+  test('invalid stored JSON shapes cannot replace the comparison array', () => {
+    for (const saved of ['{}', 'null', '42', '"text"', '[null,{},false]', '{broken']) {
+      const scheduler = createScheduler();
+      const h = createHarness('context/CompareContext', { children: null }, {}, {
+        localStorage: { getItem: () => saved, setItem: () => {} },
+        queueMicrotask: scheduler.queueMicrotask,
+        console: { warn: () => {} },
+      });
+      scheduler.flush();
+      h.rerender();
+      assert.equal(Array.isArray(h.getState(0)), true, saved);
+      assert.equal(h.getState(0).length, 0, saved);
+      h.unmount();
+    }
+  });
+
+  test('dock validation retains valid products, removes duplicates and caps at four', () => {
+    const { sanitizeCompareList } = loadSource('context/CompareContext.js');
+    const product = (id, price = 300000) => ({ id, name: `Product ${id}`, price });
+    const input = [null, {}, product('negative', -1), product('nan', NaN),
+      product('infinite', Infinity), product('a'), product('a'), product('b'),
+      product('c'), product('d'), product('e')];
+    const restored = sanitizeCompareList(input);
+    assert.equal(restored.map(p => p.id).join(','), 'a,b,c,d');
+    assert.equal(input.length, 11, 'validation must not mutate saved input');
+  });
+
+  test('comparison fallback preserves requested column order during an outage', async () => {
+    const { compareProducts } = loadSource('lib/api.js', {}, {
+      process: { env: {} }, fetch: async () => { throw new Error('offline'); },
+      console: { warn: () => {} },
+    });
+    const result = await compareProducts(['sm-002', 'sm-001']);
+    assert.equal(result.products.map(p => p.id).join(','), 'sm-002,sm-001');
+    assert.equal(result.highlights.find(h => h.spec_name === 'ram').values['sm-001'], result.products[1].specs.ram);
+  });
+
+  function comparisonHarness(initialSelection) {
+    let selection = initialSelection;
+    const requests = [];
+    const h = createHarness('app/compare/page', {}, {
+      '@/context/CompareContext': { useCompare: () => ({ compareList: selection, clearCompare() {}, addToCompare() {} }) },
+      '@/lib/api': { compareProducts: (ids) => new Promise((resolve, reject) => requests.push({ ids, resolve, reject })) },
+    }, { console: { error() {} } });
+    return { h, requests, select(items) { selection = items; h.rerender(); } };
+  }
+
+  test('clearing comparison while a response is pending keeps the matrix empty', async () => {
+    const { h, requests, select } = comparisonHarness([{ id: 'sm-001' }, { id: 'sm-002' }]);
+    select([]);
+    requests[0].resolve({ products: [{ id: 'sm-001' }, { id: 'sm-002' }] });
+    await new Promise(setImmediate);
+    h.rerender();
+    assert.equal(h.getState(0), null);
+    assert.equal(h.getState(1), false);
+    h.unmount();
+  });
+
+  test('a superseded response cannot overwrite the latest selection or clear its loading state', async () => {
+    const { h, requests, select } = comparisonHarness([{ id: 'sm-001' }, { id: 'sm-002' }]);
+    select([{ id: 'sm-003' }, { id: 'sm-004' }]);
+    requests[0].resolve({ products: [{ id: 'sm-001' }] });
+    await new Promise(setImmediate);
+    h.rerender();
+    assert.equal(h.getState(0), null);
+    assert.equal(h.getState(1), true);
+    const latest = { products: [{ id: 'sm-003' }, { id: 'sm-004' }] };
+    requests[1].resolve(latest);
+    await new Promise(setImmediate);
+    h.rerender();
+    assert.equal(h.getState(0), latest);
+    assert.equal(h.getState(1), false);
+    h.unmount();
+  });
+
+  test('unmounted comparison does not apply a late response', async () => {
+    const { h, requests } = comparisonHarness([{ id: 'sm-001' }, { id: 'sm-002' }]);
+    h.unmount();
+    requests[0].resolve({ products: [{ id: 'sm-001' }] });
+    await new Promise(setImmediate);
+    assert.equal(h.getState(0), null);
+  });
+});
+
 function createHarness(ComponentPath, initialProps = {}, overrides = {}, globals = {}, initialStates = {}, filterEffects = () => true) {
   const states = [];
   const stateSetters = [];
@@ -321,7 +406,7 @@ describe('CompareContext Microtask Lifecycle', () => {
 
   test('Test A — Normal execution: hydrates dock from localStorage upon flush', () => {
     const env = makeEnv();
-    env.store.set('comparebuy_dock', JSON.stringify([{ id: 'sm-001', name: 'Test 1' }]));
+    env.store.set('comparebuy_dock', JSON.stringify([{ id: 'sm-001', name: 'Test 1', price: 1000000 }]));
 
     const h = createHarness('context/CompareContext', { children: null }, {}, {
       localStorage: env.localStorageMock,
@@ -341,7 +426,7 @@ describe('CompareContext Microtask Lifecycle', () => {
 
   test('Test B — Cleanup before flush: unmount cancels dock hydration callback', () => {
     const env = makeEnv();
-    env.store.set('comparebuy_dock', JSON.stringify([{ id: 'sm-001', name: 'Test 1' }]));
+    env.store.set('comparebuy_dock', JSON.stringify([{ id: 'sm-001', name: 'Test 1', price: 1000000 }]));
 
     const h = createHarness('context/CompareContext', { children: null }, {}, {
       localStorage: env.localStorageMock,
@@ -360,7 +445,7 @@ describe('CompareContext Microtask Lifecycle', () => {
 
   test('Test C — Strict Mode: setup-cleanup-setup only hydrates from active effect', () => {
     const env = makeEnv();
-    env.store.set('comparebuy_dock', JSON.stringify([{ id: 'lp-001', name: 'Laptop 1' }]));
+    env.store.set('comparebuy_dock', JSON.stringify([{ id: 'lp-001', name: 'Laptop 1', price: 1000000 }]));
 
     const h = createHarness('context/CompareContext', { children: null }, {}, {
       localStorage: env.localStorageMock,

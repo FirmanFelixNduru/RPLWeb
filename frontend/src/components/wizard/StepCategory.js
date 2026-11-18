@@ -33,10 +33,12 @@ export default function StepCategory({ selectedCategory, onSelect }) {
           const isSelected = selectedCategory === cat.id;
 
           return (
-            <div
+            <button
               key={cat.id}
+              type="button"
+              aria-pressed={isSelected}
               onClick={() => onSelect(cat.id)}
-              className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between group ${
+              className={`relative p-5 rounded-2xl border-2 text-left cursor-pointer transition-all duration-200 flex flex-col justify-between group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
                 isSelected
                   ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-50/60 dark:bg-indigo-950/40 shadow-lg shadow-indigo-500/10'
                   : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
@@ -68,7 +70,7 @@ export default function StepCategory({ selectedCategory, onSelect }) {
                   </p>
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

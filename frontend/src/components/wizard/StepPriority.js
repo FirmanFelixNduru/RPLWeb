@@ -47,9 +47,9 @@ export default function StepPriority({ priorities = {}, onChangePriority }) {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white block">
+                  <label htmlFor={`priority-${factor.id}`} className="text-sm font-bold text-slate-900 dark:text-white block">
                     {factor.label}
-                  </span>
+                  </label>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
                     {factor.desc}
                   </span>
@@ -66,6 +66,7 @@ export default function StepPriority({ priorities = {}, onChangePriority }) {
               <div className="flex items-center gap-3 pt-1">
                 <span className="text-xs font-bold text-slate-400">1</span>
                 <input
+                  id={`priority-${factor.id}`}
                   type="range"
                   min={1}
                   max={5}

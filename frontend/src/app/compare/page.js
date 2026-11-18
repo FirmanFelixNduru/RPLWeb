@@ -15,9 +15,11 @@ export default function ComparePage() {
 
   // Fetch comparison data whenever compareList changes
   useEffect(() => {
+    let isActive = true;
     async function loadMatrix() {
+      setComparisonData(null);
       if (compareList.length < 2) {
-        setComparisonData(null);
+        setLoading(false);
         return;
       }
 
@@ -25,14 +27,15 @@ export default function ComparePage() {
       try {
         const ids = compareList.map((p) => p.id);
         const data = await compareProducts(ids);
-        setComparisonData(data);
+        if (isActive) setComparisonData(data);
       } catch (err) {
         console.error('Failed to load comparison data:', err);
       } finally {
-        setLoading(false);
+        if (isActive) setLoading(false);
       }
     }
     loadMatrix();
+    return () => { isActive = false; };
   }, [compareList]);
 
   // Products available to add (not already in compare)

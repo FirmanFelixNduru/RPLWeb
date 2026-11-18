@@ -41,7 +41,7 @@ export async function getProducts(params = {}) {
     let filtered = [...PRODUCTS];
 
     if (params.search) {
-      const q = params.search.toLowerCase();
+      const q = params.search.trim().toLowerCase();
       filtered = filtered.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
@@ -258,7 +258,9 @@ export async function compareProducts(productIds) {
   } catch (err) {
     console.warn('Compare API offline, generating local comparison matrix:', err.message);
 
-    const products = PRODUCTS.filter((p) => productIds.includes(p.id));
+    const products = productIds
+      .map((id) => PRODUCTS.find((p) => p.id === id))
+      .filter(Boolean);
 
     // Determine category consistency
     const categories = new Set(products.map((p) => p.category));
