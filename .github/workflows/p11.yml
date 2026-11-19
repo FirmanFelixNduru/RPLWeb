@@ -125,7 +125,7 @@ jobs:
             url=$(vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN")
           fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "## Deployment\n\nCommit: $GITHUB_SHA\n\nURL: $url" >> "$GITHUB_STEP_SUMMARY"
+          printf '## Deployment\n\nCommit: %s\n\nURL: %s\n' "$GITHUB_SHA" "$url" >> "$GITHUB_STEP_SUMMARY"
 
   smoke-test:
     name: Verify live commit
