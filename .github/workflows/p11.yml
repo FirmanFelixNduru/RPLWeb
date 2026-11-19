@@ -56,6 +56,7 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -70,11 +71,14 @@ jobs:
           node frontend/scripts/write-version.cjs
           if [ "$GITHUB_REF_NAME" = "v1.0_dev" ]; then
             vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+            node scripts/p11/prepare-public-env.cjs preview
             vercel build --token="$VERCEL_TOKEN"
           else
             vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+            node scripts/p11/prepare-public-env.cjs production
             vercel build --prod --token="$VERCEL_TOKEN"
           fi
+          node scripts/p11/verify-build.cjs
       - name: Package prebuilt output and its traced Next.js files without losing links
         run: tar --exclude='frontend/.next/cache' -czf prebuilt-workspace.tar.gz .vercel/output .vercel/project.json frontend/.next
       - uses: actions/upload-artifact@v4
@@ -141,6 +145,7 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ needs.deploy.outputs.url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
         run: node scripts/p11/smoke.cjs
       - uses: actions/upload-artifact@v4
         if: always()

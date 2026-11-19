@@ -96,6 +96,14 @@ laporan, atau artefak pengujian:
 - `VERCEL_AUTOMATION_BYPASS_SECRET`: untuk smoke test terhadap URL preview yang
   dilindungi Vercel Authentication; perlindungan proyek tetap aktif.
 
+Repository variable publik `NEXT_PUBLIC_API_URL` menyimpan URL backend.
+CI menyalurkan nilai publik tersebut ke environment build secara eksplisit,
+karena pembacaan variable bertipe sensitive melalui Vercel dapat menghasilkan
+placeholder `[SENSITIVE]`. Build ditolak jika placeholder masuk ke bundle atau
+URL backend tidak ditemukan. Smoke test juga memeriksa konfigurasi pada chunk
+JavaScript katalog yang benar-benar dipublikasikan. Nilai private lain tidak
+diubah atau dicetak.
+
 Token deployment perlu dirotasi sebelum kedaluwarsa agar deployment berikutnya
 tetap berjalan. Node.js 24 dan Vercel CLI 66.2.0 digunakan pada pipeline ini.
 Warning `<img>` yang telah ada tidak diperlakukan sebagai kegagalan lint.
