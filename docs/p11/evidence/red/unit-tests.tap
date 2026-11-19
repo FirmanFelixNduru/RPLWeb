@@ -1,0 +1,1286 @@
+TAP version 13
+# Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release.
+# Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release.
+# Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release.
+# Subtest: result status is one polite semantic host, with actual positive and zero-result messages
+ok 1 - result status is one polite semantic host, with actual positive and zero-result messages
+  ---
+  duration_ms: 32.60008
+  type: 'test'
+  ...
+# Subtest: rapid searches coalesce speech only; sorting and equal counts do not republish identical status
+ok 2 - rapid searches coalesce speech only; sorting and equal counts do not republish identical status
+  ---
+  duration_ms: 16.948475
+  type: 'test'
+  ...
+# Subtest: category, brand, budget, chip removal and reset all feed the filtered result status
+ok 3 - category, brand, budget, chip removal and reset all feed the filtered result status
+  ---
+  duration_ms: 24.622471
+  type: 'test'
+  ...
+# Subtest: dialog transitions move the same status host without publishing duplicates or dropping a pending result
+ok 4 - dialog transitions move the same status host without publishing duplicates or dropping a pending result
+  ---
+  duration_ms: 17.421913
+  type: 'test'
+  ...
+# Subtest: loading never announces a temporary zero and unmount cancels timers and removes the status host
+ok 5 - loading never announces a temporary zero and unmount cancels timers and removes the status host
+  ---
+  duration_ms: 15.254762
+  type: 'test'
+  ...
+# Subtest: highest-score catalog order follows actual card badges for previously reversed products
+ok 6 - highest-score catalog order follows actual card badges for previously reversed products
+  ---
+  duration_ms: 17.104078
+  type: 'test'
+  ...
+# Subtest: entire local catalog is descending by displayed score and does not mutate input
+ok 7 - entire local catalog is descending by displayed score and does not mutate input
+  ---
+  duration_ms: 30.405929
+  type: 'test'
+  ...
+# Subtest: equal rounded card scores use deterministic product ID order
+ok 8 - equal rounded card scores use deterministic product ID order
+  ---
+  duration_ms: 34.731127
+  type: 'test'
+  ...
+# Subtest: card score keeps its existing five-dimension formula, defaults and rounding
+not ok 9 - card score keeps its existing five-dimension formula, defaults and rounding
+  ---
+  duration_ms: 2.426729
+  type: 'test'
+  location: '/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs:310:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    50 !== 40
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 40
+  actual: 50
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs:314:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: price/name sorting and category, brand, budget and search filters remain available
+ok 10 - price/name sorting and category, brand, budget and search filters remain available
+  ---
+  duration_ms: 58.273151
+  type: 'test'
+  ...
+# Subtest: actual card button adds/removes through the real context and updates labels and selected state
+ok 11 - actual card button adds/removes through the real context and updates labels and selected state
+  ---
+  duration_ms: 42.826744
+  type: 'test'
+  ...
+# Subtest: four-product limit, removal at capacity and product detail action retain existing behavior
+ok 12 - four-product limit, removal at capacity and product detail action retain existing behavior
+  ---
+  duration_ms: 9.090053
+  type: 'test'
+  ...
+# Subtest: search has a name and its named clear button retains input/clear behavior
+ok 13 - search has a name and its named clear button retains input/clear behavior
+  ---
+  duration_ms: 1.770027
+  type: 'test'
+  ...
+# Subtest: default budget does not render a budget chip or an empty active-filter summary
+ok 14 - default budget does not render a budget chip or an empty active-filter summary
+  ---
+  duration_ms: 29.376359
+  type: 'test'
+  ...
+# Subtest: active budget summary uses the actual filter preset label: < Rp 5 Juta
+ok 15 - active budget summary uses the actual filter preset label: < Rp 5 Juta
+  ---
+  duration_ms: 13.398065
+  type: 'test'
+  ...
+# Subtest: active budget summary uses the actual filter preset label: Rp 5 - 15 Juta
+ok 16 - active budget summary uses the actual filter preset label: Rp 5 - 15 Juta
+  ---
+  duration_ms: 13.262162
+  type: 'test'
+  ...
+# Subtest: active budget summary uses the actual filter preset label: Rp 15 - 25 Juta
+ok 17 - active budget summary uses the actual filter preset label: Rp 15 - 25 Juta
+  ---
+  duration_ms: 13.246169
+  type: 'test'
+  ...
+# Subtest: active budget summary uses the actual filter preset label: > Rp 25 Juta
+ok 18 - active budget summary uses the actual filter preset label: > Rp 25 Juta
+  ---
+  duration_ms: 13.174251
+  type: 'test'
+  ...
+# Subtest: removing budget changes only budget state and moves focus to the existing search input
+ok 19 - removing budget changes only budget state and moves focus to the existing search input
+  ---
+  duration_ms: 24.247279
+  type: 'test'
+  ...
+# Subtest: upper-unbounded budget stays open until explicit completion and remains summarized after closing
+ok 20 - upper-unbounded budget stays open until explicit completion and remains summarized after closing
+  ---
+  duration_ms: 32.238139
+  type: 'test'
+  ...
+# Subtest: mobile onSelectCategory changes only its filter without closing the dialog
+ok 21 - mobile onSelectCategory changes only its filter without closing the dialog
+  ---
+  duration_ms: 9.668248
+  type: 'test'
+  ...
+# Subtest: mobile onSelectBrand changes only its filter without closing the dialog
+ok 22 - mobile onSelectBrand changes only its filter without closing the dialog
+  ---
+  duration_ms: 11.604668
+  type: 'test'
+  ...
+# Subtest: mobile onSelectPriceRange changes only its filter without closing the dialog
+ok 23 - mobile onSelectPriceRange changes only its filter without closing the dialog
+  ---
+  duration_ms: 9.550973
+  type: 'test'
+  ...
+# Subtest: mobile filter session applies consecutive choices immediately, preserves search/sort and completes explicitly
+ok 24 - mobile filter session applies consecutive choices immediately, preserves search/sort and completes explicitly
+  ---
+  duration_ms: 174.284614
+  type: 'test'
+  ...
+# Subtest: zero-result completion stays enabled, reset stays open and the completion action is last in the dialog
+ok 25 - zero-result completion stays enabled, reset stays open and the completion action is last in the dialog
+  ---
+  duration_ms: 41.842004
+  type: 'test'
+  ...
+# Subtest: budget removal preserves combined category, brand, search and price sorting results
+ok 26 - budget removal preserves combined category, brand, search and price sorting results
+  ---
+  duration_ms: 42.005868
+  type: 'test'
+  ...
+# Subtest: reset still clears all filters and restores score sorting after an active budget
+ok 27 - reset still clears all filters and restores score sorting after an active budget
+  ---
+  duration_ms: 38.019633
+  type: 'test'
+  ...
+# Subtest: each filter group exposes one selected option and preserves selection callbacks
+ok 28 - each filter group exposes one selected option and preserves selection callbacks
+  ---
+  duration_ms: 8.055954
+  type: 'test'
+  ...
+# Subtest: sort select is enclosed by its label and sort/reset handlers retain their values
+ok 29 - sort select is enclosed by its label and sort/reset handlers retain their values
+  ---
+  duration_ms: 4.043991
+  type: 'test'
+  ...
+# Subtest: mobile toggle, close control and filter chips have names and preserve existing state updates
+ok 30 - mobile toggle, close control and filter chips have names and preserve existing state updates
+  ---
+  duration_ms: 18.943787
+  type: 'test'
+  ...
+# Subtest: product heading preserves its complete name and natural wrapping: Xiaomi 14 Ultra
+ok 31 - product heading preserves its complete name and natural wrapping: Xiaomi 14 Ultra
+  ---
+  duration_ms: 4.866498
+  type: 'test'
+  ...
+# Subtest: product heading preserves its complete name and natural wrapping: Lenovo ThinkPad X1 Carbon Gen 11
+ok 32 - product heading preserves its complete name and natural wrapping: Lenovo ThinkPad X1 Carbon Gen 11
+  ---
+  duration_ms: 4.615681
+  type: 'test'
+  ...
+# Subtest: product heading preserves its complete name and natural wrapping: ASUS ROG Zephyrus G14 (2024)
+ok 33 - product heading preserves its complete name and natural wrapping: ASUS ROG Zephyrus G14 (2024)
+  ---
+  duration_ms: 4.710353
+  type: 'test'
+  ...
+# Subtest: product heading preserves its complete name and natural wrapping: Fixture Laptop Professional Edition Generasi 2026 Model ABC 123 Konfigurasi RAM 32 GB Storage 2 TB untuk Pengujian Nama Sangat Panjang Tanpa Mengubah Dataset
+ok 34 - product heading preserves its complete name and natural wrapping: Fixture Laptop Professional Edition Generasi 2026 Model ABC 123 Konfigurasi RAM 32 GB Storage 2 TB untuk Pengujian Nama Sangat Panjang Tanpa Mengubah Dataset
+  ---
+  duration_ms: 4.513968
+  type: 'test'
+  ...
+# Subtest: product name is a noninteractive heading while detail remains a keyboard-native button
+ok 35 - product name is a noninteractive heading while detail remains a keyboard-native button
+  ---
+  duration_ms: 4.755731
+  type: 'test'
+  ...
+# Subtest: metadata, rating, filter count, empty state and search placeholder meet normal-text contrast in both themes
+ok 36 - metadata, rating, filter count, empty state and search placeholder meet normal-text contrast in both themes
+  ---
+  duration_ms: 18.657176
+  type: 'test'
+  ...
+# Subtest: all score badge gradients retain scores and meet contrast across sampled sRGB interpolation
+ok 37 - all score badge gradients retain scores and meet contrast across sampled sRGB interpolation
+  ---
+  duration_ms: 2.36725
+  type: 'test'
+  ...
+# Subtest: catalog controls retain visible focus and 44px targets, with contrast for controls and rating icons
+ok 38 - catalog controls retain visible focus and 44px targets, with contrast for controls and rating icons
+  ---
+  duration_ms: 20.088819
+  type: 'test'
+  ...
+# Subtest: product and mobile filter expose named native modal dialogs and explicit close actions
+ok 39 - product and mobile filter expose named native modal dialogs and explicit close actions
+  ---
+  duration_ms: 19.035936
+  type: 'test'
+  ...
+# Subtest: product and filter openers establish the clicked button as the return-focus target
+ok 40 - product and filter openers establish the clicked button as the return-focus target
+  ---
+  duration_ms: 14.836801
+  type: 'test'
+  ...
+# Subtest: dialog lifecycle requests native modality, title focus, scroll lock and cleans up on close/unmount
+ok 41 - dialog lifecycle requests native modality, title focus, scroll lock and cleans up on close/unmount
+  ---
+  duration_ms: 1.726457
+  type: 'test'
+  ...
+# Subtest: native cancel/close request the latest React close callback without stale Strict Mode close events
+ok 42 - native cancel/close request the latest React close callback without stale Strict Mode close events
+  ---
+  duration_ms: 1.404982
+  type: 'test'
+  ...
+# Subtest: route change closes React state and does not reopen the previous route dialog
+ok 43 - route change closes React state and does not reopen the previous route dialog
+  ---
+  duration_ms: 1.305573
+  type: 'test'
+  ...
+# Subtest: cleanup skips missing, hidden or explicitly inert return-focus targets
+ok 44 - cleanup skips missing, hidden or explicitly inert return-focus targets
+  ---
+  duration_ms: 3.521636
+  type: 'test'
+  ...
+# Subtest: overlapping dialog effects retain scroll lock until the last cleanup, even out of order
+ok 45 - overlapping dialog effects retain scroll lock until the last cleanup, even out of order
+  ---
+  duration_ms: 1.252914
+  type: 'test'
+  ...
+# Subtest: mobile filter closes on the desktop breakpoint and removes its media listener on cleanup
+ok 46 - mobile filter closes on the desktop breakpoint and removes its media listener on cleanup
+  ---
+  duration_ms: 17.500888
+  type: 'test'
+  ...
+# Subtest: card and modal header label unchanged product prices as catalog prices regardless of product ID
+ok 47 - card and modal header label unchanged product prices as catalog prices regardless of product ID
+  ---
+  duration_ms: 35.093934
+  type: 'test'
+  ...
+# Subtest: supplied positive reviews keep their rating, count, summary and pros/cons without changing the dataset
+ok 48 - supplied positive reviews keep their rating, count, summary and pros/cons without changing the dataset
+  ---
+  duration_ms: 145.741541
+  type: 'test'
+  ...
+# Subtest: missing, null and zero-count reviews never invent rating or counts, including the backend default object
+ok 49 - missing, null and zero-count reviews never invent rating or counts, including the backend default object
+  ---
+  duration_ms: 36.102299
+  type: 'test'
+  ...
+# Subtest: zero rating is preserved when a positive review count supports the aggregate
+ok 50 - zero rating is preserved when a positive review count supports the aggregate
+  ---
+  duration_ms: 6.02467
+  type: 'test'
+  ...
+# Subtest: partial or invalid numeric reviews display only supported fields
+ok 51 - partial or invalid numeric reviews display only supported fields
+  ---
+  duration_ms: 63.443744
+  type: 'test'
+  ...
+# Subtest: partial review text renders safely without absent arrays or unsupported section placeholders
+ok 52 - partial review text renders safely without absent arrays or unsupported section placeholders
+  ---
+  duration_ms: 16.520984
+  type: 'test'
+  ...
+# Subtest: reviews do not claim verification, real-time provenance or a fixed sentiment distribution
+ok 53 - reviews do not claim verification, real-time provenance or a fixed sentiment distribution
+  ---
+  duration_ms: 19.026111
+  type: 'test'
+  ...
+# Subtest: dialog Tab boundaries wrap between operable controls while preserving normal and browser shortcuts
+ok 54 - dialog Tab boundaries wrap between operable controls while preserving normal and browser shortcuts
+  ---
+  duration_ms: 2.272117
+  type: 'test'
+  ...
+# Subtest: gambar produk valid tetap memakai URL asli dan alt nama produk
+ok 55 - gambar produk valid tetap memakai URL asli dan alt nama produk
+  ---
+  duration_ms: 2.257915
+  type: 'test'
+  ...
+# Subtest: gambar gagal dimuat beralih ke placeholder lokal yang ada
+ok 56 - gambar gagal dimuat beralih ke placeholder lokal yang ada
+  ---
+  duration_ms: 0.586042
+  type: 'test'
+  ...
+# Subtest: URL gambar kosong atau tidak tersedia memakai placeholder tanpa menunggu error
+ok 57 - URL gambar kosong atau tidak tersedia memakai placeholder tanpa menunggu error
+  ---
+  duration_ms: 1.010039
+  type: 'test'
+  ...
+# Subtest: kegagalan placeholder tidak membuat loop fallback
+ok 58 - kegagalan placeholder tidak membuat loop fallback
+  ---
+  duration_ms: 0.702656
+  type: 'test'
+  ...
+# Subtest: kegagalan satu kartu tidak memengaruhi kartu lain
+ok 59 - kegagalan satu kartu tidak memengaruhi kartu lain
+  ---
+  duration_ms: 0.659722
+  type: 'test'
+  ...
+# Subtest: penggunaan ulang komponen untuk URL berbeda tidak mewarisi status error sebelumnya
+ok 60 - penggunaan ulang komponen untuk URL berbeda tidak mewarisi status error sebelumnya
+  ---
+  duration_ms: 0.459471
+  type: 'test'
+  ...
+# Subtest: struktur dan kontrol kartu tetap terjaga setelah penanganan gambar
+ok 61 - struktur dan kontrol kartu tetap terjaga setelah penanganan gambar
+  ---
+  duration_ms: 1.040815
+  type: 'test'
+  ...
+# Subtest: API helper sukses mengembalikan source api dan mempertahankan properti respons
+ok 62 - API helper sukses mengembalikan source api dan mempertahankan properti respons
+  ---
+  duration_ms: 8.055083
+  type: 'test'
+  ...
+# Subtest: API helper beralih ke fallback saat network failure terjadi
+ok 63 - API helper beralih ke fallback saat network failure terjadi
+  ---
+  duration_ms: 6.536499
+  type: 'test'
+  ...
+# Subtest: API helper beralih ke fallback saat respons HTTP bukan 2xx
+ok 64 - API helper beralih ke fallback saat respons HTTP bukan 2xx
+  ---
+  duration_ms: 24.993945
+  type: 'test'
+  ...
+# Subtest: API helper beralih ke fallback saat respons JSON malformed
+ok 65 - API helper beralih ke fallback saat respons JSON malformed
+  ---
+  duration_ms: 6.408597
+  type: 'test'
+  ...
+# Subtest: API helper fallback tetap memfilter kategori dan brand dari dataset lokal
+ok 66 - API helper fallback tetap memfilter kategori dan brand dari dataset lokal
+  ---
+  duration_ms: 6.297961
+  type: 'test'
+  ...
+# Subtest: katalog subheader tidak lagi memuat klaim ulasan asli atau perbandingan harga live
+ok 67 - katalog subheader tidak lagi memuat klaim ulasan asli atau perbandingan harga live
+  ---
+  duration_ms: 26.679499
+  type: 'test'
+  ...
+# Subtest: indikator fallback tampil ketika sumber data adalah fallback lokal
+ok 68 - indikator fallback tampil ketika sumber data adalah fallback lokal
+  ---
+  duration_ms: 27.766304
+  type: 'test'
+  ...
+# Subtest: indikator fallback tidak tampil ketika data bersumber dari API normal atau saat loading
+ok 69 - indikator fallback tidak tampil ketika data bersumber dari API normal atau saat loading
+  ---
+  duration_ms: 63.995284
+  type: 'test'
+  ...
+# Subtest: katalog tetap menampilkan produk, filter, dan sorting saat fallback aktif
+ok 70 - katalog tetap menampilkan produk, filter, dan sorting saat fallback aktif
+  ---
+  duration_ms: 24.298288
+  type: 'test'
+  ...
+# Subtest: katalog meminta per_page: 100 saat mount
+ok 71 - katalog meminta per_page: 100 saat mount
+  ---
+  duration_ms: 8.762868
+  type: 'test'
+  ...
+# Subtest: produk pada posisi ke-21 dan ke-100 dapat ditampilkan dan dicari
+ok 72 - produk pada posisi ke-21 dan ke-100 dapat ditampilkan dan dicari
+  ---
+  duration_ms: 34.35367
+  type: 'test'
+  ...
+# Subtest: brand yang hanya muncul di luar 20 produk pertama tetap tersedia di filter brand
+ok 73 - brand yang hanya muncul di luar 20 produk pertama tetap tersedia di filter brand
+  ---
+  duration_ms: 9.786326
+  type: 'test'
+  ...
+# Subtest: filtering kategori dan rentang harga bekerja pada keseluruhan 100 produk
+ok 74 - filtering kategori dan rentang harga bekerja pada keseluruhan 100 produk
+  ---
+  duration_ms: 21.06697
+  type: 'test'
+  ...
+# Subtest: sorting harga ascending dan descending bekerja terhadap keseluruhan 100 produk
+ok 75 - sorting harga ascending dan descending bekerja terhadap keseluruhan 100 produk
+  ---
+  duration_ms: 25.985636
+  type: 'test'
+  ...
+# Subtest: result count dan pengumuman pembaca layar mencerminkan jumlah hasil 100 produk
+ok 76 - result count dan pengumuman pembaca layar mencerminkan jumlah hasil 100 produk
+  ---
+  duration_ms: 9.94828
+  type: 'test'
+  ...
+# Subtest: pemilihan produk posisi ke-21 dan ke-100 untuk comparison tetap berfungsi tanpa regresi
+ok 77 - pemilihan produk posisi ke-21 dan ke-100 untuk comparison tetap berfungsi tanpa regresi
+  ---
+  duration_ms: 4.350612
+  type: 'test'
+  ...
+# Subtest: API helper dan fallback lokal menangani per_page: 100 dengan mempertahankan metadata source P2-A06
+ok 78 - API helper dan fallback lokal menangani per_page: 100 dengan mempertahankan metadata source P2-A06
+  ---
+  duration_ms: 12.557433
+  type: 'test'
+  ...
+# Subtest: Post-deploy regression: stored comparison and asynchronous results
+    # Subtest: invalid stored JSON shapes cannot replace the comparison array
+    ok 1 - invalid stored JSON shapes cannot replace the comparison array
+      ---
+      duration_ms: 23.172923
+      type: 'test'
+      ...
+    # Subtest: dock validation retains valid products, removes duplicates and caps at four
+    ok 2 - dock validation retains valid products, removes duplicates and caps at four
+      ---
+      duration_ms: 2.433269
+      type: 'test'
+      ...
+    # Subtest: comparison fallback preserves requested column order during an outage
+    ok 3 - comparison fallback preserves requested column order during an outage
+      ---
+      duration_ms: 14.842276
+      type: 'test'
+      ...
+    # Subtest: clearing comparison while a response is pending keeps the matrix empty
+    ok 4 - clearing comparison while a response is pending keeps the matrix empty
+      ---
+      duration_ms: 106.832247
+      type: 'test'
+      ...
+    # Subtest: a superseded response cannot overwrite the latest selection or clear its loading state
+    ok 5 - a superseded response cannot overwrite the latest selection or clear its loading state
+      ---
+      duration_ms: 14.389969
+      type: 'test'
+      ...
+    # Subtest: unmounted comparison does not apply a late response
+    ok 6 - unmounted comparison does not apply a late response
+      ---
+      duration_ms: 16.55749
+      type: 'test'
+      ...
+    1..6
+ok 79 - Post-deploy regression: stored comparison and asynchronous results
+  ---
+  duration_ms: 180.300622
+  type: 'suite'
+  ...
+# Subtest: ThemeContext Microtask Lifecycle
+    # Subtest: Test A — Normal execution: queues microtask and applies theme after flush
+    ok 1 - Test A — Normal execution: queues microtask and applies theme after flush
+      ---
+      duration_ms: 3.130401
+      type: 'test'
+      ...
+    # Subtest: Test B — Cleanup before flush: unmounting cancels microtask state mutation
+    ok 2 - Test B — Cleanup before flush: unmounting cancels microtask state mutation
+      ---
+      duration_ms: 2.251046
+      type: 'test'
+      ...
+    # Subtest: Test C — Strict Mode-like lifecycle: setup -> cleanup -> setup flushes safely
+    ok 3 - Test C — Strict Mode-like lifecycle: setup -> cleanup -> setup flushes safely
+      ---
+      duration_ms: 2.250506
+      type: 'test'
+      ...
+    # Subtest: Test D — Rapid preference changes: fallback to system preference when storage empty
+    ok 4 - Test D — Rapid preference changes: fallback to system preference when storage empty
+      ---
+      duration_ms: 2.295563
+      type: 'test'
+      ...
+    1..4
+ok 80 - ThemeContext Microtask Lifecycle
+  ---
+  duration_ms: 10.388655
+  type: 'suite'
+  ...
+# Subtest: CompareContext Microtask Lifecycle
+    # Subtest: Test A — Normal execution: hydrates dock from localStorage upon flush
+    ok 1 - Test A — Normal execution: hydrates dock from localStorage upon flush
+      ---
+      duration_ms: 2.409513
+      type: 'test'
+      ...
+    # Subtest: Test B — Cleanup before flush: unmount cancels dock hydration callback
+    ok 2 - Test B — Cleanup before flush: unmount cancels dock hydration callback
+      ---
+      duration_ms: 2.72798
+      type: 'test'
+      ...
+    # Subtest: Test C — Strict Mode: setup-cleanup-setup only hydrates from active effect
+    ok 3 - Test C — Strict Mode: setup-cleanup-setup only hydrates from active effect
+      ---
+      duration_ms: 4.657986
+      type: 'test'
+      ...
+    1..3
+ok 81 - CompareContext Microtask Lifecycle
+  ---
+  duration_ms: 10.013955
+  type: 'suite'
+  ...
+# Subtest: Catalog Page Status Host & Announcement Lifecycle
+    # Subtest: Test A — Status host normal execution: microtask sets statusHost and appends to DOM
+    ok 1 - Test A — Status host normal execution: microtask sets statusHost and appends to DOM
+      ---
+      duration_ms: 15.441261
+      type: 'test'
+      ...
+    # Subtest: Test B — Status host cleanup before flush: unmount removes host and prevents state set
+    ok 2 - Test B — Status host cleanup before flush: unmount removes host and prevents state set
+      ---
+      duration_ms: 12.829044
+      type: 'test'
+      ...
+    # Subtest: Test C — Strict Mode: setup -> cleanup -> setup sets host once without orphan node
+    ok 3 - Test C — Strict Mode: setup -> cleanup -> setup sets host once without orphan node
+      ---
+      duration_ms: 13.348331
+      type: 'test'
+      ...
+    # Subtest: Test D & E — Result announcement lifecycle: timer cancelled on cleanup without stale announcement
+    ok 4 - Test D & E — Result announcement lifecycle: timer cancelled on cleanup without stale announcement
+      ---
+      duration_ms: 12.422617
+      type: 'test'
+      ...
+    1..4
+ok 82 - Catalog Page Status Host & Announcement Lifecycle
+  ---
+  duration_ms: 54.316044
+  type: 'suite'
+  ...
+# Subtest: TabValue Product Identity & Lifecycle
+    # Subtest: Test 1 — Normal manual refresh: click refresh sets refreshing=true, resolves, updates data, sets refreshing=false
+    ok 1 - Test 1 — Normal manual refresh: click refresh sets refreshing=true, resolves, updates data, sets refreshing=false
+      ---
+      duration_ms: 23.987831
+      type: 'test'
+      ...
+    # Subtest: Test 2 — Old refresh cannot overwrite new product: delayed sm-001 refresh cannot overwrite sm-002
+    ok 2 - Test 2 — Old refresh cannot overwrite new product: delayed sm-001 refresh cannot overwrite sm-002
+      ---
+      duration_ms: 11.478144
+      type: 'test'
+      ...
+    # Subtest: Test 3 — Old refresh finally cannot clear new loading state: old refresh resolution leaves new product loading=true
+    ok 3 - Test 3 — Old refresh finally cannot clear new loading state: old refresh resolution leaves new product loading=true
+      ---
+      duration_ms: 8.315064
+      type: 'test'
+      ...
+    # Subtest: Test 4 — Refresh supersedes initial request: delayed initial request cannot overwrite newer refresh result
+    ok 4 - Test 4 — Refresh supersedes initial request: delayed initial request cannot overwrite newer refresh result
+      ---
+      duration_ms: 5.552864
+      type: 'test'
+      ...
+    # Subtest: Test 5 — Old refresh rejection: rejection of stale refresh does not affect new product state
+    ok 5 - Test 5 — Old refresh rejection: rejection of stale refresh does not affect new product state
+      ---
+      duration_ms: 6.284097
+      type: 'test'
+      ...
+    # Subtest: Test 6 — Unmount during manual refresh: resolution after unmount does not mutate state
+    ok 6 - Test 6 — Unmount during manual refresh: resolution after unmount does not mutate state
+      ---
+      duration_ms: 5.236591
+      type: 'test'
+      ...
+    # Subtest: Test 7 — Same ID, new object reference: re-rendering with new object reference triggers no additional request
+    ok 7 - Test 7 — Same ID, new object reference: re-rendering with new object reference triggers no additional request
+      ---
+      duration_ms: 4.97517
+      type: 'test'
+      ...
+    # Subtest: Test 8 — New product ID: changing ID triggers new request and old response cannot overwrite
+    ok 8 - Test 8 — New product ID: changing ID triggers new request and old response cannot overwrite
+      ---
+      duration_ms: 5.638662
+      type: 'test'
+      ...
+    # Subtest: Scenario 1 (Baseline) — Render product with ID sm-001 triggers exactly one request
+    ok 9 - Scenario 1 (Baseline) — Render product with ID sm-001 triggers exactly one request
+      ---
+      duration_ms: 4.865506
+      type: 'test'
+      ...
+    # Subtest: Scenario 5 (Baseline) — Component unmount before initial request finishes prevents state update
+    ok 10 - Scenario 5 (Baseline) — Component unmount before initial request finishes prevents state update
+      ---
+      duration_ms: 4.777965
+      type: 'test'
+      ...
+    1..10
+ok 83 - TabValue Product Identity & Lifecycle
+  ---
+  duration_ms: 81.717661
+  type: 'suite'
+  ...
+# Subtest: P11 score: zero is a valid score, not a missing value
+not ok 84 - P11 score: zero is a valid score, not a missing value
+  ---
+  duration_ms: 4.196536
+  type: 'test'
+  location: '/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs:29:51'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    50 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 50
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs:31:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.start (node:internal/test_runner/test:1262:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: P11 score: missing dimensions use neutral defaults
+ok 85 - P11 score: missing dimensions use neutral defaults
+  ---
+  duration_ms: 0.893205
+  type: 'test'
+  ...
+# Subtest: P11 score: null dimensions use neutral defaults
+ok 86 - P11 score: null dimensions use neutral defaults
+  ---
+  duration_ms: 0.221872
+  type: 'test'
+  ...
+# Subtest: P11 score: maximum remains 100
+ok 87 - P11 score: maximum remains 100
+  ---
+  duration_ms: 0.130045
+  type: 'test'
+  ...
+# Subtest: P11 score: minimum positive remains 1
+ok 88 - P11 score: minimum positive remains 1
+  ---
+  duration_ms: 0.143685
+  type: 'test'
+  ...
+# Subtest: P11 score: neutral score remains 50
+ok 89 - P11 score: neutral score remains 50
+  ---
+  duration_ms: 0.132758
+  type: 'test'
+  ...
+# Subtest: P11 score: performance contributes one fifth of the score
+ok 90 - P11 score: performance contributes one fifth of the score
+  ---
+  duration_ms: 0.21388
+  type: 'test'
+  ...
+# Subtest: P11 score: camera contributes one fifth of the score
+ok 91 - P11 score: camera contributes one fifth of the score
+  ---
+  duration_ms: 0.109834
+  type: 'test'
+  ...
+# Subtest: P11 score: battery contributes one fifth of the score
+ok 92 - P11 score: battery contributes one fifth of the score
+  ---
+  duration_ms: 0.152358
+  type: 'test'
+  ...
+# Subtest: P11 score: display contributes one fifth of the score
+ok 93 - P11 score: display contributes one fifth of the score
+  ---
+  duration_ms: 0.96972
+  type: 'test'
+  ...
+# Subtest: P11 score: value contributes one fifth of the score
+ok 94 - P11 score: value contributes one fifth of the score
+  ---
+  duration_ms: 0.195823
+  type: 'test'
+  ...
+# Subtest: P11 score: rounds down below midpoint
+ok 95 - P11 score: rounds down below midpoint
+  ---
+  duration_ms: 0.097606
+  type: 'test'
+  ...
+# Subtest: P11 score: rounds up above midpoint
+ok 96 - P11 score: rounds up above midpoint
+  ---
+  duration_ms: 0.07987
+  type: 'test'
+  ...
+# Subtest: P11 score: four missing dimensions remain neutral
+ok 97 - P11 score: four missing dimensions remain neutral
+  ---
+  duration_ms: 0.076404
+  type: 'test'
+  ...
+# Subtest: P11 score: uneven dimensions retain their average
+ok 98 - P11 score: uneven dimensions retain their average
+  ---
+  duration_ms: 0.082704
+  type: 'test'
+  ...
+# Subtest: P11 score: uniform 79 remains 79
+ok 99 - P11 score: uniform 79 remains 79
+  ---
+  duration_ms: 0.084256
+  type: 'test'
+  ...
+# Subtest: P11 score: uniform 90 remains 90
+ok 100 - P11 score: uniform 90 remains 90
+  ---
+  duration_ms: 0.086679
+  type: 'test'
+  ...
+# Subtest: P11 score: undefined is treated as missing
+ok 101 - P11 score: undefined is treated as missing
+  ---
+  duration_ms: 0.074051
+  type: 'test'
+  ...
+# Subtest: P11 score: unrelated audio score does not affect card score
+ok 102 - P11 score: unrelated audio score does not affect card score
+  ---
+  duration_ms: 0.076024
+  type: 'test'
+  ...
+# Subtest: P11 score: unrelated software score does not affect card score
+ok 103 - P11 score: unrelated software score does not affect card score
+  ---
+  duration_ms: 0.077506
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects root null
+ok 104 - P11 dock: rejects root null
+  ---
+  duration_ms: 0.426799
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects root object
+ok 105 - P11 dock: rejects root object
+  ---
+  duration_ms: 0.091016
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects root string
+ok 106 - P11 dock: rejects root string
+  ---
+  duration_ms: 0.064166
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects root number
+ok 107 - P11 dock: rejects root number
+  ---
+  duration_ms: 0.055663
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects root boolean
+ok 108 - P11 dock: rejects root boolean
+  ---
+  duration_ms: 0.229933
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects root undefined
+ok 109 - P11 dock: rejects root undefined
+  ---
+  duration_ms: 0.074281
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects missing name but keeps valid neighbors
+ok 110 - P11 dock: rejects missing name but keeps valid neighbors
+  ---
+  duration_ms: 0.161481
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects blank name but keeps valid neighbors
+ok 111 - P11 dock: rejects blank name but keeps valid neighbors
+  ---
+  duration_ms: 0.700928
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects missing id but keeps valid neighbors
+ok 112 - P11 dock: rejects missing id but keeps valid neighbors
+  ---
+  duration_ms: 0.214931
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects blank id but keeps valid neighbors
+ok 113 - P11 dock: rejects blank id but keeps valid neighbors
+  ---
+  duration_ms: 0.090115
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects null entry but keeps valid neighbors
+ok 114 - P11 dock: rejects null entry but keeps valid neighbors
+  ---
+  duration_ms: 0.065789
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects NaN price but keeps valid neighbors
+ok 115 - P11 dock: rejects NaN price but keeps valid neighbors
+  ---
+  duration_ms: 0.096424
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects infinite price but keeps valid neighbors
+ok 116 - P11 dock: rejects infinite price but keeps valid neighbors
+  ---
+  duration_ms: 0.06715
+  type: 'test'
+  ...
+# Subtest: P11 dock: rejects negative price but keeps valid neighbors
+ok 117 - P11 dock: rejects negative price but keeps valid neighbors
+  ---
+  duration_ms: 0.058838
+  type: 'test'
+  ...
+# Subtest: P11 dock: zero price is retained as a finite nonnegative amount
+ok 118 - P11 dock: zero price is retained as a finite nonnegative amount
+  ---
+  duration_ms: 0.108211
+  type: 'test'
+  ...
+# Subtest: P11 dock: one valid product is retained
+ok 119 - P11 dock: one valid product is retained
+  ---
+  duration_ms: 0.631634
+  type: 'test'
+  ...
+# Subtest: P11 dock: duplicate ids retain the first product
+ok 120 - P11 dock: duplicate ids retain the first product
+  ---
+  duration_ms: 0.097746
+  type: 'test'
+  ...
+# Subtest: P11 dock: fifth unique product is excluded
+ok 121 - P11 dock: fifth unique product is excluded
+  ---
+  duration_ms: 0.097015
+  type: 'test'
+  ...
+# Subtest: P11 dock: selection order remains stable
+ok 122 - P11 dock: selection order remains stable
+  ---
+  duration_ms: 0.084787
+  type: 'test'
+  ...
+# Subtest: P11 dock: validation does not mutate the saved array
+ok 123 - P11 dock: validation does not mutate the saved array
+  ---
+  duration_ms: 0.095432
+  type: 'test'
+  ...
+# Subtest: P11 budget: smartphone segment 1 applies exact amounts and representable sliders
+ok 124 - P11 budget: smartphone segment 1 applies exact amounts and representable sliders
+  ---
+  duration_ms: 19.575553
+  type: 'test'
+  ...
+# Subtest: P11 budget: smartphone segment 2 applies exact amounts and representable sliders
+ok 125 - P11 budget: smartphone segment 2 applies exact amounts and representable sliders
+  ---
+  duration_ms: 1.242579
+  type: 'test'
+  ...
+# Subtest: P11 budget: smartphone segment 3 applies exact amounts and representable sliders
+ok 126 - P11 budget: smartphone segment 3 applies exact amounts and representable sliders
+  ---
+  duration_ms: 1.012484
+  type: 'test'
+  ...
+# Subtest: P11 budget: laptop segment 1 applies exact amounts and representable sliders
+ok 127 - P11 budget: laptop segment 1 applies exact amounts and representable sliders
+  ---
+  duration_ms: 1.943727
+  type: 'test'
+  ...
+# Subtest: P11 budget: laptop segment 2 applies exact amounts and representable sliders
+ok 128 - P11 budget: laptop segment 2 applies exact amounts and representable sliders
+  ---
+  duration_ms: 2.670193
+  type: 'test'
+  ...
+# Subtest: P11 budget: laptop segment 3 applies exact amounts and representable sliders
+ok 129 - P11 budget: laptop segment 3 applies exact amounts and representable sliders
+  ---
+  duration_ms: 4.009306
+  type: 'test'
+  ...
+# Subtest: P11 budget: tablet segment 1 applies exact amounts and representable sliders
+ok 130 - P11 budget: tablet segment 1 applies exact amounts and representable sliders
+  ---
+  duration_ms: 1.61859
+  type: 'test'
+  ...
+# Subtest: P11 budget: tablet segment 2 applies exact amounts and representable sliders
+ok 131 - P11 budget: tablet segment 2 applies exact amounts and representable sliders
+  ---
+  duration_ms: 0.752956
+  type: 'test'
+  ...
+# Subtest: P11 budget: tablet segment 3 applies exact amounts and representable sliders
+ok 132 - P11 budget: tablet segment 3 applies exact amounts and representable sliders
+  ---
+  duration_ms: 0.759186
+  type: 'test'
+  ...
+# Subtest: P11 budget: tws segment 1 applies exact amounts and representable sliders
+ok 133 - P11 budget: tws segment 1 applies exact amounts and representable sliders
+  ---
+  duration_ms: 1.360084
+  type: 'test'
+  ...
+# Subtest: P11 budget: tws segment 2 applies exact amounts and representable sliders
+ok 134 - P11 budget: tws segment 2 applies exact amounts and representable sliders
+  ---
+  duration_ms: 0.716922
+  type: 'test'
+  ...
+# Subtest: P11 budget: tws segment 3 applies exact amounts and representable sliders
+ok 135 - P11 budget: tws segment 3 applies exact amounts and representable sliders
+  ---
+  duration_ms: 0.724734
+  type: 'test'
+  ...
+# Subtest: P11 budget: smartwatch segment 1 applies exact amounts and representable sliders
+ok 136 - P11 budget: smartwatch segment 1 applies exact amounts and representable sliders
+  ---
+  duration_ms: 1.341235
+  type: 'test'
+  ...
+# Subtest: P11 budget: smartwatch segment 2 applies exact amounts and representable sliders
+ok 137 - P11 budget: smartwatch segment 2 applies exact amounts and representable sliders
+  ---
+  duration_ms: 1.54478
+  type: 'test'
+  ...
+# Subtest: P11 budget: smartwatch segment 3 applies exact amounts and representable sliders
+ok 138 - P11 budget: smartwatch segment 3 applies exact amounts and representable sliders
+  ---
+  duration_ms: 0.765475
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: unfiltered score order
+ok 139 - P11 catalog fallback: unfiltered score order
+  ---
+  duration_ms: 9.173788
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: trimmed search
+ok 140 - P11 catalog fallback: trimmed search
+  ---
+  duration_ms: 7.194809
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: case-insensitive name search
+ok 141 - P11 catalog fallback: case-insensitive name search
+  ---
+  duration_ms: 6.280021
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: brand search
+ok 142 - P11 catalog fallback: brand search
+  ---
+  duration_ms: 6.819889
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: description search
+ok 143 - P11 catalog fallback: description search
+  ---
+  duration_ms: 7.211665
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: tag search
+ok 144 - P11 catalog fallback: tag search
+  ---
+  duration_ms: 5.803678
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: category filter
+ok 145 - P11 catalog fallback: category filter
+  ---
+  duration_ms: 6.063367
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: case-insensitive brand filter
+ok 146 - P11 catalog fallback: case-insensitive brand filter
+  ---
+  duration_ms: 6.285639
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: inclusive minimum price
+ok 147 - P11 catalog fallback: inclusive minimum price
+  ---
+  duration_ms: 5.848756
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: inclusive maximum price
+ok 148 - P11 catalog fallback: inclusive maximum price
+  ---
+  duration_ms: 6.882081
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: closed budget range
+ok 149 - P11 catalog fallback: closed budget range
+  ---
+  duration_ms: 6.039792
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: single tag filter
+ok 150 - P11 catalog fallback: single tag filter
+  ---
+  duration_ms: 6.930715
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: multiple tags use OR
+ok 151 - P11 catalog fallback: multiple tags use OR
+  ---
+  duration_ms: 5.90459
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: comma tags trim whitespace
+ok 152 - P11 catalog fallback: comma tags trim whitespace
+  ---
+  duration_ms: 6.153021
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: ascending price
+ok 153 - P11 catalog fallback: ascending price
+  ---
+  duration_ms: 7.176071
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: descending price
+ok 154 - P11 catalog fallback: descending price
+  ---
+  duration_ms: 6.128825
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: alphabetical name order
+ok 155 - P11 catalog fallback: alphabetical name order
+  ---
+  duration_ms: 6.612348
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: first page
+ok 156 - P11 catalog fallback: first page
+  ---
+  duration_ms: 6.035265
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: second page
+ok 157 - P11 catalog fallback: second page
+  ---
+  duration_ms: 5.835176
+  type: 'test'
+  ...
+# Subtest: P11 catalog fallback: no matching product
+ok 158 - P11 catalog fallback: no matching product
+  ---
+  duration_ms: 7.118365
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order sm-002 then sm-001
+ok 159 - P11 comparison: preserves selected order sm-002 then sm-001
+  ---
+  duration_ms: 7.827966
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order sm-004 then sm-003
+ok 160 - P11 comparison: preserves selected order sm-004 then sm-003
+  ---
+  duration_ms: 6.78073
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order lp-002 then lp-001
+ok 161 - P11 comparison: preserves selected order lp-002 then lp-001
+  ---
+  duration_ms: 6.523355
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order lp-005 then lp-004
+ok 162 - P11 comparison: preserves selected order lp-005 then lp-004
+  ---
+  duration_ms: 6.410225
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order tb-002 then tb-001
+ok 163 - P11 comparison: preserves selected order tb-002 then tb-001
+  ---
+  duration_ms: 7.915567
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order tw-002 then tw-001
+ok 164 - P11 comparison: preserves selected order tw-002 then tw-001
+  ---
+  duration_ms: 6.517837
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order tw-004 then tw-003
+ok 165 - P11 comparison: preserves selected order tw-004 then tw-003
+  ---
+  duration_ms: 6.010077
+  type: 'test'
+  ...
+# Subtest: P11 comparison: preserves selected order sw-003 then sw-001
+ok 166 - P11 comparison: preserves selected order sw-003 then sw-001
+  ---
+  duration_ms: 6.081584
+  type: 'test'
+  ...
+# Subtest: P11 comparison: larger RAM wins
+ok 167 - P11 comparison: larger RAM wins
+  ---
+  duration_ms: 6.124879
+  type: 'test'
+  ...
+# Subtest: P11 comparison: TB storage is normalized to GB
+ok 168 - P11 comparison: TB storage is normalized to GB
+  ---
+  duration_ms: 6.457977
+  type: 'test'
+  ...
+# Subtest: P11 comparison: lower weight wins after kg conversion
+ok 169 - P11 comparison: lower weight wins after kg conversion
+  ---
+  duration_ms: 8.020524
+  type: 'test'
+  ...
+# Subtest: P11 comparison: identical RAM is a shared win
+ok 170 - P11 comparison: identical RAM is a shared win
+  ---
+  duration_ms: 6.247212
+  type: 'test'
+  ...
+# Subtest: P11 comparison: processor names do not invent numerical winners
+ok 171 - P11 comparison: processor names do not invent numerical winners
+  ---
+  duration_ms: 6.172941
+  type: 'test'
+  ...
+# Subtest: P11 comparison: battery mAh and Wh are not compared
+ok 172 - P11 comparison: battery mAh and Wh are not compared
+  ---
+  duration_ms: 6.275034
+  type: 'test'
+  ...
+# Subtest: P11 comparison: cross-category dimension has no winner
+ok 173 - P11 comparison: cross-category dimension has no winner
+  ---
+  duration_ms: 8.058881
+  type: 'test'
+  ...
+# Subtest: P11 comparison: higher camera dimension wins
+ok 174 - P11 comparison: higher camera dimension wins
+  ---
+  duration_ms: 6.09843
+  type: 'test'
+  ...
+# Subtest: P11 comparison: equal dimension scores expose a tie
+ok 175 - P11 comparison: equal dimension scores expose a tie
+  ---
+  duration_ms: 6.189075
+  type: 'test'
+  ...
+# Subtest: P11 comparison: cheaper same-category price wins
+ok 176 - P11 comparison: cheaper same-category price wins
+  ---
+  duration_ms: 6.675913
+  type: 'test'
+  ...
+# Subtest: P11 comparison: higher warranty index wins
+ok 177 - P11 comparison: higher warranty index wins
+  ---
+  duration_ms: 6.597226
+  type: 'test'
+  ...
+# Subtest: P11 comparison: cross-category summary avoids universal winner
+ok 178 - P11 comparison: cross-category summary avoids universal winner
+  ---
+  duration_ms: 5.692773
+  type: 'test'
+  ...
+1..178
+# tests 200
+# suites 5
+# pass 198
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1812.511791
