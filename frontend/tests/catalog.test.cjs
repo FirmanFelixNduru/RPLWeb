@@ -311,7 +311,7 @@ test('card score keeps its existing five-dimension formula, defaults and roundin
   const { getCatalogScore } = loadSource('lib/catalogScore.js');
   assert.equal(getCatalogScore(product('sm-006')), 79);
   assert.equal(getCatalogScore({}), 50);
-  assert.equal(getCatalogScore({ score_performance: 0 }), 50);
+  assert.equal(getCatalogScore({ score_performance: 0 }), 40);
   assert.equal(getCatalogScore({ score_performance: 54 }), 51);
 });
 

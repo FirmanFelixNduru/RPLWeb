@@ -1,0 +1,141 @@
+name: P11 - Unit Tests, Build, Deploy
+
+on:
+  push:
+    branches: [main, v1.0_dev, V1.1]
+  pull_request:
+    branches: [main, V1.1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p11-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unit-tests:
+    name: 200 Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --prefix frontend --no-audit --no-fund
+      - name: Run at least 200 unit tests (no failures or skips)
+        run: npm run test:ci --prefix frontend
+      - name: Save TAP, JUnit and JSON evidence even when tests fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports-${{ github.sha }}
+          path: frontend/reports/
+          if-no-files-found: error
+      - name: Publish test counts
+        if: always()
+        shell: bash
+        run: |
+          if [ -f frontend/reports/summary.json ]; then
+            node -e 'const fs=require("fs"); const s=require("./frontend/reports/summary.json"); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Unit tests: ${s.status}\n\nCommit: ${process.env.GITHUB_SHA}\n\n| Total | Passed | Failed | Skipped |\n|---|---|---|---|\n| ${s.tests} | ${s.passed} | ${s.failed} | ${s.skipped} |\n\nBuild and deployment require this job to succeed.\n`);'
+          fi
+
+  build:
+    name: Build tested commit
+    needs: unit-tests
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --global vercel@66.2.0
+      - name: Pull configuration and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$VERCEL_TOKEN" && test -n "$VERCEL_ORG_ID" && test -n "$VERCEL_PROJECT_ID"
+          if [ "$GITHUB_REF_NAME" = "v1.0_dev" ]; then
+            vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+            vercel build --token="$VERCEL_TOKEN"
+          else
+            vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+            vercel build --prod --token="$VERCEL_TOKEN"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vercel-build-${{ github.sha }}
+          path: |
+            .vercel/output
+            .vercel/project.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy built artifact
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: ${{ github.ref_name == 'v1.0_dev' && 'p11-testing' || 'production' }}
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          name: vercel-build-${{ github.sha }}
+          path: .vercel
+      - run: npm install --global vercel@66.2.0
+      - name: Deploy exactly the artifact from the build job
+        id: deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF_NAME" = "v1.0_dev" ]; then
+            url=$(vercel deploy --prebuilt --yes --token="$VERCEL_TOKEN")
+          else
+            url=$(vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN")
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "## Deployment\n\nCommit: $GITHUB_SHA\n\nURL: $url" >> "$GITHUB_STEP_SUMMARY"
+
+  smoke-test:
+    name: Verify live commit
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify deployed version and public application routes
+        env:
+          DEPLOYMENT_URL: ${{ needs.deploy.outputs.url }}
+        run: node scripts/p11/smoke.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-smoke-${{ github.sha }}
+          path: docs/p11/generated/smoke.json
+          if-no-files-found: warn

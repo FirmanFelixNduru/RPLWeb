@@ -3,6 +3,12 @@ frontend/.next/
 frontend/out/
 frontend/build/
 frontend/node_modules/
+frontend/reports/
+frontend/.vercel/
+.vercel/
+frontend/public/version.json
+/p11-red-local.log
+docs/p11/generated/
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
