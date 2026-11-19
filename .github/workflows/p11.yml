@@ -104,6 +104,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Restore locked runtime dependencies referenced by the prebuilt artifact
+        run: npm ci --prefix frontend --no-audit --no-fund
       - uses: actions/download-artifact@v4
         with:
           name: vercel-build-${{ github.sha }}
