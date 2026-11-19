@@ -16,6 +16,24 @@ const report = { testedAt: new Date().toISOString(), url: base, expectedCommit, 
         check.version = await response.json();
         check.passed = check.version.commit === expectedCommit;
       }
+      if (route === '/catalog' && response.ok) {
+        const html = await response.text();
+        const scripts = [...html.matchAll(/<script[^>]+src="([^"]+\.js(?:\?[^"]*)?)"/g)].map(match => match[1]);
+        let apiConfigured = false;
+        const expectedApi = process.env.NEXT_PUBLIC_API_URL;
+        if (!expectedApi) throw Error('NEXT_PUBLIC_API_URL is required for client verification');
+        for (const script of new Set(scripts)) {
+          const url = new URL(script, base);
+          if (url.origin !== new URL(base).origin) continue;
+          const chunk = await fetch(url, { headers, signal: AbortSignal.timeout(30000) });
+          if (!chunk.ok) throw Error('A deployed client chunk is unavailable');
+          const source = await chunk.text();
+          if (source.includes('[SENSITIVE]') || source.includes('[REDACTED]')) throw Error('The deployed client contains an invalid environment placeholder');
+          if (source.includes(expectedApi)) apiConfigured = true;
+        }
+        check.apiConfigured = apiConfigured;
+        check.passed = check.passed && apiConfigured;
+      }
       report.checks.push(check);
       if (!check.passed) throw Error(`Live verification failed: ${route} (${response.status})`);
     }
