@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "startedAt": "2026-11-19T18:32:37.545Z",
+  "finishedAt": "2026-11-19T18:32:39.495Z",
+  "commit": "7f576addfb7563a7759fc1e817b051962a302d4c",
+  "minimum": 200,
+  "tests": 200,
+  "passed": 200,
+  "failed": 0,
+  "skipped": 0,
+  "todo": 0,
+  "cancelled": 0,
+  "exitCode": 0
+}

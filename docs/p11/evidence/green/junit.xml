@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="result status is one polite semantic host, with actual positive and zero-result messages" time="0.055547" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="rapid searches coalesce speech only; sorting and equal counts do not republish identical status" time="0.025163" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="category, brand, budget, chip removal and reset all feed the filtered result status" time="0.043534" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="dialog transitions move the same status host without publishing duplicates or dropping a pending result" time="0.024674" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="loading never announces a temporary zero and unmount cancels timers and removes the status host" time="0.021448" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="highest-score catalog order follows actual card badges for previously reversed products" time="0.040204" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="entire local catalog is descending by displayed score and does not mutate input" time="0.072444" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="equal rounded card scores use deterministic product ID order" time="0.090619" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="card score keeps its existing five-dimension formula, defaults and rounding" time="0.004715" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="price/name sorting and category, brand, budget and search filters remain available" time="0.097484" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="actual card button adds/removes through the real context and updates labels and selected state" time="0.048792" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="four-product limit, removal at capacity and product detail action retain existing behavior" time="0.023551" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="search has a name and its named clear button retains input/clear behavior" time="0.003195" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="default budget does not render a budget chip or an empty active-filter summary" time="0.047733" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="active budget summary uses the actual filter preset label: &lt; Rp 5 Juta" time="0.025019" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="active budget summary uses the actual filter preset label: Rp 5 - 15 Juta" time="0.024927" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="active budget summary uses the actual filter preset label: Rp 15 - 25 Juta" time="0.025679" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="active budget summary uses the actual filter preset label: > Rp 25 Juta" time="0.019304" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="removing budget changes only budget state and moves focus to the existing search input" time="0.031760" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="upper-unbounded budget stays open until explicit completion and remains summarized after closing" time="0.043337" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="mobile onSelectCategory changes only its filter without closing the dialog" time="0.012409" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="mobile onSelectBrand changes only its filter without closing the dialog" time="0.014516" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="mobile onSelectPriceRange changes only its filter without closing the dialog" time="0.012103" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="mobile filter session applies consecutive choices immediately, preserves search/sort and completes explicitly" time="0.224006" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="zero-result completion stays enabled, reset stays open and the completion action is last in the dialog" time="0.052977" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="budget removal preserves combined category, brand, search and price sorting results" time="0.054095" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="reset still clears all filters and restores score sorting after an active budget" time="0.047738" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="each filter group exposes one selected option and preserves selection callbacks" time="0.010120" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="sort select is enclosed by its label and sort/reset handlers retain their values" time="0.005136" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="mobile toggle, close control and filter chips have names and preserve existing state updates" time="0.024200" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="product heading preserves its complete name and natural wrapping: Xiaomi 14 Ultra" time="0.006400" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="product heading preserves its complete name and natural wrapping: Lenovo ThinkPad X1 Carbon Gen 11" time="0.005969" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="product heading preserves its complete name and natural wrapping: ASUS ROG Zephyrus G14 (2024)" time="0.006045" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="product heading preserves its complete name and natural wrapping: Fixture Laptop Professional Edition Generasi 2026 Model ABC 123 Konfigurasi RAM 32 GB Storage 2 TB untuk Pengujian Nama Sangat Panjang Tanpa Mengubah Dataset" time="0.006107" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="product name is a noninteractive heading while detail remains a keyboard-native button" time="0.005561" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="metadata, rating, filter count, empty state and search placeholder meet normal-text contrast in both themes" time="0.026839" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="all score badge gradients retain scores and meet contrast across sampled sRGB interpolation" time="0.002700" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="catalog controls retain visible focus and 44px targets, with contrast for controls and rating icons" time="0.024352" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="product and mobile filter expose named native modal dialogs and explicit close actions" time="0.023327" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="product and filter openers establish the clicked button as the return-focus target" time="0.017854" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="dialog lifecycle requests native modality, title focus, scroll lock and cleans up on close/unmount" time="0.002161" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="native cancel/close request the latest React close callback without stale Strict Mode close events" time="0.001710" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="route change closes React state and does not reopen the previous route dialog" time="0.001611" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="cleanup skips missing, hidden or explicitly inert return-focus targets" time="0.004474" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="overlapping dialog effects retain scroll lock until the last cleanup, even out of order" time="0.001560" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="mobile filter closes on the desktop breakpoint and removes its media listener on cleanup" time="0.022906" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="card and modal header label unchanged product prices as catalog prices regardless of product ID" time="0.045289" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="supplied positive reviews keep their rating, count, summary and pros/cons without changing the dataset" time="0.186425" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="missing, null and zero-count reviews never invent rating or counts, including the backend default object" time="0.048436" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="zero rating is preserved when a positive review count supports the aggregate" time="0.007536" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="partial or invalid numeric reviews display only supported fields" time="0.080708" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="partial review text renders safely without absent arrays or unsupported section placeholders" time="0.014886" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="reviews do not claim verification, real-time provenance or a fixed sentiment distribution" time="0.026461" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="dialog Tab boundaries wrap between operable controls while preserving normal and browser shortcuts" time="0.003054" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="gambar produk valid tetap memakai URL asli dan alt nama produk" time="0.003312" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="gambar gagal dimuat beralih ke placeholder lokal yang ada" time="0.000800" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="URL gambar kosong atau tidak tersedia memakai placeholder tanpa menunggu error" time="0.001118" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="kegagalan placeholder tidak membuat loop fallback" time="0.000693" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="kegagalan satu kartu tidak memengaruhi kartu lain" time="0.000875" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="penggunaan ulang komponen untuk URL berbeda tidak mewarisi status error sebelumnya" time="0.000582" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="struktur dan kontrol kartu tetap terjaga setelah penanganan gambar" time="0.001567" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="API helper sukses mengembalikan source api dan mempertahankan properti respons" time="0.011062" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="API helper beralih ke fallback saat network failure terjadi" time="0.008568" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="API helper beralih ke fallback saat respons HTTP bukan 2xx" time="0.033312" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="API helper beralih ke fallback saat respons JSON malformed" time="0.008364" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="API helper fallback tetap memfilter kategori dan brand dari dataset lokal" time="0.008397" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="katalog subheader tidak lagi memuat klaim ulasan asli atau perbandingan harga live" time="0.044487" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="indikator fallback tampil ketika sumber data adalah fallback lokal" time="0.036715" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="indikator fallback tidak tampil ketika data bersumber dari API normal atau saat loading" time="0.096142" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="katalog tetap menampilkan produk, filter, dan sorting saat fallback aktif" time="0.031606" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="katalog meminta per_page: 100 saat mount" time="0.011213" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="produk pada posisi ke-21 dan ke-100 dapat ditampilkan dan dicari" time="0.041015" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="brand yang hanya muncul di luar 20 produk pertama tetap tersedia di filter brand" time="0.012645" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="filtering kategori dan rentang harga bekerja pada keseluruhan 100 produk" time="0.027611" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="sorting harga ascending dan descending bekerja terhadap keseluruhan 100 produk" time="0.037690" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="result count dan pengumuman pembaca layar mencerminkan jumlah hasil 100 produk" time="0.013000" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="pemilihan produk posisi ke-21 dan ke-100 untuk comparison tetap berfungsi tanpa regresi" time="0.005888" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testcase name="API helper dan fallback lokal menangani per_page: 100 dengan mempertahankan metadata source P2-A06" time="0.017554" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/catalog.test.cjs"/>
+	<testsuite name="Post-deploy regression: stored comparison and asynchronous results" time="0.220638" disabled="0" errors="0" tests="6" failures="0" skipped="0" timestamp="2026-11-19T18:27:40.719Z" hostname="runnervmccnms">
+		<testcase name="invalid stored JSON shapes cannot replace the comparison array" time="0.030856" classname="Post-deploy regression: stored comparison and asynchronous results" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="dock validation retains valid products, removes duplicates and caps at four" time="0.003128" classname="Post-deploy regression: stored comparison and asynchronous results" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="comparison fallback preserves requested column order during an outage" time="0.018821" classname="Post-deploy regression: stored comparison and asynchronous results" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="clearing comparison while a response is pending keeps the matrix empty" time="0.127836" classname="Post-deploy regression: stored comparison and asynchronous results" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="a superseded response cannot overwrite the latest selection or clear its loading state" time="0.021176" classname="Post-deploy regression: stored comparison and asynchronous results" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="unmounted comparison does not apply a late response" time="0.016708" classname="Post-deploy regression: stored comparison and asynchronous results" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+	</testsuite>
+	<testsuite name="ThemeContext Microtask Lifecycle" time="0.021005" disabled="0" errors="0" tests="4" failures="0" skipped="0" timestamp="2026-11-19T18:27:40.919Z" hostname="runnervmccnms">
+		<testcase name="Test A — Normal execution: queues microtask and applies theme after flush" time="0.004112" classname="ThemeContext Microtask Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test B — Cleanup before flush: unmounting cancels microtask state mutation" time="0.002464" classname="ThemeContext Microtask Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test C — Strict Mode-like lifecycle: setup -> cleanup -> setup flushes safely" time="0.008614" classname="ThemeContext Microtask Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test D — Rapid preference changes: fallback to system preference when storage empty" time="0.005358" classname="ThemeContext Microtask Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+	</testsuite>
+	<testsuite name="CompareContext Microtask Lifecycle" time="0.016130" disabled="0" errors="0" tests="3" failures="0" skipped="0" timestamp="2026-11-19T18:27:40.924Z" hostname="runnervmccnms">
+		<testcase name="Test A — Normal execution: hydrates dock from localStorage upon flush" time="0.006304" classname="CompareContext Microtask Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test B — Cleanup before flush: unmount cancels dock hydration callback" time="0.004673" classname="CompareContext Microtask Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test C — Strict Mode: setup-cleanup-setup only hydrates from active effect" time="0.004885" classname="CompareContext Microtask Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+	</testsuite>
+	<testsuite name="Catalog Page Status Host &amp; Announcement Lifecycle" time="0.103559" disabled="0" errors="0" tests="4" failures="0" skipped="0" timestamp="2026-11-19T18:27:40.840Z" hostname="runnervmccnms">
+		<testcase name="Test A — Status host normal execution: microtask sets statusHost and appends to DOM" time="0.041314" classname="Catalog Page Status Host &amp; Announcement Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test B — Status host cleanup before flush: unmount removes host and prevents state set" time="0.028506" classname="Catalog Page Status Host &amp; Announcement Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test C — Strict Mode: setup -> cleanup -> setup sets host once without orphan node" time="0.016095" classname="Catalog Page Status Host &amp; Announcement Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test D &amp; E — Result announcement lifecycle: timer cancelled on cleanup without stale announcement" time="0.017276" classname="Catalog Page Status Host &amp; Announcement Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+	</testsuite>
+	<testsuite name="TabValue Product Identity &amp; Lifecycle" time="0.141445" disabled="0" errors="0" tests="10" failures="0" skipped="0" timestamp="2026-11-19T18:27:40.804Z" hostname="runnervmccnms">
+		<testcase name="Test 1 — Normal manual refresh: click refresh sets refreshing=true, resolves, updates data, sets refreshing=false" time="0.056310" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test 2 — Old refresh cannot overwrite new product: delayed sm-001 refresh cannot overwrite sm-002" time="0.017792" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test 3 — Old refresh finally cannot clear new loading state: old refresh resolution leaves new product loading=true" time="0.008821" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test 4 — Refresh supersedes initial request: delayed initial request cannot overwrite newer refresh result" time="0.007562" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test 5 — Old refresh rejection: rejection of stale refresh does not affect new product state" time="0.010020" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test 6 — Unmount during manual refresh: resolution after unmount does not mutate state" time="0.006660" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test 7 — Same ID, new object reference: re-rendering with new object reference triggers no additional request" time="0.006287" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Test 8 — New product ID: changing ID triggers new request and old response cannot overwrite" time="0.012169" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Scenario 1 (Baseline) — Render product with ID sm-001 triggers exactly one request" time="0.007154" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+		<testcase name="Scenario 5 (Baseline) — Component unmount before initial request finishes prevents state update" time="0.005168" classname="TabValue Product Identity &amp; Lifecycle" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/lifecycle.test.cjs"/>
+	</testsuite>
+	<testcase name="P11 score: zero is a valid score, not a missing value" time="0.010333" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: missing dimensions use neutral defaults" time="0.006057" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: null dimensions use neutral defaults" time="0.000206" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: maximum remains 100" time="0.000190" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: minimum positive remains 1" time="0.000242" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: neutral score remains 50" time="0.000173" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: performance contributes one fifth of the score" time="0.000187" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: camera contributes one fifth of the score" time="0.000194" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: battery contributes one fifth of the score" time="0.001383" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: display contributes one fifth of the score" time="0.000642" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: value contributes one fifth of the score" time="0.000305" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: rounds down below midpoint" time="0.000155" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: rounds up above midpoint" time="0.000125" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: four missing dimensions remain neutral" time="0.000138" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: uneven dimensions retain their average" time="0.000132" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: uniform 79 remains 79" time="0.000130" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: uniform 90 remains 90" time="0.000331" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: undefined is treated as missing" time="0.000115" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: unrelated audio score does not affect card score" time="0.000128" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 score: unrelated software score does not affect card score" time="0.000308" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects root null" time="0.000203" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects root object" time="0.000119" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects root string" time="0.000113" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects root number" time="0.000356" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects root boolean" time="0.000109" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects root undefined" time="0.000116" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects missing name but keeps valid neighbors" time="0.000239" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects blank name but keeps valid neighbors" time="0.000325" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects missing id but keeps valid neighbors" time="0.000156" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects blank id but keeps valid neighbors" time="0.000909" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects null entry but keeps valid neighbors" time="0.000116" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects NaN price but keeps valid neighbors" time="0.000243" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects infinite price but keeps valid neighbors" time="0.000127" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: rejects negative price but keeps valid neighbors" time="0.000109" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: zero price is retained as a finite nonnegative amount" time="0.000786" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: one valid product is retained" time="0.000135" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: duplicate ids retain the first product" time="0.000124" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: fifth unique product is excluded" time="0.000171" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: selection order remains stable" time="0.000214" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 dock: validation does not mutate the saved array" time="0.000130" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: smartphone segment 1 applies exact amounts and representable sliders" time="0.026976" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: smartphone segment 2 applies exact amounts and representable sliders" time="0.001957" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: smartphone segment 3 applies exact amounts and representable sliders" time="0.001858" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: laptop segment 1 applies exact amounts and representable sliders" time="0.003447" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: laptop segment 2 applies exact amounts and representable sliders" time="0.004922" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: laptop segment 3 applies exact amounts and representable sliders" time="0.003099" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: tablet segment 1 applies exact amounts and representable sliders" time="0.002104" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: tablet segment 2 applies exact amounts and representable sliders" time="0.001222" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: tablet segment 3 applies exact amounts and representable sliders" time="0.001229" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: tws segment 1 applies exact amounts and representable sliders" time="0.001324" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: tws segment 2 applies exact amounts and representable sliders" time="0.001324" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: tws segment 3 applies exact amounts and representable sliders" time="0.001444" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: smartwatch segment 1 applies exact amounts and representable sliders" time="0.001614" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: smartwatch segment 2 applies exact amounts and representable sliders" time="0.001723" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 budget: smartwatch segment 3 applies exact amounts and representable sliders" time="0.001086" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: unfiltered score order" time="0.011079" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: trimmed search" time="0.008275" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: case-insensitive name search" time="0.008102" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: brand search" time="0.008333" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: description search" time="0.009111" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: tag search" time="0.007911" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: category filter" time="0.008414" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: case-insensitive brand filter" time="0.011436" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: inclusive minimum price" time="0.015663" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: inclusive maximum price" time="0.017293" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: closed budget range" time="0.016889" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: single tag filter" time="0.008793" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: multiple tags use OR" time="0.008374" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: comma tags trim whitespace" time="0.008754" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: ascending price" time="0.009607" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: descending price" time="0.008603" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: alphabetical name order" time="0.009634" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: first page" time="0.008623" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: second page" time="0.008803" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 catalog fallback: no matching product" time="0.008964" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order sm-002 then sm-001" time="0.012038" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order sm-004 then sm-003" time="0.009570" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order lp-002 then lp-001" time="0.009265" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order lp-005 then lp-004" time="0.009111" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order tb-002 then tb-001" time="0.010057" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order tw-002 then tw-001" time="0.008332" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order tw-004 then tw-003" time="0.008537" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: preserves selected order sw-003 then sw-001" time="0.008323" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: larger RAM wins" time="0.013324" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: TB storage is normalized to GB" time="0.016675" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: lower weight wins after kg conversion" time="0.014834" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: identical RAM is a shared win" time="0.017757" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: processor names do not invent numerical winners" time="0.014872" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: battery mAh and Wh are not compared" time="0.019068" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: cross-category dimension has no winner" time="0.020591" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: higher camera dimension wins" time="0.017101" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: equal dimension scores expose a tie" time="0.017992" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: cheaper same-category price wins" time="0.018584" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: higher warranty index wins" time="0.018525" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<testcase name="P11 comparison: cross-category summary avoids universal winner" time="0.008616" classname="test" file="/home/runner/work/RPLWeb/RPLWeb/frontend/tests/p11.test.cjs"/>
+	<!-- tests 200 -->
+	<!-- suites 5 -->
+	<!-- pass 200 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 2578.995958 -->
+</testsuites>

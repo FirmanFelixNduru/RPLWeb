@@ -1,0 +1,39 @@
+{
+  "testedAt": "2026-11-19T18:34:25.399Z",
+  "url": "https://comparebuy-6r1e2kmxj-firmanfelixnduru.vercel.app",
+  "expectedCommit": "7f576addfb7563a7759fc1e817b051962a302d4c",
+  "checks": [
+    {
+      "route": "/version.json",
+      "status": 200,
+      "passed": true,
+      "version": {
+        "version": "1.1.0",
+        "commit": "7f576addfb7563a7759fc1e817b051962a302d4c",
+        "branch": "v1.0_dev",
+        "builtAt": "2026-11-19T18:33:15.679Z"
+      }
+    },
+    {
+      "route": "/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "route": "/catalog",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "route": "/wizard",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "route": "/compare",
+      "status": 200,
+      "passed": true
+    }
+  ],
+  "passed": true
+}
