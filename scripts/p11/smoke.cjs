@@ -7,7 +7,10 @@ const report = { testedAt: new Date().toISOString(), url: base, expectedCommit, 
 (async () => {
   try {
     for (const route of ['/version.json', '/', '/catalog', '/wizard', '/compare']) {
-      const response = await fetch(base + route, { signal: AbortSignal.timeout(30000) });
+      const headers = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+        ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
+        : {};
+      const response = await fetch(base + route, { headers, signal: AbortSignal.timeout(30000) });
       const check = { route, status: response.status, passed: response.ok };
       if (route === '/version.json' && response.ok) {
         check.version = await response.json();

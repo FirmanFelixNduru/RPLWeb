@@ -29,6 +29,8 @@ jobs:
       - run: npm ci --prefix frontend --no-audit --no-fund
       - name: Run at least 200 unit tests (no failures or skips)
         run: npm run test:ci --prefix frontend
+      - name: Lint frontend
+        run: npm run lint --prefix frontend
       - name: Save TAP, JUnit and JSON evidence even when tests fail
         if: always()
         uses: actions/upload-artifact@v4
@@ -65,6 +67,7 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$VERCEL_TOKEN" && test -n "$VERCEL_ORG_ID" && test -n "$VERCEL_PROJECT_ID"
+          node frontend/scripts/write-version.cjs
           if [ "$GITHUB_REF_NAME" = "v1.0_dev" ]; then
             vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
             vercel build --token="$VERCEL_TOKEN"
@@ -132,6 +135,7 @@ jobs:
       - name: Verify deployed version and public application routes
         env:
           DEPLOYMENT_URL: ${{ needs.deploy.outputs.url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: node scripts/p11/smoke.cjs
       - uses: actions/upload-artifact@v4
         if: always()
