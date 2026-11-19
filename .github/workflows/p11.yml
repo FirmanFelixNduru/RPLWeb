@@ -75,13 +75,12 @@ jobs:
             vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
             vercel build --prod --token="$VERCEL_TOKEN"
           fi
+      - name: Package prebuilt output and its traced Next.js files without losing links
+        run: tar --exclude='frontend/.next/cache' -czf prebuilt-workspace.tar.gz .vercel/output .vercel/project.json frontend/.next
       - uses: actions/upload-artifact@v4
         with:
           name: vercel-build-${{ github.sha }}
-          path: |
-            .vercel/output
-            .vercel/project.json
-          include-hidden-files: true
+          path: prebuilt-workspace.tar.gz
           if-no-files-found: error
           retention-days: 7
 
@@ -111,7 +110,9 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: vercel-build-${{ github.sha }}
-          path: .vercel
+          path: .
+      - name: Restore the exact build workspace
+        run: tar -xzf prebuilt-workspace.tar.gz
       - run: npm install --global vercel@66.2.0
       - name: Deploy exactly the artifact from the build job
         id: deploy
