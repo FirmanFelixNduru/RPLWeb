@@ -1,3 +1,5 @@
+> **Laporan historis QA deployment 18 November 2026.** Hasil 105 test dan 10/10 kasus pada dokumen/JSON ini adalah bukti pada commit yang dicatat, bukan jumlah test rilis terbaru. P11 menambah suite menjadi 200 unit test dan mempunyai bukti sendiri di [laporan P11](../p11/README.md). Artefak sebelum/sesudah tidak diubah sebagai bagian pembaruan dokumentasi.
+
 # Laporan bug setelah deployment CompareBuy
 
 Pengujian awal dilakukan pada https://comparebuy-livid.vercel.app dengan backend

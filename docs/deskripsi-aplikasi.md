@@ -1,497 +1,126 @@
-# CompareBuy
-
-Build a full-stack web application named **CompareBuy**.
-
-## Purpose
-
-Help Indonesian consumers compare and choose technology products objectively. The application combines a curated gadget catalog, product specifications, review sentiment, warranty information, marketplace prices, a personalized recommendation wizard, and side-by-side comparison.
-
-The current application supports these product categories:
-
-* Smartphone
-* Laptop
-* Tablet
-* TWS / audio
-* Smartwatch
-
-The current dataset contains 20 curated products stored in backend memory and mirrored by frontend fallback data. It does not currently use a database, user accounts, authentication, or persistent product administration.
-
-## Current Stack
-
-* Frontend: Next.js 14 App Router + React 18
-* Frontend language: JavaScript with JSX
-* Styling: Tailwind CSS 3
-* Icons: Lucide React
-* Backend: Python FastAPI
-* Validation and response schemas: Pydantic 2
-* HTTP client and scraper: HTTPX + BeautifulSoup4
-* API style: REST API returning JSON
-* Frontend deployment: Vercel-compatible Next.js application
-* Backend deployment plan: Render
-* Frontend deployment plan: Vercel
-* Planned database: PostgreSQL
-* Current database implementation: None; product data is held in Python memory
-
-## Application Features
-
-### 1. Landing Page
-
-The landing page presents:
-
-* CompareBuy branding and technology advisory positioning.
-* A call-to-action to start the four-step Smart Wizard.
-* A call-to-action to open the gadget catalog.
-* Six feature pillars:
-  * Smart Recommendation Wizard.
-  * Weighted Dynamic Scoring Engine.
-  * Side-by-Side Comparison Matrix.
-  * Real User Sentiment Aggregator.
-  * After-Sales & Warranty Index.
-  * Live Marketplace Price Scraping.
-* A category selector for featured products.
-* A preview of curated products.
-* A CTA banner to start the recommendation wizard.
-
-### 2. Gadget Catalog
-
-The catalog allows users to:
-
-* Search by product name, brand, description, or tag.
-* Filter by gadget category.
-* Filter by brand.
-* Filter by predefined budget ranges.
-* Sort by recommendation score, lowest price, highest price, or name.
-* Open a product detail modal.
-* Add or remove a product from the comparison list.
-* Use the filter panel on desktop or a mobile filter drawer on smaller screens.
-* See loading placeholders and an empty state when no product matches.
-
-The frontend first requests data from the FastAPI catalog endpoint. If the API is unavailable, it filters the local product dataset in `frontend/src/data/products.js`.
-
-### 3. Smart Recommendation Wizard
-
-The wizard has four steps:
-
-1. **Choose Category**
-   * Select smartphone, laptop, tablet, TWS/audio, or smartwatch.
-2. **Set Budget**
-   * Select a category-specific budget preset.
-   * Adjust minimum and maximum budget with two range sliders.
-3. **Choose Usage Scenarios**
-   * Select one or more scenarios such as gaming, productivity, photography, content creation, business, student, fitness, multimedia, or casual use.
-4. **Set Trade-Off Priorities**
-   * Set importance from 1 to 5 for performance, camera, battery, display, build quality, and value.
-
-The result page shows:
-
-* The best recommendation.
-* Additional ranked alternatives.
-* Total recommendation score.
-* Budget fit status.
-* Score breakdown.
-* Contextual explanation for the recommendation.
-* Buttons to open product details or add products to the comparison dock.
-
-If the backend scoring endpoint is unavailable, the frontend runs a simplified local scoring fallback.
-
-### 4. Product Comparison
-
-The comparison flow supports up to four products at once.
-
-* Products can be added from product cards, the product modal, the comparison page, or the floating dock.
-* The selected products are saved to `localStorage` under `comparebuy_dock`.
-* The comparison matrix displays price, warranty, technical specifications, and score fields.
-* The best value in each comparable row is highlighted automatically.
-* Users can remove individual products or clear the entire comparison list.
-* An empty state guides the user back to the catalog.
-
-The backend accepts between two and four product IDs for a comparison request.
-
-### 5. Product Detail Modal
-
-Each product can be opened in a modal with four tabs:
-
-* **Spesifikasi**: display, refresh rate, processor, RAM, storage, battery, camera, operating system, weight, connectivity, water resistance, build material, and special features.
-* **User Experience & Review**: rating, review count, community summary, pros, and cons.
-* **Garansi & Purna Jual**: warranty duration, claim ease, service center count, warranty coverage, and warranty index score.
-* **Marketplace Live & Value**: MSRP, marketplace offers, cheapest offer, potential savings, seller, availability, and store links.
-
-### 6. Theme and Layout
-
-The shared application layout includes:
-
-* Responsive sticky navigation bar.
-* Indonesian interface labels.
-* Dark mode and light mode.
-* Theme preference persisted in `localStorage` under `comparebuy_theme`.
-* Floating comparison dock.
-* Global product detail modal.
-* Responsive footer.
-* Loading, empty, hover, and transition states.
-
-## Data Models
-
-The main Pydantic product model is `Product` in `backend/app/models.py`.
-
-### Product
-
-* `id`
-* `name`
-* `brand`
-* `category`
-* `price`
-* `image`
-* `description`
-* `specs`
-* `review_sentiment`
-* `warranty`
-* `marketplace_links`
-* `tags`
-* `release_year`
-* `score_performance`
-* `score_camera`
-* `score_battery`
-* `score_display`
-* `score_build_quality`
-* `score_value`
-* `score_audio`
-* `score_software`
-
-### ProductSpecs
-
-The flexible specification object may contain:
-
-* `display`
-* `processor`
-* `ram`
-* `storage`
-* `battery`
-* `camera`
-* `os`
-* `weight`
-* `connectivity`
-* `screen_size`
-* `refresh_rate`
-* `resolution`
-* `gpu`
-* `water_resistance`
-* `driver_size`
-* `anc`
-* `codec`
-* `sensors`
-* `build_material`
-* `special_features`
-
-### ReviewSentiment
-
-* `overall_score`
-* `total_reviews`
-* `pros`
-* `cons`
-* `summary`
-
-### WarrantyInfo
-
-* `duration_months`
-* `coverage`
-* `claim_ease`
-* `official_service_centers`
-* `score`
-
-### MarketplacePrice
-
-* `marketplace`
-* `price`
-* `url`
-* `seller`
-* `available`
-
-## Recommendation Algorithm
-
-The scoring engine is implemented in `backend/app/scoring.py` using weighted Multi-Criteria Decision Analysis (MCDA).
-
-### Scoring dimensions
-
-* Performance
-* Camera
-* Battery
-* Display
-* Build quality
-* Value for money
-* Audio
-* Software and updates
-
-### Scoring flow
-
-1. Filter products by the selected category.
-2. Read user priority values, defaulting an unspecified dimension to `3`.
-3. Add scenario-specific boosts.
-4. Normalize all weights so their total is `1.0`.
-5. Calculate the weighted product score.
-6. Apply a budget modifier:
-   * Within budget: `+5`.
-   * Below the minimum budget: `+2`.
-   * Above the maximum budget by up to 20%: `-5`.
-   * Above the maximum budget by more than 20%: `-15`.
-7. Generate a contextual `why_this_product` explanation from the three strongest weighted dimensions.
-8. Sort products by final score in descending order and assign ranks.
-
-The backend supports scenario boosts for gaming, productivity, photography, social media, content creation, business, student, fitness, multimedia, and casual use.
-
-## Marketplace Price Scraping
-
-The price service is implemented in `backend/app/scraper.py`.
-
-* It attempts to read search results from Tokopedia, Shopee, and Lazada.
-* Requests run concurrently with `asyncio.gather()`.
-* HTTP requests use HTTPX with browser-like headers and a timeout.
-* HTML is parsed with BeautifulSoup4.
-* If a marketplace cannot be scraped, the service uses curated fallback prices.
-* Fallback prices receive a small random variation.
-* Results are sorted from the lowest price to the highest price.
-* The response includes the marketplace, price, seller, availability, URL, and update time.
-
-The price result is therefore not guaranteed to be a fully live result; it may contain fallback data when marketplace pages are dynamic, blocked, or unavailable.
-
-## REST API Routes
-
-### Service
-
-* `GET /` - Return service name, version, health status, and documentation path.
-* `GET /health` - Return the backend health status.
-
-### Catalog
-
-* `GET /api/products` - List products with search, category, brand, price, tag, sorting, and pagination query parameters.
-* `GET /api/products/{product_id}` - Return one product by ID.
-* `GET /api/brands` - Return unique brands.
-* `GET /api/tags` - Return unique tags.
-* `GET /api/categories` - Return available product categories.
-
-Supported catalog query parameters:
-
-* `search`
-* `category`
-* `brand`
-* `min_price`
-* `max_price`
-* `tags`
-* `sort_by`: `score`, `price_asc`, `price_desc`, or `name`
-* `page`
-* `per_page`
-
-### Recommendations
-
-* `POST /api/score` - Calculate ranked recommendations from category, budget, scenarios, and priorities.
-
-### Comparison
-
-* `POST /api/compare` - Compare two to four products and return specification highlights.
-
-### Marketplace Prices
-
-* `GET /api/prices/{product_id}` - Fetch marketplace prices with fallback handling.
-
-## API Response Models
-
-The backend defines these response and request schemas:
-
-* `CatalogResponse`
-* `WizardInput`
-* `ScoreBreakdown`
-* `ScoredProduct`
-* `ScoringResponse`
-* `CompareRequest`
-* `SpecHighlight`
-* `CompareResponse`
-* `PriceResponse`
-
-## Project Structure
+# Deskripsi aplikasi CompareBuy
+
+Diperbarui 26 November 2026 berdasarkan source versi 1.1.0. Dokumen ini menjelaskan
+implementasi; ide awal dan hasil uji historis dipisahkan di [indeks docs](README.md).
+
+CompareBuy membantu pengguna membandingkan smartphone, laptop, tablet, TWS/audio,
+dan smartwatch melalui katalog, wizard rekomendasi, serta matriks perbandingan.
+Aplikasi tidak menyediakan akun pengguna, autentikasi pengguna, atau panel
+administrasi produk. Katalog awal berisi 20 produk kurasi; isi database dapat berubah
+setelah pengisian atau pembaruan data.
+
+## Stack dan arsitektur
+
+| Bagian | Implementasi |
+| --- | --- |
+| Frontend | Next.js 16.4.5 App Router, React/React DOM 19.2.9, JavaScript/JSX |
+| Runtime frontend | Node.js 24.x, sesuai package.json dan workflow |
+| Tampilan | Tailwind CSS 3, Lucide React |
+| Backend | FastAPI, Pydantic 2, Python 3.12 sebagai runtime Docker |
+| Database | PostgreSQL, SQLAlchemy 2.x, Alembic, seeder idempotent |
+| Harga marketplace | HTTPX, BeautifulSoup4, worker scraping dan cache layanan harga |
+| Deployment frontend | Vercel melalui gate GitHub Actions P11 |
+| Deployment backend | Konfigurasi Render tersedia; Railway sebagai alternatif konfigurasi |
+
+Backend membaca katalog melalui repository database. Fallback memori backend hanya
+berlaku bila development/test dan `ALLOW_CATALOG_FALLBACK=true`. Default lingkungan
+adalah production; pada production atau Render, database gagal mengakibatkan HTTP
+503 pada API inti/readiness, bukan penggantian diam-diam dengan seed memori.
+
+Frontend memiliki dataset cadangan tersendiri di `frontend/src/data/products.js`.
+Kegagalan API dapat mengaktifkan fallback klien. Ini mempertahankan fungsi lokal,
+tetapi bukan jaminan data sama mutakhirnya dengan PostgreSQL. Persistensi pilihan
+komparasi dan tema memakai localStorage, bukan database.
+
+## Fitur yang tersedia
+
+- **Katalog**: pencarian nama, brand, deskripsi, dan tag; filter kategori, brand,
+  rentang harga; sorting skor, harga, atau nama; detail produk dan dock komparasi.
+  API juga mendukung filter tag serta pagination. UI katalog tidak menyediakan
+  semua parameter API sebagai kontrol tersendiri.
+- **Wizard empat langkah**: kategori ? anggaran ? skenario ? prioritas. UI meminta
+  minimal satu skenario. Enam prioritas dapat diubah pengguna; engine menghitung
+  delapan dimensi, termasuk audio/software dengan bobot default jika tidak diisi.
+- **Rekomendasi**: bobot skenario dinormalisasi, skor produk dibobotkan, lalu diberi
+  modifier budget (+5 dalam rentang, +2 di bawah, -5 di atas hingga 20%, -15 jika
+  lebih). Hasil memuat ranking, breakdown, alasan, dan status budget. API gagal
+  dapat memicu perhitungan lokal klien.
+- **Komparasi**: dua sampai empat produk; urutan pilihan dipertahankan, seri dan
+  dimensi yang tidak berlaku ditangani, serta kondisi kosong/satu produk tersedia.
+  Pilihan disimpan di `comparebuy_dock`, divalidasi, dideduplikasi, dan dibatasi empat.
+- **Detail produk**: spesifikasi, ringkasan ulasan, garansi/purna jual, marketplace
+  dan value. Informasi harga dan garansi harus dibaca bersama konfigurasi varian
+  serta status verifikasinya; semua SKU tidak otomatis terverifikasi.
+- **Tema**: dark/light mode, tersimpan pada `comparebuy_theme`.
+
+Skor kartu katalog berbeda dari skor personal wizard: kartu memakai rata-rata lima
+dimensi dengan pembulatan. Sejak P11, nilai sah `0` dipertahankan; hanya null atau
+undefined yang memakai default 50.
+
+## Batas klaim data
+
+Ringkasan ulasan berasal dari data yang disediakan katalog; keberadaan rating atau
+pros/cons tidak membuktikan ulasan telah dikumpulkan live, diverifikasi pembelinya,
+atau dihasilkan oleh layanan AI eksternal. Produk yang tidak punya data ulasan
+memerlukan tampilan tanpa klaim rating/review yang dibuat-buat.
+
+Scraping marketplace dapat dibatasi halaman dinamis atau anti-bot. Setiap penawaran
+backend dibedakan melalui `source` (`scraped`/`fallback`). Fallback backend bersifat
+deterministik, tanpa variasi acak, dan `captured_at` tidak mengklaim tangkapan live.
+Fallback harga frontend merupakan jalur terpisah dengan metadata sendiri. Harga,
+nama seller, dan ketersediaan pada data acuan tidak menjamin stok/harga aktual.
+Snapshot harga database append-only dan tidak mengganti harga acuan produk secara
+langsung. Jangan menyimpulkan semua penawaran atau garansi resmi telah terverifikasi.
+
+## Endpoint utama
+
+| Method | Path | Tujuan |
+| --- | --- | --- |
+| GET | `/` | Metadata layanan; bukan readiness database |
+| GET | `/health` | Readiness: connected, degraded pada fallback lokal, atau HTTP 503 |
+| GET | `/api/products` | Katalog, search/filter/sort, page dan per_page |
+| GET | `/api/products/{product_id}` | Detail produk |
+| GET | `/api/brands`, `/api/tags`, `/api/categories` | Metadata filter |
+| POST | `/api/score` | Rekomendasi personal |
+| POST | `/api/compare` | Komparasi dua sampai empat ID |
+| GET | `/api/prices/{product_id}` | Penawaran harga dengan sumber data |
+
+Schema Pydantic berada di `backend/app/models.py`; entitas database di
+`backend/app/entities/`, akses data di `backend/app/repositories/`, dan migrasi di
+`backend/migrations/`. Field garansi terstruktur mencakup parts, labor, baterai,
+charger, tipe layanan, sumber, dan status verifikasi. Spesifikasi dapat memuat
+`base_configuration`, `variants_note`, `ports`, serta `charging`.
+
+## Struktur dan pengoperasian
 
 ```text
-Rekayasa Perangkat Lunak/
-  README.md
-  format-jawaban.md
-  perbaikan.md
-  deskripsi-aplikasi.md
+CompareBuy/
+  .github/workflows/p11.yml
   backend/
-    Dockerfile
-    Procfile
-    railway.json (legacy deployment configuration)
+    app/{routers,entities,repositories,security}/
+    app/{main,db,models,products,scoring,scraper,price_service,scrape_worker}.py
+    migrations/
+    tests/
+    seed.py
     requirements.txt
-    test_api.py
-    .env.example
-    app/
-      __init__.py
-      main.py
-      models.py
-      products.py
-      scoring.py
-      scraper.py
-      routers/
-        __init__.py
-        catalog.py
-        compare.py
-        prices.py
-        scoring.py
   frontend/
+    src/{app,components,context,data,lib}/
+    tests/
+    scripts/
     package.json
-    package-lock.json
-    next.config.js
-    tailwind.config.js
-    postcss.config.js
-    jsconfig.json
-    .env.example
-    src/
-      app/
-        layout.js
-        page.js
-        globals.css
-        catalog/page.js
-        compare/page.js
-        wizard/page.js
-      components/
-        catalog/
-          FilterPanel.js
-          ProductCard.js
-          SearchBar.js
-        compare/
-          ComparisonMatrix.js
-        layout/
-          FloatingDock.js
-          Footer.js
-          Navbar.js
-        product/
-          ProductModal.js
-          TabReviews.js
-          TabSpecs.js
-          TabValue.js
-          TabWarranty.js
-        ui/
-          PriceTag.js
-          ScoreBadge.js
-          ThemeToggle.js
-        wizard/
-          StepBudget.js
-          StepCategory.js
-          StepPriority.js
-          StepScenario.js
-          WizardResults.js
-      context/
-        CompareContext.js
-        ThemeContext.js
-      data/products.js
-      lib/api.js
+    eslint.config.mjs
+    vercel.json
+  scripts/p11/
+  docs/{qa,p11}/
 ```
 
-## Environment Configuration
+Ikuti [HowToRun.md](HowToRun.md) untuk environment, PostgreSQL, fallback lokal,
+frontend, dan perintah test. CI P11 memisahkan minimal 200 unit test frontend dari
+integrasi backend dan smoke deployment. Hasil backend bergantung database test;
+SKIP tidak dihitung passed.
 
-### Backend
-
-For the planned PostgreSQL integration and Render deployment, configure the backend environment variables as follows:
-
-```env
-ALLOWED_ORIGINS=http://localhost:3000,https://comparebuy-livid.vercel.app
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/comparebuy
-```
-
-`DATABASE_URL` is the planned PostgreSQL connection string. The current FastAPI code does not read this variable yet because product data is still stored in memory.
-
-### Frontend
-
-Copy `frontend/.env.example` to `frontend/.env.local` and configure:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-## Installation and Startup
-
-### Backend
-
-```bash
-cd backend
-python -m venv venv
-# Windows PowerShell
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Backend URLs:
-
-* API: `http://localhost:8000`
-* Swagger UI: `http://localhost:8000/docs`
-* ReDoc: `http://localhost:8000/redoc`
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend URL: `http://localhost:3000`.
-
-Available frontend scripts:
-
-* `npm run dev` - Start the Next.js development server.
-* `npm run build` - Build the production application.
-* `npm run start` - Start the production application after building.
-* `npm run lint` - Run the configured Next.js lint command.
-
-## Docker and Deployment Plan
-
-The backend includes a multi-stage Dockerfile based on Python 3.12 slim. It installs dependencies in a build stage, copies the installed packages into the runtime image, exposes port `8000`, and provides a `/health` container health check. This image can be used by Render for backend deployment.
-
-Production deployment URLs:
-
-* **Frontend (Vercel):** [https://comparebuy-livid.vercel.app](https://comparebuy-livid.vercel.app)
-* **Backend (Render):** [https://comparebuy-api.onrender.com](https://comparebuy-api.onrender.com) ([Swagger UI](https://comparebuy-api.onrender.com/docs), [Health Check](https://comparebuy-api.onrender.com/health))
-
-Deployment architecture:
-
-* **Database: PostgreSQL** hosted by a managed PostgreSQL provider or Render PostgreSQL.
-* **Backend: Render** ([https://comparebuy-api.onrender.com](https://comparebuy-api.onrender.com)), using the `backend` directory, Dockerfile or Python build configuration, and Uvicorn as the start command.
-* **Frontend: Vercel** ([https://comparebuy-livid.vercel.app](https://comparebuy-livid.vercel.app)), using the `frontend` directory and `NEXT_PUBLIC_API_URL` pointing to [`https://comparebuy-api.onrender.com`](https://comparebuy-api.onrender.com).
-* **CORS:** Set the backend `ALLOWED_ORIGINS` value to include `http://localhost:3000` and [`https://comparebuy-livid.vercel.app`](https://comparebuy-livid.vercel.app).
-
-Recommended Render backend settings:
-
-```text
-Root Directory: backend
-Build Command: pip install -r requirements.txt
-Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-Health Check Path: /health
-```
-
-The existing `railway.json` is retained in the repository as a legacy deployment configuration and is not the target deployment platform.
-
-## Verification
-
-Run the backend API smoke test from the `backend` directory:
-
-```bash
-python test_api.py
-```
-
-The test verifies:
-
-* Health check.
-* Catalog loading.
-* Recommendation scoring.
-* Product comparison.
-* Marketplace price response and fallback data.
-
-## Current Limitations
-
-* Product data is in-memory and resets when the backend restarts.
-* PostgreSQL integration is planned but is not implemented in the current code.
-* There is no ORM, migration, seed script, or CRUD administration.
-* There is no authentication or user profile system.
-* The marketplace service uses static fallback prices with random variation when scraping fails.
-* Backend and frontend product datasets are similar but not perfectly identical.
-* Backend scoring uses eight dimensions, while the frontend fallback uses six dimensions.
-* Product image URLs are external in the frontend seed data and local `/images/...` paths in the backend seed data; image availability depends on the active data source.
-* The frontend is JavaScript/JSX, not TypeScript.
+Bukti rilis 1.1.0, issue, screenshot, serta alur merah/hijau ada pada
+[laporan P11](p11/README.md) dan [GitHub Release](https://github.com/FirmanFelixNduru/RPLWeb/releases/tag/v1.1.0).
+URL produksi yang dicatat pada rilis: https://comparebuy-livid.vercel.app dengan
+backend https://comparebuy-api.onrender.com. Status live tidak diuji ulang sebagai
+bagian pembaruan teks ini.

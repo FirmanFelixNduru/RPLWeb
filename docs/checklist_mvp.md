@@ -1,3 +1,18 @@
+> **Status dokumen: checklist historis MVP, dengan ringkasan P11.** Ditinjau 26 November 2026. Status PASSED, jumlah backend, commit, dan timecode video pada tabel historis bukan hasil pengujian ulang tanggal ini. Angka backend lama belum diaudit ulang; cek log aktual dan PostgreSQL test sebelum menggunakannya sebagai bukti terkini.
+>
+> Panduan operasional: [HowToRun](HowToRun.md). Bukti terbaru yang tersedia: [P11](p11/README.md) dan [Release 1.1.0](https://github.com/FirmanFelixNduru/RPLWeb/releases/tag/v1.1.0).
+
+## Ringkasan perubahan setelah MVP
+
+- QA deployment terdahulu mencatat 10 issue #5?#14, reproduksi dan verifikasi di [laporan QA](qa/README.md).
+- P11 mencatat 200 unit test frontend: tahap merah 198 passed/2 failed, lalu 200 passed/0 failed/0 skipped. Ini tidak mencakup semua tes integrasi backend.
+- Lint sudah tersedia dengan `frontend/eslint.config.mjs`; build dan lint adalah pemeriksaan terpisah.
+- GitHub Actions mengatur gate unit test/lint ? build ? deploy prebuilt ? smoke SHA/route/bundle. Branch baseline `v1.0`, testing `v1.0_dev`, rilis `V1.1`.
+- Produksi memakai PostgreSQL dan fail closed (HTTP 503 saat database tidak tersedia). Backend fallback katalog hanya opt-in di development/test; frontend fallback dan fallback harga adalah jalur terpisah.
+- Informasi review adalah data katalog; status PASSED model tidak membuktikan pembeli/ulasan terverifikasi atau sumber live.
+
+## Catatan verifikasi MVP terdahulu
+
 # Checklist Kesiapan & Verifikasi MVP CompareBuy 📋
 
 Dokumen ini memetakan seluruh fitur inti MVP, 5 User Stories beserta kriteria penerimaan (*Acceptance Criteria*), 11 item revisi yang telah diselesaikan, pengujian otomatis, serta status kesiapan demonstrasi aplikasi CompareBuy.
@@ -68,7 +83,7 @@ Untuk memastikan integritas dan transparansi evaluasi, status diklasifikasikan s
 | **Backend Unit Tests** | `python -m unittest discover -s tests -p "test_*.py" -v` | **228 tests PASSED** (0 failed, 0 error, 0 skipped) | **`PASSED (Automated)`** |
 | **API Integration Test** | `python -m tests.test_api` | **16 check blocks PASSED** (Catalog, Scoring, Compare, Prices, DB constraints) | **`PASSED (Automated)`** |
 | **Frontend Production Build** | `npm run build` | **7 static pages compiled successfully** tanpa error/warning | **`PASSED (Automated)`** |
-| **Frontend Linter** | `npm run lint` | Belum dikonfigurasi (`.eslintrc.json` belum disediakan di proyek) | **`NOT RUN / PENDING`** |
+| **Frontend Linter (pembaruan P11)** | `npm run lint --prefix frontend` | Sudah memakai `eslint.config.mjs`; hasil lint P11 tanpa error dengan warning `<img>` yang tercatat | **`PASSED pada P11; bukan uji ulang tanggal ini`** |
 | **Git Working Tree Hygiene** | `git diff --check` | Tidak ada trailing whitespace atau konflik | **`PASSED (Automated)`** |
 
 ---
@@ -96,6 +111,6 @@ Untuk memastikan integritas dan transparansi evaluasi, status diklasifikasikan s
 3. **Scraping Harga Marketplace Live:**
    - Platform e-commerce Tokopedia, Shopee, dan Lazada menerapkan proteksi anti-bot/WAF dinamis. Apabila koneksi scraping langsung dibatasi, sistem secara jujur dan deterministik mengembalikan data acuan berlabel `source="fallback"` dengan `captured_at: null` dan menonaktifkan klaim "Harga Termurah". Hal ini merupakan proteksi integritas data, bukan malafungsi sistem.
 4. **Frontend Linter (`npm run lint`):**
-   - Proyek belum menyertakan berkas konfigurasi `.eslintrc.json`. Perintah `npm run lint` membutuhkan konfigurasi awal interaktif. Build produksi `next build` membuktikan kompilasi dan tipe data valid.
+   - Konfigurasi kini tersedia di `frontend/eslint.config.mjs`, dijalankan tanpa setup interaktif. Jalankan lint dan build secara terpisah; keberhasilan build tidak menggantikan hasil lint.
 5. **Database Fallback:**
-   - Aplikasi dapat beroperasi secara penuh baik menggunakan database PostgreSQL lokal maupun dataset in-memory fallback tanpa penurunan fungsionalitas fitur inti.
+   - Backend produksi membutuhkan PostgreSQL; database gagal menghasilkan HTTP 503. Fallback memori hanya untuk development/test dengan izin eksplisit, tanpa persistensi. Fallback frontend tidak membuktikan integrasi database berhasil.

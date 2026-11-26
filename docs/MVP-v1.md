@@ -1,3 +1,7 @@
+> **Status dokumen: Arsip MVP Pertemuan 5.** Ditinjau 26 November 2026. Laporan dan output test di bawah merekam tahap MVP awal, bukan status rilis 1.1.0. Label TypeScript, SQLite/in-memory, dan endpoint `/api/wizard/recommend` merupakan catatan lama; implementasi kini JavaScript/JSX, PostgreSQL, dan `POST /api/score`. Angka test lama tidak menyatakan pengujian ulang.
+>
+> Acuan: [indeks dokumentasi](README.md), [implementasi](deskripsi-aplikasi.md), [panduan menjalankan](HowToRun.md), [QA](qa/README.md), dan [P11](p11/README.md).
+
 # 📋 Dokumentasi MVP Version 1 — CompareBuy
 **Mata Kuliah:** Rekayasa Perangkat Lunak (Pertemuan 5)  
 **Proyek:** CompareBuy (Smart Gadget Recommendation & Comparison Platform)  

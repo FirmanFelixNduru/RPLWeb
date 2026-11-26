@@ -1,5 +1,10 @@
 # Tugas P11 — CompareBuy v1.1.0
 
+> Laporan pelaksanaan P11 pada 20 November 2026 WIB. Konteks akhir ditambahkan
+> pada peninjauan dokumentasi 26 November 2026; tidak menjalankan ulang pipeline
+> atau memutakhirkan hasil historis JSON/screenshot. Panduan lokal terbaru ada
+> pada [HowToRun](../HowToRun.md).
+
 Issue fokus: [#17 — skor katalog nol dianggap kosong](https://github.com/FirmanFelixNduru/RPLWeb/issues/17).
 
 ## Branch dan perubahan
@@ -110,8 +115,28 @@ Warning `<img>` yang telah ada tidak diperlakukan sebagai kegagalan lint.
 
 ## Live dan verifikasi rilis
 
+Hasil akhir yang tercatat pada release (menggantikan percobaan awal sebagai
+acuan penyelesaian P11):
+
+| Branch | Commit akhir | Bukti pipeline |
+| --- | --- | --- |
+| `v1.0` | `779ed35` | Baseline, tidak diubah oleh P11 |
+| `v1.0_dev` | `00d73be` | [Run 44592057325](https://github.com/FirmanFelixNduru/RPLWeb/actions/runs/44592057325), seluruh job berhasil |
+| `V1.1` / tag `v1.1.0` | `00d73be` | [Run 44591223702](https://github.com/FirmanFelixNduru/RPLWeb/actions/runs/44591223702), 200 passed, build/deploy/smoke berhasil |
+| `main` | `71fef06` | [Run 44591968324](https://github.com/FirmanFelixNduru/RPLWeb/actions/runs/44591968324), seluruh job berhasil |
+
+Commit main adalah hasil merge dengan source tree yang sama seperti rilis V1.1
+pada pelaksanaan P11. PR [#18](https://github.com/FirmanFelixNduru/RPLWeb/pull/18)
+dan [#19](https://github.com/FirmanFelixNduru/RPLWeb/pull/19) digabung; Issue
+[#17](https://github.com/FirmanFelixNduru/RPLWeb/issues/17) ditutup completed.
+[Laporan final](https://github.com/FirmanFelixNduru/RPLWeb/releases/download/v1.1.0/REPORT-P11.md)
+dan [paket bukti ZIP](https://github.com/FirmanFelixNduru/RPLWeb/releases/download/v1.1.0/P11-bukti.zip)
+memuat screenshot rilis serta verifikasi browser: API Render HTTP 200 tanpa
+indikator fallback, backend connected, dan 20 produk pada saat pengujian.
+Ini adalah status yang dicatat ketika rilis, bukan klaim pemeriksaan live hari ini.
+
 - Produksi: https://comparebuy-livid.vercel.app
-- [Preview yang telah diverifikasi](https://comparebuy-6r1e2kmxj-firmanfelixnduru.vercel.app).
+- [Preview pengembangan awal P11](https://comparebuy-6r1e2kmxj-firmanfelixnduru.vercel.app).
 - [Bukti smoke preview](evidence/preview-smoke/smoke.json): HTTP 200 untuk
   `/version.json`, `/`, `/catalog`, `/wizard`, dan `/compare`; commit live cocok
   dengan `7f576addfb7563a7759fc1e817b051962a302d4c`.
@@ -119,10 +144,13 @@ Warning `<img>` yang telah ada tidak diperlakukan sebagai kegagalan lint.
 - [Rilis v1.1.0 dan lampiran bukti produksi](https://github.com/FirmanFelixNduru/RPLWeb/releases/tag/v1.1.0).
 
 Preview memerlukan akses Vercel; URL produksi digunakan reviewer untuk pengujian
-publik. Saat pemeriksaan browser, katalog preview menggunakan fallback lokal
-karena origin preview tidak termasuk origin backend yang diizinkan. Hal ini
-tidak dihitung sebagai bukti integrasi backend berhasil; URL produksi digunakan
-untuk pemeriksaan koneksi API. Smoke test memeriksa HTTP dan identitas commit, bukan menggantikan
+publik. Pada build awal, browser menampilkan fallback; inspeksi berikutnya menemukan
+placeholder `[SENSITIVE]` pada URL API di bundle. Konfigurasi publik diperbaiki
+melalui PR #19. Pembatasan CORS untuk origin preview merupakan batas terpisah;
+jangan menyimpulkan CORS adalah satu-satunya penyebab fallback awal. Bukti smoke
+preview di atas hanya memeriksa HTTP/commit sebelum pemeriksaan bundle ditambahkan.
+Pipeline akhir juga memeriksa bundle, sedangkan browser produksi diverifikasi
+terpisah memakai API backend. Smoke test tidak menggantikan
 pengujian interaksi pengguna. Bukti produksi final, screenshot live, dan hasil
 pipeline rilis dilampirkan pada GitHub Release agar tetap merujuk commit aplikasi
 yang diuji tanpa mengubahnya hanya untuk menambahkan bukti sesudah deployment.

@@ -1,3 +1,7 @@
+> **Status dokumen: Arsip pemaparan dan pemilihan tema.** Ditinjau 26 November 2026. Memuat beberapa tema proposal, termasuk CompareBuy dan KosKu. Klaim ulasan pembeli terverifikasi, agregasi AI/live, serta kriteria sukses di bawah adalah aspirasi proposal; bukan bukti fitur atau sumber data telah diverifikasi.
+>
+> Acuan: [indeks dokumentasi](README.md), [implementasi](deskripsi-aplikasi.md), [panduan menjalankan](HowToRun.md), [QA](qa/README.md), dan [P11](p11/README.md).
+
 # Pemaparan Ide Proyek RPL
 
 ---

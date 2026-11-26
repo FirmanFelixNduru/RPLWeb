@@ -1,3 +1,7 @@
+> **Status dokumen: Arsip permintaan revisi antarmuka.** Ditinjau 26 November 2026. Daftar di bawah merekam permintaan perubahan terdahulu, bukan daftar bug aktif atau jaminan status selesai. Perbaikan dan bukti yang telah dilakukan dirujuk pada laporan QA dan P11.
+>
+> Acuan: [indeks dokumentasi](README.md), [implementasi](deskripsi-aplikasi.md), [panduan menjalankan](HowToRun.md), [QA](qa/README.md), dan [P11](p11/README.md).
+
 # Revisi
 
 ## Yang di UBAH

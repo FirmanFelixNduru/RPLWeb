@@ -1,218 +1,166 @@
-# Panduan Menjalankan CompareBuy (How to Run) 📱⚡
+# Menjalankan dan menguji CompareBuy
 
-Dokumen ini berisi panduan lengkap langkah demi langkah untuk menyiapkan, mengonfigurasi, menguji, dan menjalankan platform **CompareBuy** (FastAPI Backend + Next.js Frontend) pada lingkungan lokal menggunakan Windows PowerShell.
+Diperbarui 26 November 2026 berdasarkan kode versi 1.1.0. Perintah PowerShell
+berikut dimulai dari root repository `CompareBuy`, bukan path komputer tertentu.
+Hasil pengujian P11 adalah bukti historis; panduan ini tidak menyatakan deployment
+atau seluruh pengujian telah diperiksa ulang pada tanggal pembaruan dokumentasi.
 
----
+## Prasyarat
 
-## 1. Prasyarat Sistem & Versi Runtime
+- Node.js **24.x**, sesuai `frontend/package.json` dan workflow P11; npm bawaan Node.
+- Python **3.12** sebagai acuan runtime Docker backend; gunakan virtual environment.
+- PostgreSQL untuk penggunaan database dan pengujian integrasi PostgreSQL.
+- Git; GitHub CLI hanya diperlukan untuk memeriksa workflow/release.
 
-Pastikan perangkat Anda telah terpasang perangkat lunak berikut:
+Periksa runtime dengan `node --version`, `npm --version`, dan `python --version`.
+Database produksi sudah diimplementasikan melalui SQLAlchemy dan Alembic.
 
-| Perangkat Lunak | Versi Minimal yang Didukung | Versi Terverifikasi | Perintah Pengecekan |
-|---|---|---|---|
-| **Python** | 3.12+ / 3.13+ | Python 3.13.7 | `python --version` |
-| **Node.js** | v18.x / v20.x+ | Node.js v20+ | `node -v` |
-| **npm** | v9.x+ / v10.x+ | npm v10+ | `npm -v` |
-| **PostgreSQL** *(Opsional)* | 15+ / 16+ / 18+ | PostgreSQL 18.6 | `Get-Service -Name *postgres*` |
+## Backend lokal dengan PostgreSQL
 
-> [!NOTE]
-> **Mode Database vs Mode In-Memory Fallback & Transparansi Data:**
-> CompareBuy memiliki arsitektur cerdas dan tangguh. Jika PostgreSQL tidak diinstal atau dinonaktifkan, backend FastAPI **secara otomatis beralih ke Mode In-Memory Fallback** menggunakan dataset 20 produk terkurasi di `backend/app/products.py`. Seluruh fitur scoring, perbandingan, katalog, dan wizard tetap berjalan 100% normal tanpa database.
-> Data katalog mengedepankan transparansi: produk dengan SKU unverified (seperti Acer Aspire 5 Rp8.499.000) secara tegas dilabeli sebagai *Harga Acuan Katalog (Belum Terverifikasi)* untuk konfigurasi dasar RAM 8 GB / SSD 512 GB, dan tidak diasumsikan sebagai MSRP peluncuran resmi.
-
----
-
-## 2. Struktur Folder Proyek
-
-```text
-Rekayasa Perangkat Lunak/
-├── backend/                       # Python FastAPI Microservice
-│   ├── app/                       # Logika aplikasi (models, routers, scoring, scraper, db)
-│   ├── migrations/                # Alembic schema migrations (001, 002, 003)
-│   ├── tests/                     # Rangkaian unit test & test_api integrasi
-│   ├── .env.example               # Templat environment backend
-│   ├── alembic.ini                # Konfigurasi migrasi database
-│   ├── requirements.txt           # Daftar dependensi Python
-│   └── seed.py                    # Seeder katalog idempotent
-├── frontend/                      # Next.js App Router (React 18)
-│   ├── src/                       # Komponen UI, halaman (catalog, compare, wizard), context
-│   ├── .env.example               # Templat environment frontend
-│   └── package.json               # Konfigurasi dependensi Node.js
-└── venv/                          # Python Virtual Environment
-```
-
----
-
-## 3. Persiapan Variabel Lingkungan (Environment Variables)
-
-Salin template konfigurasi resmi yang telah disediakan tanpa menyalin atau menyebarkan kredensial rahasia:
-
-### A. Backend (`backend/.env`)
-Buka terminal PowerShell di folder `backend/`:
 ```powershell
-cd "c:\KULIAH\Semester 3\Rekayasa Perangkat Lunak\backend"
+cd backend
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
-Isi konfigurasi pada file `backend/.env`:
-- **Jika menggunakan PostgreSQL lokal:**
-  ```env
-  ALLOWED_ORIGINS=http://localhost:3000
-  DATABASE_URL=postgresql://USERNAME_POSTGRES:PASSWORD_POSTGRES@localhost:5432/comparebuy
-  ```
-  *(Ganti `USERNAME_POSTGRES` dan `PASSWORD_POSTGRES` dengan kredensial PostgreSQL lokal Anda).*
-- **Jika menggunakan Mode In-Memory Fallback (Tanpa PostgreSQL):**
-  Cukup kosongkan nilai `DATABASE_URL` atau jangan sertakan variabel tersebut:
-  ```env
-  ALLOWED_ORIGINS=http://localhost:3000
-  ```
 
-### B. Frontend (`frontend/.env.local`)
-Buka terminal PowerShell di folder `frontend/`:
-```powershell
-cd "c:\KULIAH\Semester 3\Rekayasa Perangkat Lunak\frontend"
-Copy-Item .env.example .env.local
-```
-Isi konfigurasi `frontend/.env.local`:
+Jangan menimpa `.env` yang sudah berisi konfigurasi. Buat database lokal
+`comparebuy` melalui PostgreSQL, lalu isi `backend/.env`:
+
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+APP_ENV=development
+ALLOW_CATALOG_FALLBACK=false
+ALLOWED_ORIGINS=http://localhost:3000
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/comparebuy
 ```
 
----
+Ganti kredensial dengan milik database lokal, kemudian dari folder `backend`:
 
-## 4. Konfigurasi Database PostgreSQL (Opsional)
-
-> [!IMPORTANT]
-> **Penting:** Lewati langkah ini jika Anda ingin menjalankan aplikasi dalam **Mode In-Memory Fallback** tanpa PostgreSQL. Pada mode fallback, Anda **TIDAK PERLU** menjalankan migrasi maupun seeder PostgreSQL.
-
-Jika Anda ingin mengaktifkan persistensi PostgreSQL:
-
-1. **Pastikan Service PostgreSQL Aktif:**
-   ```powershell
-   Get-Service -Name *postgres*
-   ```
-   Jika statusnya belum *Running*, aktifkan service via PowerShell Administrator:
-   ```powershell
-   Start-Service postgresql*
-   ```
-
-2. **Buat Database `comparebuy`:**
-   Masuk ke command line `psql` PostgreSQL:
-   ```sql
-   CREATE DATABASE comparebuy;
-   ```
-
-3. **Jalankan Migrasi Skema Database (Alembic):**
-   *Wajib dijalankan terlebih dahulu sebelum seeder agar struktur constraint terpasang benar:*
-   ```powershell
-   cd "c:\KULIAH\Semester 3\Rekayasa Perangkat Lunak\backend"
-   ..\venv\Scripts\alembic.exe upgrade head
-   ```
-   Perintah ini akan mengeksekusi 3 migrasi:
-   - `001_initial_schema` (pembuatan tabel inti)
-   - `002_database_constraints` (tipe JSONB dan domain constraints)
-   - `003_add_warranty_details` (kolom garansi suku cadang vs servis resmi)
-
-4. **Eksekusi Seeder Data Katalog:**
-   ```powershell
-   ..\venv\Scripts\python.exe seed.py
-   ```
-   *Seeder ini bersifat idempotent dan aman dijalankan berulang kali tanpa membuat duplikasi data.*
-
----
-
-## 5. Menjalankan Backend (FastAPI)
-
-1. Buka PowerShell dan masuk ke direktori backend:
-   ```powershell
-   cd "c:\KULIAH\Semester 3\Rekayasa Perangkat Lunak\backend"
-   ```
-
-2. Jalankan Uvicorn menggunakan interpreter Python lokal (disarankan mengaktifkan UTF-8 console untuk Windows):
-   ```powershell
-   $env:PYTHONUTF8=1
-   ..\venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-3. **Verifikasi Backend:**
-   - Akses Healthcheck: `http://localhost:8000/health` (menghasilkan status `ok`).
-   - Akses Root Status: `http://localhost:8000/` (menghasilkan versi API).
-   - Akses Swagger UI Interaktif: `http://localhost:8000/docs`.
-   - Akses Dokumentasi ReDoc: `http://localhost:8000/redoc`.
-
----
-
-## 6. Menjalankan Frontend (Next.js)
-
-1. Buka terminal PowerShell baru dan masuk ke direktori frontend:
-   ```powershell
-   cd "c:\KULIAH\Semester 3\Rekayasa Perangkat Lunak\frontend"
-   ```
-
-2. Pastikan dependensi Node.js terpasang:
-   ```powershell
-   npm install
-   ```
-
-3. Jalankan server pengembangan Next.js:
-   ```powershell
-   npm run dev
-   ```
-
-4. Buka peramban (browser) dan akses aplikasi di:
-   ```text
-   http://localhost:3000
-   ```
-
----
-
-## 7. Menjalankan Rangkaian Pengujian (Testing)
-
-Sebelum mendemonstrasikan atau menyerahkan proyek, verifikasi integritas kode dengan menjalankan pengujian aktual:
-
-### A. Rangkaian Unit Test Backend (228 Tests)
-Jalankan dari folder `backend/`:
 ```powershell
-cd "c:\KULIAH\Semester 3\Rekayasa Perangkat Lunak\backend"
-..\venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py" -v
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe seed.py
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
-*Hasil yang diharapkan: `=== ALL 228 UNIT TESTS PASSED ===`*
 
-### B. Pengujian Integrasi API & Entity DB
-Jalankan dari folder `backend/`:
+Seeder mengisi katalog awal secara idempotent. Migrasi ada di `backend/migrations/`.
+Gunakan URL PostgreSQL lokal, bukan database produksi, untuk setup pengembangan.
+
+- Dokumentasi API: http://localhost:8000/docs dan http://localhost:8000/redoc.
+- `GET /health`: HTTP 200 dengan `database=connected` saat database tersedia.
+- Tanpa database dan tanpa izin fallback, readiness mengembalikan HTTP 503.
+  Root `/` berisi metadata layanan dan bukan pengganti pemeriksaan readiness.
+
+## Backend lokal tanpa PostgreSQL
+
+Fallback katalog backend hanya diizinkan secara eksplisit untuk development/test.
+Untuk demo lokal tanpa persistensi, gunakan konfigurasi berikut:
+
+```env
+APP_ENV=development
+ALLOW_CATALOG_FALLBACK=true
+DATABASE_URL=
+ALLOWED_ORIGINS=http://localhost:3000
+```
+
+Lewati migrasi dan seed pada mode ini. Health check menjadi HTTP 200 dengan
+`status=degraded`, `database=disconnected`, dan `fallback=enabled`.
+Di produksi fallback katalog backend dilarang, termasuk saat `RENDER=true`.
+Mengosongkan `DATABASE_URL` saja tidak otomatis mengaktifkan fallback. Database
+produksi yang gagal tidak boleh diam-diam diganti dataset memori.
+
+Fallback katalog **frontend** berbeda: klien dapat menampilkan dataset lokal
+ketika API gagal, dengan pemberitahuan sumber data. Fallback harga marketplace
+juga berbeda: penawaran acuan bukan bukti harga/ketersediaan live.
+
+## Frontend lokal
+
+Buka terminal kedua dari root repository:
+
 ```powershell
-..\venv\Scripts\python.exe -m tests.test_api
+cd frontend
+Copy-Item .env.example .env.local
+npm ci --no-audit --no-fund
+npm run dev
 ```
-*Hasil yang diharapkan: `=== API CORE ENDPOINTS AND AVAILABLE DATABASE CHECKS PASSED ===`*
 
-### C. Uji Kompilasi Produksi Frontend
-Jalankan dari folder `frontend/`:
+Isi `frontend/.env.local` dengan `NEXT_PUBLIC_API_URL=http://localhost:8000`.
+Buka http://localhost:3000. Jika memakai `127.0.0.1` sebagai origin browser,
+tambahkan origin yang sama ke `ALLOWED_ORIGINS`; origin ini berbeda dari localhost.
+Perubahan variabel `NEXT_PUBLIC_*` memerlukan restart dev server atau build ulang.
+
+## Unit test dan build frontend
+
+Dari root repository:
+
 ```powershell
-cd "c:\KULIAH\Semester 3\Rekayasa Perangkat Lunak\frontend"
-npm run build
+npm run test:ci --prefix frontend
+npm run lint --prefix frontend
+npm run build --prefix frontend
 ```
-*Hasil yang diharapkan: `✓ Compiled successfully` dan `Generating static pages (7/7)`.*
 
----
+Gate P11 mensyaratkan minimal 200 test, semuanya passed, tanpa failed, skipped,
+cancelled, atau todo. Hasil disimpan di `frontend/reports/` sebagai JSON, TAP,
+dan JUnit. `npm test --prefix frontend` menjalankan suite tanpa gate jumlah P11.
+Jumlah halaman build dan jumlah test mengikuti hasil eksekusi, bukan angka lama
+yang ditulis tetap. Lint sudah memakai `frontend/eslint.config.mjs`.
 
-## 8. Panduan Troubleshooting Kendala Umum
+## Pengujian backend
 
-1. **Port 8000 atau Port 3000 Sedang Digunakan:**
-   - Cari proses yang menggunakan port:
-     ```powershell
-     Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object OwningProcess
-     ```
-   - Hentikan proses tersebut jika merupakan instans lama:
-     ```powershell
-     Stop-Process -Id <PID> -Force
-     ```
+Gunakan terminal khusus pengujian dari folder `backend`. `tests/__init__.py`
+memasang guard untuk mencegah pemakaian database development/production.
+Untuk tes tanpa database:
 
-2. **Kendala Koneksi Database PostgreSQL:**
-   - Jika terminal menampilkan `Could not initialize database engine: ... Falling back to in-memory mode`, backend tidak akan crash. Aplikasi tetap berfungsi normal menggunakan data memori.
-   - Periksa kembali format `DATABASE_URL` di `backend/.env` dan pastikan nama database `comparebuy` telah dibuat di PostgreSQL.
+```powershell
+$env:DATABASE_URL=''
+$env:TEST_DATABASE_URL=''
+$env:APP_ENV='test'
+$env:ALLOW_CATALOG_FALLBACK='true'
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p 'test_*.py' -v
+```
 
-3. **Kendala CORS pada Frontend:**
-   - Jika konsol browser menampilkan pesan blocked by CORS policy, pastikan file `backend/.env` memuat `ALLOWED_ORIGINS=http://localhost:3000`. Restart server backend setelah memperbarui `.env`.
+Modul integrasi yang membutuhkan PostgreSQL dapat **SKIP**; laporkan jumlah
+skipped terpisah, jangan menyebut semuanya passed. Tidak ada jaminan jumlah
+backend tetap 228 seperti laporan MVP lama.
 
-4. **Data Harga Marketplace Berstatus Fallback:**
-   - Tokopedia, Shopee, dan Lazada menerapkan proteksi anti-bot/WAF. Apabila scraping langsung dibatasi, modul `backend/app/scraper.py` secara otomatis menggunakan data fallback acuan yang deterministik.
-   - UI akan menandai penawaran dengan badge jujur: *"Data Acuan Fallback"* dan `captured_at: null`. Ini adalah perilaku sistem yang didesain tangguh (*fail-safe by design*), bukan bug.
+Untuk integrasi, buat database PostgreSQL khusus, misalnya `comparebuy_test`,
+berbeda dari database development/production. Contoh pada terminal test:
+
+```powershell
+$env:TEST_DATABASE_URL='postgresql://USER:PASSWORD@localhost:5432/comparebuy_test'
+$env:DATABASE_URL=$env:TEST_DATABASE_URL
+$env:APP_ENV='test'
+$env:ALLOW_CATALOG_FALLBACK='true'
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe seed.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p 'test_*.py' -v
+.\.venv\Scripts\python.exe -m tests.test_api
+```
+
+Migrasi dan seed di atas menulis **hanya ke database test yang ditentukan**.
+`tests.test_catalog` menggunakan fixture transaksi rollback dan memerlukan
+`TEST_DATABASE_URL`; baca prasyarat modul tersebut. Skrip smoke API berada di
+`backend/tests/test_api.py`, bukan `backend/test_api.py`.
+
+## Deployment dan diagnosis
+
+Frontend P11 memakai [workflow GitHub Actions](../.github/workflows/p11.yml):
+unit test/lint ? build ? deploy prebuilt ? smoke commit/route/bundle.
+`frontend/vercel.json` menonaktifkan deployment langsung dari push Git.
+Push `v1.0_dev` menghasilkan preview; `V1.1`/`main` menghasilkan produksi.
+Konfigurasi secret, variable publik API, bukti gagal/hijau, dan rotasi token ada
+pada [laporan P11](p11/README.md). Backend Render dikelola terpisah; workflow
+tersebut tidak men-deploy backend.
+
+- Database gagal: periksa koneksi, migrasi, dan readiness `/health`; produksi
+  mengembalikan 503 alih-alih fallback katalog backend.
+- CORS: pastikan origin frontend tepat ada di `ALLOWED_ORIGINS`; restart backend.
+  Preview Vercel belum tentu termasuk origin yang diizinkan.
+- Katalog fallback frontend: periksa request API, URL publik saat build, respons
+  HTTP, serta CORS. Fallback bukan bukti integrasi backend berhasil.
+- Harga fallback: periksa `source`; respons backend fallback tidak memakai
+  timestamp tangkapan live. Bentuk metadata fallback frontend dapat berbeda.
+- Port terpakai: periksa proses milik server proyek dan hentikan hanya instance
+  yang memang Anda jalankan; jangan menghentikan proses lain tanpa identifikasi.
+
+Lihat [indeks dokumentasi](README.md), [deskripsi aplikasi](deskripsi-aplikasi.md),
+[hasil QA terdahulu](qa/README.md), dan [bukti rilis P11](p11/README.md).

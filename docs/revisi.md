@@ -1,3 +1,7 @@
+> **Status dokumen: Arsip prompt proses revisi.** Ditinjau 26 November 2026. Instruksi kerja di bawah disimpan sebagai riwayat tahap revisi, bukan prosedur operasional proyek saat ini atau persetujuan untuk perubahan baru. PDF `Revisi (list).pdf` yang disebut tidak tersedia pada folder docs ini. Acuan implementasi adalah kode dan deskripsi aplikasi; gunakan laporan QA/P11 untuk bukti penyelesaian.
+>
+> Acuan: [indeks dokumentasi](README.md), [implementasi](deskripsi-aplikasi.md), [panduan menjalankan](HowToRun.md), [QA](qa/README.md), dan [P11](p11/README.md).
+
 # MASTER PROMPT — Implementasi Revisi CompareBuy Secara Bertahap dan Terkontrol
 
 ## 1. Peran dan Konteks
@@ -15,7 +19,7 @@ CompareBuy adalah aplikasi web pembanding gadget dengan fitur:
 - Scoring dan Auto-Highlighting.
 - Floating comparison dock.
 
-Teknologi proyek diperkirakan mencakup React/Vite, FastAPI, dan PostgreSQL. Namun, **periksa repository yang sebenarnya sebelum mengambil keputusan teknis.** Jangan menganggap semua struktur folder, model, endpoint, atau implementasi masih sama seperti dokumentasi sebelumnya.
+Konteks stack diperbarui: proyek menggunakan Next.js App Router/React (JavaScript/JSX), FastAPI, dan PostgreSQL; bukan Vite. Namun, **periksa repository yang sebenarnya sebelum mengambil keputusan teknis.** Jangan menganggap semua struktur folder, model, endpoint, atau implementasi masih sama seperti dokumentasi sebelumnya.
 
 Dokumen `Revisi (list).pdf` merupakan sumber utama persyaratan. Gunakan teks, nomor revisi, dan screenshot dalam dokumen sebagai acuan. Jangan mengganti maksud revisi berdasarkan asumsi pribadi.
 

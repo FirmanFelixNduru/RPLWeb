@@ -1,19 +1,23 @@
+> **Status dokumen: Spesifikasi rancangan awal, dengan konteks implementasi terbaru.** Ditinjau 26 November 2026. Bagian desain di bawah menyimpan persyaratan/rencana database awal. PostgreSQL, SQLAlchemy, dan Alembic kini sudah diimplementasikan; rencana tidak boleh ditafsirkan sebagai laporan bahwa database belum tersedia. Gunakan deskripsi aplikasi dan HowToRun untuk kondisi implementasi/operasional. Tidak semua persyaratan rancangan adalah fitur yang sudah diverifikasi.
+>
+> Acuan: [indeks dokumentasi](README.md), [implementasi](deskripsi-aplikasi.md), [panduan menjalankan](HowToRun.md), [QA](qa/README.md), dan [P11](p11/README.md).
+
 Build a full-stack web application named **CompareBuy**.
 
 Purpose:
 Help Indonesian consumers compare and choose technology products using a curated gadget catalog, detailed specifications, community review summaries, warranty information, marketplace prices, personalized recommendations, and side-by-side comparisons. The application supports smartphones, laptops, tablets, TWS/audio devices, and smartwatches.
 
-The current source has a Next.js frontend and FastAPI backend. Product information is presently held in backend Python memory and mirrored in frontend fallback data; there is no database, user account, authentication, or product administration. The database in this specification is the proposed persistent design for completing the application, not a claim about the current implementation.
+Implementation context (updated 26 November 2026): the source uses Next.js and FastAPI with PostgreSQL repositories, SQLAlchemy entities, Alembic migrations, and an idempotent seed. Backend in-memory catalog fallback requires explicit development/test opt-in and is forbidden in production. Frontend fallback data is separate. User accounts, user authentication, and product administration are not provided. The design requirements below remain a specification, not proof that every requirement is implemented.
 
 Use this stack:
 
-* Frontend: Next.js 14 App Router + React 18 + JavaScript/JSX
+* Frontend: Next.js 16.4.5 App Router + React 19.2.9 (Node.js 24.x) + JavaScript/JSX
 * Styling: Tailwind CSS 3
 * Icons: Lucide React
 * Backend: Python 3.12+ + FastAPI
 * Validation and API schemas: Pydantic 2
 * Database: PostgreSQL
-* ORM and migrations: SQLAlchemy 2.x + Alembic (to be added for database integration)
+* ORM and migrations: SQLAlchemy 2.x + Alembic (implemented; inspect entities/repositories/migrations)
 * API style: REST API returning JSON
 * HTTP client and marketplace parsing: HTTPX + BeautifulSoup4
 * Frontend deployment: Vercel
@@ -148,7 +152,7 @@ Backend features:
 
 1. Product Catalog
 
-	* List and return product details from PostgreSQL after database integration; initially, the current in-memory curated catalog is the data source.
+	* List and return product details from PostgreSQL. The curated seed supplies initial data; backend in-memory fallback is allowed only with explicit development/test opt-in.
 	* Support search by name, brand, description, and tags; filter by category, brand, price range, and tags; sort by score, ascending/descending price, or name; and paginate results.
 	* Return the available categories, brands, and tags for filter controls.
 	* Return a clear not-found response for an unknown product.

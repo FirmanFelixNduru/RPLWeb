@@ -1,3 +1,7 @@
+> **Status dokumen: Arsip alternatif ide proyek.** Ditinjau 26 November 2026. Memuat CompareBuy, Lapor Fasilitas Umum, dan KosKu sebagai alternatif ide awal. Dua ide lain bukan fitur atau modul CompareBuy. Gunakan deskripsi aplikasi untuk implementasi yang dikerjakan.
+>
+> Acuan: [indeks dokumentasi](README.md), [implementasi](deskripsi-aplikasi.md), [panduan menjalankan](HowToRun.md), [QA](qa/README.md), dan [P11](p11/README.md).
+
 # CompareBuy
 CompareBuy adalah sebuah aplikasi berbasis web yang membantu konsumen memilih perangkat teknologi dengan lebih terarah, seperti smartphone, laptop, tablet, TWS, dan smartwatch. Banyaknya pilihan produk, spesifikasi teknis, ulasan, serta perbedaan harga antar-marketplace dapat membuat calon pembeli kesulitan menentukan perangkat yang paling sesuai. Melalui katalog, pengguna dapat mencari dan menyaring produk, lalu memakai Smart Recommendation Wizard dengan mengisi kategori, anggaran, skenario penggunaan, dan prioritas fitur untuk memperoleh rekomendasi beserta skor dan alasannya. Pengguna juga dapat membandingkan hingga empat produk dalam satu matriks yang menyoroti keunggulan spesifikasi, serta melihat informasi spesifikasi, ulasan, garansi, dan penawaran harga marketplace. Dengan demikian, CompareBuy membantu konsumen mengambil keputusan pembelian yang lebih objektif sesuai kebutuhan dan anggaran.
 

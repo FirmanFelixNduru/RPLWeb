@@ -1,3 +1,7 @@
+> **Status dokumen: Arsip contoh format untuk proyek lain.** Ditinjau 26 November 2026. Dokumen ini adalah prompt Lecturer GitHub Tracker (Vite/Express/MySQL), bukan spesifikasi atau panduan menjalankan CompareBuy.
+>
+> Acuan: [indeks dokumentasi](README.md), [implementasi](deskripsi-aplikasi.md), [panduan menjalankan](HowToRun.md), [QA](qa/README.md), dan [P11](p11/README.md).
+
 Build a simple full-stack web application named **Lecturer GitHub Tracker**.
 
 Purpose:
